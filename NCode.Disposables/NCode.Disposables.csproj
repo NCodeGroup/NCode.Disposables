@@ -42,10 +42,11 @@
   <ItemGroup>
     <Compile Include="Disposable.cs" />
     <Compile Include="DisposableAction.cs" />
+    <Compile Include="DisposableAggregate.cs" />
     <Compile Include="DisposableCollection.cs" />
     <Compile Include="DisposableEmpty.cs" />
     <Compile Include="DisposableReferenceCounter.cs" />
-    <Compile Include="DisposableSynchronize.cs" />
+    <Compile Include="DisposableContext.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

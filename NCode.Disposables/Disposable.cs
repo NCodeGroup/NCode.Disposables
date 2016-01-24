@@ -18,17 +18,17 @@ namespace NCode.Disposables
 			return new DisposableAction(action);
 		}
 
-		public static IDisposable Synchronize(IDisposable disposable, SynchronizationContext context, bool async)
+		public static IDisposable Context(IDisposable disposable, SynchronizationContext context, bool async = false)
 		{
 			if (disposable == null)
 				throw new ArgumentNullException(nameof(disposable));
 			if (context == null)
 				throw new ArgumentNullException(nameof(context));
 
-			return new DisposableSynchronize(disposable, context, async);
+			return new DisposableContext(disposable, context, async);
 		}
 
-		public static IDisposableReference CreateReferenceCounter(IDisposable disposable)
+		public static IDisposableReference Counter(IDisposable disposable)
 		{
 			if (disposable == null)
 				throw new ArgumentNullException(nameof(disposable));

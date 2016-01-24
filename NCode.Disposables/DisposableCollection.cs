@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace NCode.Disposables
 {
@@ -27,7 +28,13 @@ namespace NCode.Disposables
 
 		public void Dispose()
 		{
-			if (_disposed) return;
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
+		protected virtual void Dispose(bool disposing)
+		{
+			if (_disposed || !disposing) return;
 
 			IEnumerable<IDisposable> list;
 			lock (_lock)
@@ -37,10 +44,10 @@ namespace NCode.Disposables
 
 				list = _list.ToArray();
 				_list.Clear();
-				Count = 0;
 			}
 
-			foreach (var item in list)
+			// dispose in reverse order for any object dependencies
+			foreach (var item in list.Reverse())
 			{
 				item.Dispose();
 			}
@@ -48,8 +55,7 @@ namespace NCode.Disposables
 
 		public bool IsReadOnly => false;
 
-		public int Count { get; private set; }
-
+		public int Count => _list.Count;
 
 		public void Add(IDisposable item)
 		{
@@ -62,7 +68,6 @@ namespace NCode.Disposables
 					throw new ObjectDisposedException(GetType().FullName);
 
 				_list.Add(item);
-				++Count;
 			}
 		}
 
@@ -76,14 +81,8 @@ namespace NCode.Disposables
 				if (_disposed)
 					throw new ObjectDisposedException(GetType().FullName);
 
-				if (_list.Remove(item))
-				{
-					--Count;
-					return true;
-				}
+				return _list.Remove(item);
 			}
-
-			return false;
 		}
 
 		public void Clear()
@@ -94,7 +93,6 @@ namespace NCode.Disposables
 					throw new ObjectDisposedException(GetType().FullName);
 
 				_list.Clear();
-				Count = 0;
 			}
 		}
 

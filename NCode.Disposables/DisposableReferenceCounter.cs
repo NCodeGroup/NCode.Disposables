@@ -54,18 +54,18 @@ namespace NCode.Disposables
 
 		public void Dispose()
 		{
+			if (_disposed) return;
+
 			IDisposable disposable = null;
 			lock (_lock)
 			{
-				if (_disposable != null && !_disposed)
-				{
-					_disposed = true;
+				if (_disposed) return;
+				_disposed = true;
 
-					if (_count == 0)
-					{
-						disposable = _disposable;
-						_disposable = null;
-					}
+				if (_count == 0)
+				{
+					disposable = _disposable;
+					_disposable = null;
 				}
 			}
 
@@ -89,16 +89,13 @@ namespace NCode.Disposables
 			IDisposable disposable = null;
 			lock (_lock)
 			{
-				if (_disposable != null)
-				{
-					var count = --_count;
-					Debug.Assert(count >= 0);
+				if (_disposable == null) return;
 
-					if (_disposed && count == 0)
-					{
-						disposable = _disposable;
-						_disposable = null;
-					}
+				var count = --_count;
+				if (_disposed && count == 0)
+				{
+					disposable = _disposable;
+					_disposable = null;
 				}
 			}
 

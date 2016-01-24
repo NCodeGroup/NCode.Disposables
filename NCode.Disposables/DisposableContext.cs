@@ -3,13 +3,13 @@ using System.Threading;
 
 namespace NCode.Disposables
 {
-	public sealed class DisposableSynchronize : IDisposable
+	public sealed class DisposableContext : IDisposable
 	{
 		private IDisposable _disposable;
 		private readonly SynchronizationContext _context;
 		private readonly bool _async;
 
-		public DisposableSynchronize(IDisposable disposable, SynchronizationContext context, bool async)
+		public DisposableContext(IDisposable disposable, SynchronizationContext context, bool async = false)
 		{
 			if (disposable == null)
 				throw new ArgumentNullException(nameof(disposable));
