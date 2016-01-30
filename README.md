@@ -107,3 +107,8 @@ void Example()
   disposable.Dispose()
 }
 ```
+
+## Feedback
+Please provide any feedback, comments, or issues to this GitHub project [here][issues].
+
+[issues]: https://github.com/NCodeGroup/NCode.Disposables/issues
