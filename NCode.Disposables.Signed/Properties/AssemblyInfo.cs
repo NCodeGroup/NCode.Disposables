@@ -19,8 +19,8 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("NCode.Disposables")]
-[assembly: AssemblyProduct("NCode.Disposables")]
-[assembly: AssemblyDescription("This library provides a set of useful IDisposable implementations.")]
+[assembly: AssemblyTitle("NCode.Disposables.Signed")]
+[assembly: AssemblyProduct("NCode.Disposables.Signed")]
+[assembly: AssemblyDescription("This library (strong name signed) provides a set of useful IDisposable implementations.")]
 
-[assembly: Guid("7fd2a4c1-12c6-4eb4-b9c0-b2d7861b1d47")]
+[assembly: Guid("65c65ecb-7411-4466-9fd7-efa4f42e5081")]

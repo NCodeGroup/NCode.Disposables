@@ -1,6 +1,6 @@
-ï»¿#region Copyright Preamble
+#region Copyright Preamble
 // 
-//    Copyright Â© 2015 NCode Group
+//    Copyright © 2015 NCode Group
 // 
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
@@ -16,11 +16,28 @@
 // 
 #endregion
 
+using System;
 using System.Reflection;
+using System.Resources;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("NCode.Disposables")]
-[assembly: AssemblyProduct("NCode.Disposables")]
-[assembly: AssemblyDescription("This library provides a set of useful IDisposable implementations.")]
+[assembly: AssemblyCompany("NCode Group")]
+[assembly: AssemblyCopyright("Copyright © 2015 NCode Group")]
+[assembly: AssemblyTrademark("")]
 
-[assembly: Guid("7fd2a4c1-12c6-4eb4-b9c0-b2d7861b1d47")]
+[assembly: AssemblyCulture("")]
+[assembly: NeutralResourcesLanguage("en-us")]
+
+[assembly: ComVisible(false)]
+[assembly: CLSCompliant(true)]
+
+#if DEBUG
+[assembly: AssemblyConfiguration("Debug")]
+#else
+[assembly: AssemblyConfiguration("Release")]
+#endif
+
+// http://semver.org/
+[assembly: AssemblyVersion("1.0.0")]
+[assembly: AssemblyFileVersion("1.0.0")]
+[assembly: AssemblyInformationalVersion("1.0.0")]
