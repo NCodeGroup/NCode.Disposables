@@ -4,7 +4,7 @@
 	<metadata minClientVersion="2.8">
 		<id>NCode.Disposables</id>
 		<title>IDisposable Implementations</title>
-		<version>1.0.0</version>
+		<version>1.0.1</version>
 
 		<owners>NCode Group</owners>
 		<authors>NCode Group</authors>
@@ -21,6 +21,7 @@
 		<releaseNotes>
 			<![CDATA[
 Built on $timestamp$.
+v1.0.1 - Added Action and Func overloads.
 v1.0.0 - Initial release.
 			]]>
 		</releaseNotes>
