@@ -1,6 +1,6 @@
 #region Copyright Preamble
 // 
-//    Copyright © 2015 NCode Group
+//    Copyright © 2017 NCode Group
 // 
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
@@ -16,38 +16,37 @@
 // 
 #endregion
 
-using System;
-using NUnit.Framework;
+using Xunit;
 
 namespace NCode.Disposables.Test
 {
-	[TestFixture]
-	public class DisposableActionTests
-	{
-		[Test]
-		public void Dispose_ActionIsCalled()
-		{
-			var count = 0;
-			Action action = () => ++count;
-			var disposable = new DisposableAction(action);
+  public class DisposableEmptyTests
+  {
+    [Fact]
+    public void Singleton()
+    {
+      var first = Disposable.Empty;
+      Assert.NotNull(first);
 
-			disposable.Dispose();
-			Assert.AreEqual(1, count);
-		}
+      var second = Disposable.Empty;
+      Assert.Same(first, second);
+    }
 
-		[Test]
-		public void Dispose_ActionIsCalledOnlyOnce()
-		{
-			var count = 0;
-			Action action = () => ++count;
-			var disposable = new DisposableAction(action);
+    [Fact]
+    public void Dispose()
+    {
+      var disposable = new DisposableEmpty();
+      disposable.Dispose();
+    }
 
-			disposable.Dispose();
-			disposable.Dispose();
-			disposable.Dispose();
+    [Fact]
+    public void Dispose_MultipleTimes()
+    {
+      var disposable = new DisposableEmpty();
+      disposable.Dispose();
+      disposable.Dispose();
+      disposable.Dispose();
+    }
 
-			Assert.AreEqual(1, count);
-		}
-
-	}
+  }
 }

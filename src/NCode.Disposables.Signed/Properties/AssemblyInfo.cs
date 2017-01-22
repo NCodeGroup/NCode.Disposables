@@ -1,6 +1,6 @@
 ﻿#region Copyright Preamble
 // 
-//    Copyright © 2015 NCode Group
+//    Copyright © 2017 NCode Group
 // 
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
@@ -21,6 +21,6 @@ using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("NCode.Disposables")]
 [assembly: AssemblyProduct("NCode.Disposables")]
-[assembly: AssemblyDescription("This library provides a set of useful IDisposable implementations.")]
+[assembly: AssemblyDescription("This library (strong name signed) provides a set of useful IDisposable implementations.")]
 
-[assembly: Guid("7fd2a4c1-12c6-4eb4-b9c0-b2d7861b1d47")]
+[assembly: Guid("65C65ECB-7411-4466-9FD7-EFA4F42E5081")]
