@@ -13,6 +13,7 @@
     "tags": [ "IDisposable", "Dispose" ],
     "iconUrl": "https://raw.githubusercontent.com/NCodeGroup/NCode.Disposables/master/NCodeGroup.png",
     "licenseUrl": "https://raw.githubusercontent.com/NCodeGroup/NCode.Disposables/master/LICENSE.txt",
+    "projectUrl": "https://github.com/NCodeGroup/NCode.Disposables",
     "repository": {
       "type": "git",
       "url": "https://github.com/NCodeGroup/NCode.Disposables.git"
