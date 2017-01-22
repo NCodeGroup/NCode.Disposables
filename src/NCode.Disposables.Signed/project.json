@@ -17,7 +17,7 @@
       "type": "git",
       "url": "https://github.com/NCodeGroup/NCode.Disposables.git"
     },
-    "releaseNotes": "Built on $timestamp$.\nv2.0.0 - Using .Net Core/Standard.\nv1.0.1 - Added Action and Func overloads.\nv1.0.0 - Initial release."
+    "releaseNotes": "Built on $timestamp$.\nv2.0.1 - Using .Net Core/Standard.\nv1.0.1 - Added Action and Func overloads.\nv1.0.0 - Initial release."
   },
   "authors": [ "Marcin Polewski" ],
 
