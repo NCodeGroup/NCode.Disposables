@@ -17,7 +17,7 @@
       "type": "git",
       "url": "https://github.com/NCodeGroup/NCode.Disposables.git"
     },
-    "releaseNotes": "Built on $timestamp$.\nv2.0.1 - Using .Net Core/Standard.\nv1.0.1 - Added Action and Func overloads.\nv1.0.0 - Initial release."
+    "releaseNotes": "Built on $timestamp$."
   },
   "authors": [ "Marcin Polewski" ],
 
@@ -27,14 +27,24 @@
     }
   },
 
-  "dependencies": {
-    "NETStandard.Library": "1.6.1"
-  },
-
+  // we target netstandard 1.1 so that .NET Framework 4.5 can be used
   "frameworks": {
-    // we target netstandard 1.1 so that .NET Framework 4.5 can be used
     "netstandard1.1": {
-      "imports": "dnxcore50"
+      "imports": "dnxcore50",
+      "dependencies": {
+        // we trim our dependencies
+        "Microsoft.NETCore.Platforms": "1.1.0",
+        "System.Collections": "4.3.0",
+        "System.Resources.ResourceManager": "4.3.0",
+        "System.Runtime.InteropServices": "4.3.0",
+        "System.Threading": "4.3.0"
+      }
+    },
+    "net45": {
+      "frameworkAssemblies": {
+      },
+      "dependencies": {
+      }
     }
   }
 
