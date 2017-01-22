@@ -1,5 +1,4 @@
 [![Build status](https://img.shields.io/teamcity/https/teamcity.bixbots.com/s/NCodeDisposables_Build.svg?label=TeamCity)](https://teamcity.bixbots.com/viewType.html?buildTypeId=NCodeDisposables_Build&guest=1)
-[![Nuget](https://img.shields.io/nuget/dt/NCode.Disposables.svg)](https://www.nuget.org/packages/NCode.Disposables/)
 [![Nuget](https://img.shields.io/nuget/v/NCode.Disposables.svg)](https://www.nuget.org/packages/NCode.Disposables/)
 
 # NCode.Disposables
