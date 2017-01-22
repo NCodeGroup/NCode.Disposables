@@ -1,19 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NCode.Disposables", "NCode.Disposables\NCode.Disposables.csproj", "{7FD2A4C1-12C6-4EB4-B9C0-B2D7861B1D47}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E94F0EB3-912E-4DF3-98E7-682CE7CAB5F1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NCode.Disposables.Test", "NCode.Disposables.Test\NCode.Disposables.Test.csproj", "{6F0FA1C0-1C47-4A4D-9684-E0AA32855FCF}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NCode.Disposables.Signed", "NCode.Disposables.Signed\NCode.Disposables.Signed.csproj", "{65C65ECB-7411-4466-9FD7-EFA4F42E5081}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D7050535-87A9-4532-9AE0-5CFB2A6058A7}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B0D3CD88-BDDE-464F-AAB1-E0355B262D41}"
 	ProjectSection(SolutionItems) = preProject
-		.gitattributes = .gitattributes
-		.gitignore = .gitignore
+		.editorconfig = .editorconfig
 		COPYRIGHT.txt = COPYRIGHT.txt
+		global.json = global.json
 		GlobalAssemblyInfo.cs = GlobalAssemblyInfo.cs
 		LICENSE.txt = LICENSE.txt
 		NCodeGroup.png = NCodeGroup.png
@@ -21,26 +17,39 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "NCode.Disposables", "src\NCode.Disposables\NCode.Disposables.xproj", "{B0033BA5-311F-4210-B754-FE4D7C58F12C}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "NCode.Disposables.Signed", "src\NCode.Disposables.Signed\NCode.Disposables.Signed.xproj", "{55534506-87F4-4967-B2FE-FE9FE4429477}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{7DADE5BD-2FB8-4337-A5C4-E982B5D5071E}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "NCode.Disposables.Test", "test\NCode.Disposables.Test\NCode.Disposables.Test.xproj", "{B338DF62-C580-47E6-96B9-4FD91291A06D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{7FD2A4C1-12C6-4EB4-B9C0-B2D7861B1D47}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7FD2A4C1-12C6-4EB4-B9C0-B2D7861B1D47}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7FD2A4C1-12C6-4EB4-B9C0-B2D7861B1D47}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7FD2A4C1-12C6-4EB4-B9C0-B2D7861B1D47}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6F0FA1C0-1C47-4A4D-9684-E0AA32855FCF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6F0FA1C0-1C47-4A4D-9684-E0AA32855FCF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6F0FA1C0-1C47-4A4D-9684-E0AA32855FCF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6F0FA1C0-1C47-4A4D-9684-E0AA32855FCF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{65C65ECB-7411-4466-9FD7-EFA4F42E5081}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{65C65ECB-7411-4466-9FD7-EFA4F42E5081}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{65C65ECB-7411-4466-9FD7-EFA4F42E5081}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{65C65ECB-7411-4466-9FD7-EFA4F42E5081}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B0033BA5-311F-4210-B754-FE4D7C58F12C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B0033BA5-311F-4210-B754-FE4D7C58F12C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B0033BA5-311F-4210-B754-FE4D7C58F12C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B0033BA5-311F-4210-B754-FE4D7C58F12C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{55534506-87F4-4967-B2FE-FE9FE4429477}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55534506-87F4-4967-B2FE-FE9FE4429477}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55534506-87F4-4967-B2FE-FE9FE4429477}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{55534506-87F4-4967-B2FE-FE9FE4429477}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B338DF62-C580-47E6-96B9-4FD91291A06D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B338DF62-C580-47E6-96B9-4FD91291A06D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B338DF62-C580-47E6-96B9-4FD91291A06D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B338DF62-C580-47E6-96B9-4FD91291A06D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B0033BA5-311F-4210-B754-FE4D7C58F12C} = {E94F0EB3-912E-4DF3-98E7-682CE7CAB5F1}
+		{55534506-87F4-4967-B2FE-FE9FE4429477} = {E94F0EB3-912E-4DF3-98E7-682CE7CAB5F1}
+		{B338DF62-C580-47E6-96B9-4FD91291A06D} = {7DADE5BD-2FB8-4337-A5C4-E982B5D5071E}
 	EndGlobalSection
 EndGlobal

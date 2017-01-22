@@ -1,0 +1,43 @@
+﻿{
+  "title": "NCode.Disposables.Signed",
+  "copyright": "Copyright © 2017 NCode Group",
+  "description": "This library (strong name signed) provides a set of useful IDisposable implementations.",
+  "language": "en-US",
+
+  // The actual version number is set during the TeamCity build, but in the "project.json"
+  // file it MUST be "0.0.0-*" in order for the RegEx to find and replace the value.
+  "version": "0.0.0-*",
+
+  "packOptions": {
+    "owners": [ "NCode Group" ],
+    "tags": [ "IDisposable", "Dispose" ],
+    "iconUrl": "https://raw.githubusercontent.com/NCodeGroup/NCode.Disposables/master/NCodeGroup.png",
+    "licenseUrl": "https://raw.githubusercontent.com/NCodeGroup/NCode.Disposables/master/LICENSE.txt",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/NCodeGroup/NCode.Disposables.git"
+    },
+    "releaseNotes": "Built on $timestamp$.\nv2.0.0 - Using .Net Core/Standard.\nv1.0.1 - Added Action and Func overloads.\nv1.0.0 - Initial release."
+  },
+  "authors": [ "Marcin Polewski" ],
+
+  "buildOptions": {
+    "compile": {
+      "includeFiles": "../../GlobalAssemblyInfo.cs",
+      "include": "../NCode.Disposables/*.cs"
+    },
+    "keyFile": "../../NCodeGroup.snk"
+  },
+
+  "dependencies": {
+    "NETStandard.Library": "1.6.1"
+  },
+
+  "frameworks": {
+    // we target netstandard 1.1 so that .NET Framework 4.5 can be used
+    "netstandard1.1": {
+      "imports": "dnxcore50"
+    }
+  }
+
+}
