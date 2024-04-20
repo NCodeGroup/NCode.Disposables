@@ -79,7 +79,7 @@ void Example()
 {
   var resource = CreateResource();
   // ...
-  var first = Disposable.Counter(resource);
+  var first = Disposable.Shared(resource);
   var second = first.AddReference();
   var third = second.AddReference();
   // ...
@@ -111,3 +111,11 @@ void Example()
 Please provide any feedback, comments, or issues to this GitHub project [here][issues].
 
 [issues]: https://github.com/NCodeGroup/NCode.Disposables/issues
+
+## Release Notes
+ 
+* v1.0.0 - Initial release
+* v1.0.1 - Unknown changes
+* v2.0.1 - Unknown changes
+* v2.0.2 - Unknown changes
+* v3.0.0 - Refactor to .NET 8.0
