@@ -36,7 +36,7 @@ public interface IDisposableCollection : IDisposable, ICollection<IDisposable>
 /// <summary>
 /// Provides the implementation for <see cref="IDisposableCollection"/>.
 /// </summary>
-public class DisposableCollection : IDisposableCollection
+public sealed class DisposableCollection : IDisposableCollection
 {
     private int _disposed;
     private readonly List<IDisposable> _list;
@@ -68,21 +68,13 @@ public class DisposableCollection : IDisposableCollection
     /// </summary>
     public void Dispose()
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    /// <summary>
-    /// Disposes all the items contained in this collection.
-    /// </summary>
-    protected virtual void Dispose(bool disposing)
-    {
-        if (Interlocked.CompareExchange(ref _disposed, 1, 0) != 0 || !disposing)
+        if (Interlocked.CompareExchange(ref _disposed, 1, 0) != 0)
         {
             return;
         }
 
         _list.DisposeAll(_ignoreExceptions);
+        _list.Clear();
     }
 
     /// <summary>

@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NCode.Disposables", "NCode.Disposables\NCode.Disposables.csproj", "{04FAC0C0-41EF-4D1B-AAA9-29C487087C6E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NCode.Disposables.Tests", "NCode.Disposables.Tests\NCode.Disposables.Tests.csproj", "{892D424A-E49D-45D2-B056-5E8B3C7C82FD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{04FAC0C0-41EF-4D1B-AAA9-29C487087C6E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{04FAC0C0-41EF-4D1B-AAA9-29C487087C6E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{04FAC0C0-41EF-4D1B-AAA9-29C487087C6E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{892D424A-E49D-45D2-B056-5E8B3C7C82FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{892D424A-E49D-45D2-B056-5E8B3C7C82FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{892D424A-E49D-45D2-B056-5E8B3C7C82FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{892D424A-E49D-45D2-B056-5E8B3C7C82FD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
