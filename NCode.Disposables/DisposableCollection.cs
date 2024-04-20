@@ -1,4 +1,5 @@
 ﻿#region Copyright Preamble
+
 //
 //    Copyright © 2017 NCode Group
 //
@@ -14,50 +15,52 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 //
+
 #endregion
 
-using System;
 using System.Collections;
-using System.Collections.Generic;
-//using System.Linq;
 
-namespace NCode.Disposables
+namespace NCode.Disposables;
+
+/// <summary>
+/// Represents an <see cref="IDisposable"/> collection that contains other
+/// <see cref="IDisposable"/> items that will be disposed when the collection
+/// itself is disposed. The items in the collection are disposed in reverse
+/// order that they were added.
+/// </summary>
+public interface IDisposableCollection : IDisposable, ICollection<IDisposable>
 {
-  /// <summary>
-  /// Represents an <see cref="IDisposable"/> collection that contains other
-  /// <see cref="IDisposable"/> items that will be disposed when the collection
-  /// itself is disposed. The items in the collection are disposed in reverse
-  /// order that they were added.
-  /// </summary>
-  public interface IDisposableCollection : IDisposable, ICollection<IDisposable>
-  {
     // nothing
-  }
+}
 
-  /// <summary>
-  /// Provides the implementation for <see cref="IDisposableCollection"/>.
-  /// </summary>
-  public class DisposableCollection : IDisposableCollection
-  {
-    private bool _disposed;
-    private readonly object _lock = new object();
+/// <summary>
+/// Provides the implementation for <see cref="IDisposableCollection"/>.
+/// </summary>
+public class DisposableCollection : IDisposableCollection
+{
+    private int _disposed;
     private readonly List<IDisposable> _list;
+    private readonly bool _ignoreExceptions;
 
     /// <summary>
     /// Initializes a new instance of <see cref="IDisposableCollection"/> with an empty collection.
     /// </summary>
-    public DisposableCollection()
+    /// <param name="ignoreExceptions"><c>true</c> to ignore any exceptions thrown while disposing individual items.</param>
+    public DisposableCollection(bool ignoreExceptions = false)
     {
-      _list = new List<IDisposable>();
+        _list = new List<IDisposable>();
+        _ignoreExceptions = ignoreExceptions;
     }
 
     /// <summary>
     /// Initializes a new instance of <see cref="IDisposableCollection"/> that contains elements copied from the specified collection.
     /// </summary>
     /// <param name="collection">The collection whose elements are copied to the new <see cref="IDisposableCollection"/>.</param>
-    public DisposableCollection(IEnumerable<IDisposable> collection)
+    /// <param name="ignoreExceptions"><c>true</c> to ignore any exceptions thrown while disposing individual items.</param>
+    public DisposableCollection(IEnumerable<IDisposable> collection, bool ignoreExceptions = false)
     {
-      _list = new List<IDisposable>(collection);
+        _list = collection.ToList();
+        _ignoreExceptions = ignoreExceptions;
     }
 
     /// <summary>
@@ -65,33 +68,21 @@ namespace NCode.Disposables
     /// </summary>
     public void Dispose()
     {
-      Dispose(true);
-      GC.SuppressFinalize(this);
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 
     /// <summary>
-    /// Removes and disposes all the items contained in this collection.
+    /// Disposes all the items contained in this collection.
     /// </summary>
     protected virtual void Dispose(bool disposing)
     {
-      if (_disposed || !disposing) return;
+        if (Interlocked.CompareExchange(ref _disposed, 1, 0) != 0 || !disposing)
+        {
+            return;
+        }
 
-      List<IDisposable> list;
-      lock (_lock)
-      {
-        if (_disposed) return;
-        _disposed = true;
-
-        list = new List<IDisposable>(_list);
-        _list.Clear();
-      }
-
-      // dispose in reverse order for any object dependencies
-      list.Reverse();
-      foreach (var item in list)
-      {
-        item.Dispose();
-      }
+        _list.DisposeAll(_ignoreExceptions);
     }
 
     /// <summary>
@@ -111,16 +102,9 @@ namespace NCode.Disposables
     /// <exception cref="ObjectDisposedException">The <see cref="IDisposableCollection"/> is disposed.</exception>
     public void Add(IDisposable item)
     {
-      if (item == null)
-        throw new ArgumentNullException(nameof(item));
-
-      lock (_lock)
-      {
-        if (_disposed)
-          throw new ObjectDisposedException(GetType().FullName);
+        ArgumentNullException.ThrowIfNull(item);
 
         _list.Add(item);
-      }
     }
 
     /// <summary>
@@ -133,16 +117,9 @@ namespace NCode.Disposables
     /// <exception cref="ObjectDisposedException">The <see cref="IDisposableCollection"/> is disposed.</exception>
     public bool Remove(IDisposable item)
     {
-      if (item == null)
-        throw new ArgumentNullException(nameof(item));
-
-      lock (_lock)
-      {
-        if (_disposed)
-          throw new ObjectDisposedException(GetType().FullName);
+        ArgumentNullException.ThrowIfNull(item);
 
         return _list.Remove(item);
-      }
     }
 
     /// <summary>
@@ -151,13 +128,7 @@ namespace NCode.Disposables
     /// <exception cref="ObjectDisposedException">The <see cref="IDisposableCollection"/> is disposed.</exception>
     public void Clear()
     {
-      lock (_lock)
-      {
-        if (_disposed)
-          throw new ObjectDisposedException(GetType().FullName);
-
         _list.Clear();
-      }
     }
 
     /// <summary>
@@ -170,16 +141,9 @@ namespace NCode.Disposables
     /// <exception cref="ObjectDisposedException">The <see cref="IDisposableCollection"/> is disposed.</exception>
     public bool Contains(IDisposable item)
     {
-      if (item == null)
-        throw new ArgumentNullException(nameof(item));
-
-      lock (_lock)
-      {
-        if (_disposed)
-          throw new ObjectDisposedException(GetType().FullName);
+        ArgumentNullException.ThrowIfNull(item);
 
         return _list.Contains(item);
-      }
     }
 
     /// <summary>
@@ -193,16 +157,9 @@ namespace NCode.Disposables
     /// <exception cref="ObjectDisposedException">The <see cref="IDisposableCollection"/> is disposed.</exception>
     public void CopyTo(IDisposable[] array, int arrayIndex)
     {
-      if (array == null)
-        throw new ArgumentNullException(nameof(array));
-
-      lock (_lock)
-      {
-        if (_disposed)
-          throw new ObjectDisposedException(GetType().FullName);
+        ArgumentNullException.ThrowIfNull(array);
 
         _list.CopyTo(array, arrayIndex);
-      }
     }
 
     /// <summary>
@@ -214,21 +171,11 @@ namespace NCode.Disposables
     /// <exception cref="ObjectDisposedException">The <see cref="IDisposableCollection"/> is disposed.</exception>
     public IEnumerator<IDisposable> GetEnumerator()
     {
-      IEnumerable<IDisposable> list;
-      lock (_lock)
-      {
-        if (_disposed)
-          throw new ObjectDisposedException(GetType().FullName);
-
-        list = _list.ToArray();
-      }
-      return list.GetEnumerator();
+        return _list.GetEnumerator();
     }
 
     IEnumerator IEnumerable.GetEnumerator()
     {
-      return GetEnumerator();
+        return GetEnumerator();
     }
-
-  }
 }

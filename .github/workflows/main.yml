@@ -1,0 +1,92 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  release:
+    types: [ "published" ]
+
+env:
+  BUILD_CONFIGURATION: Release
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+  DOTNET_NOLOGO: true
+  DOTNET_VERSION: 8.0.x
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${DOTNET_VERSION}
+      - name: Extract version from tag
+        uses: dhkatz/get-version-action@v3.0.0
+        id: extract_version
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --no-restore --configuration ${BUILD_CONFIGURATION} /p:Version="${BUILD_VERSION}"
+        env:
+          BUILD_VERSION: ${{ steps.extract_version.outputs.is-semver == 'true' && steps.extract_version.outputs.version-without-v || '0.0.0' }}
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: binaries
+          path: |
+            ./*/bin/*
+            ./*/obj/*
+          if-no-files-found: error
+          retention-days: 5
+
+  test:
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: binaries
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${DOTNET_VERSION}
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Run rests
+        run: dotnet test --no-build --verbosity normal --configuration ${BUILD_CONFIGURATION} --logger trx
+      - name: Publish tests
+        uses: dorny/test-reporter@v1
+        if: success() || failure()
+        with:
+          name: test report
+          path: ./*/TestResults/*.trx
+          reporter: dotnet-trx
+
+  publish:
+    if: github.event_name == 'release' && github.event.action == 'published' && github.event.release.tag_name
+    needs: [ test ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: binaries
+      - name: Upload release artifacts
+        run: gh release upload ${{ github.event.release.tag_name }} ./*/bin/${BUILD_CONFIGURATION}/*.nupkg ./*/bin/${BUILD_CONFIGURATION}/*.snupkg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${DOTNET_VERSION}
+      - name: Publish NuGet package
+        run: dotnet nuget push ./*/bin/${BUILD_CONFIGURATION}/*.nupkg --api-key "${{ secrets.NUGET_APIKEY }}" --source https://api.nuget.org/v3/index.json
