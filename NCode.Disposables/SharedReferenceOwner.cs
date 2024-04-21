@@ -54,6 +54,7 @@ internal sealed class SharedReferenceOwner<T>(
 
     private void Release()
     {
+        var spinWait = new SpinWait();
         while (true)
         {
             var counter = Volatile.Read(ref _counter);
@@ -74,6 +75,8 @@ internal sealed class SharedReferenceOwner<T>(
 
                 return;
             }
+
+            spinWait.SpinOnce();
         }
     }
 
@@ -91,6 +94,7 @@ internal sealed class SharedReferenceOwner<T>(
     /// <inheritdoc />
     public bool TryAddReference([MaybeNullWhen(false)] out ISharedReference<T> reference)
     {
+        var spinWait = new SpinWait();
         while (true)
         {
             var counter = Volatile.Read(ref _counter);
@@ -107,6 +111,8 @@ internal sealed class SharedReferenceOwner<T>(
                 reference = new SharedReferenceLease<T>(this, Release);
                 return true;
             }
+
+            spinWait.SpinOnce();
         }
     }
 }

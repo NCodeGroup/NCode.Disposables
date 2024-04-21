@@ -32,6 +32,118 @@ public static class Disposable
     public static IDisposable Empty => DisposableEmpty.Singleton;
 
     /// <summary>
+    /// Creates and returns a new instance of <see cref="IDisposableAggregate"/>
+    /// that contains (i.e. aggregates) a property to another <see cref="IDisposable"/>
+    /// instance.
+    /// </summary>
+    /// <param name="disposable">The underlying <see cref="IDisposable"/> instance that the <see cref="IDisposableAggregate"/> will contain (i.e. aggregate).</param>
+    public static IDisposableAggregate Aggregate(IDisposable? disposable)
+    {
+        return new DisposableAggregate(disposable);
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of an <see cref="IDisposable"/>
+    /// instance which will invoke the <see cref="IDisposable.Dispose"/>
+    /// method of an underlying resource using an asynchronous or synchronous
+    /// operation from a <see cref="SynchronizationContext"/>.
+    /// </summary>
+    /// <param name="disposable">The underlying <see cref="IDisposable"/> instance to synchronize.</param>
+    /// <param name="context">The <see cref="SynchronizationContext"/> to invoke the operation.</param>
+    /// <param name="async"><c>true</c> to asynchronously invoke the operation; otherwise, <c>false</c> to synchronously invoke the operation.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="disposable"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="context"/> is <c>null</c>.</exception>
+    public static IDisposable Context(IDisposable disposable, SynchronizationContext context, bool async = false)
+    {
+        ArgumentNullException.ThrowIfNull(disposable);
+        ArgumentNullException.ThrowIfNull(context);
+
+        return new DisposableContext(disposable, context, async);
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="ISharedReference{T}"/>
+    /// which contains an <see cref="IDisposable"/> resource that uses reference
+    /// counting and only disposes the underlying resource when all the
+    /// references have been released (i.e. reference count is zero).
+    /// </summary>
+    /// <param name="value">The underlying <see cref="IDisposable"/> instance that this <see cref="ISharedReference{T}"/> will contain.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <c>null</c>.</exception>
+    public static ISharedReference<T> Shared<T>(T value)
+        where T : IDisposable
+    {
+        ArgumentNullException.ThrowIfNull(value);
+
+        return SharedReference.Create(value);
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="ISharedReference{T}"/>
+    /// which contains an <see cref="IDisposable"/> resource that uses reference
+    /// counting and only disposes the underlying resource when all the
+    /// references have been released (i.e. reference count is zero).
+    /// </summary>
+    /// <param name="value">The underlying value that the <see cref="ISharedReference{T}"/> will contain.</param>
+    /// <param name="onRelease">The callback method used to release/cleanup the shared reference.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <c>null</c>.</exception>
+    public static ISharedReference<T> Shared<T>(T value, Action<T> onRelease)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        ArgumentNullException.ThrowIfNull(onRelease);
+
+        return SharedReference.Create(value, onRelease);
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="IDisposableCollection"/>
+    /// which contains other <see cref="IDisposable"/> items that will be
+    /// disposed when the collection itself is disposed. The collection is
+    /// initialized from a variable argument array of <see cref="IDisposable"/>
+    /// items.
+    /// </summary>
+    /// <param name="collection">The collection whose elements are copied to the new <see cref="IDisposableCollection"/>.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <c>null</c>.</exception>
+    public static IDisposableCollection Collection(params IDisposable[] collection)
+    {
+        ArgumentNullException.ThrowIfNull(collection);
+
+        return Collection(collection.AsEnumerable());
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="IDisposableCollection"/>
+    /// which contains other <see cref="IDisposable"/> items that will be
+    /// disposed when the collection itself is disposed. The collection is
+    /// initialized from a variable argument array of <see cref="IDisposable"/>
+    /// items.
+    /// </summary>
+    /// <param name="ignoreExceptions"><c>true</c> to ignore any exceptions thrown while disposing individual items.</param>
+    /// <param name="collection">The collection whose elements are copied to the new <see cref="IDisposableCollection"/>.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <c>null</c>.</exception>
+    public static IDisposableCollection Collection(bool ignoreExceptions, params IDisposable[] collection)
+    {
+        ArgumentNullException.ThrowIfNull(collection);
+
+        return Collection(collection.AsEnumerable(), ignoreExceptions);
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="IDisposableCollection"/>
+    /// which contains other <see cref="IDisposable"/> items that will be
+    /// disposed when the collection itself is disposed. The collection is
+    /// initialized from an enumeration of <see cref="IDisposable"/> items.
+    /// </summary>
+    /// <param name="collection">The collection whose elements are copied to the new <see cref="IDisposableCollection"/>.</param>
+    /// <param name="ignoreExceptions"><c>true</c> to ignore any exceptions thrown while disposing individual items.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <c>null</c>.</exception>
+    public static IDisposableCollection Collection(IEnumerable<IDisposable> collection, bool ignoreExceptions = false)
+    {
+        ArgumentNullException.ThrowIfNull(collection);
+
+        return new DisposableCollection(collection, ignoreExceptions);
+    }
+
+    /// <summary>
     /// Creates and returns a new instance of <see cref="IDisposable"/> that
     /// will invoke an <see cref="Action"/> when <see cref="IDisposable.Dispose"/>
     /// is called.
@@ -427,117 +539,5 @@ public static class Disposable
         ArgumentNullException.ThrowIfNull(action);
 
         return new DisposableAction(() => action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8));
-    }
-
-    /// <summary>
-    /// Creates and returns a new instance of <see cref="IDisposableAggregate"/>
-    /// that contains (i.e. aggregates) a property to another <see cref="IDisposable"/>
-    /// instance.
-    /// </summary>
-    /// <param name="disposable">The underlying <see cref="IDisposable"/> instance that the <see cref="IDisposableAggregate"/> will contain (i.e. aggregate).</param>
-    public static IDisposableAggregate Aggregate(IDisposable? disposable)
-    {
-        return new DisposableAggregate(disposable);
-    }
-
-    /// <summary>
-    /// Creates and returns a new instance of an <see cref="IDisposable"/>
-    /// instance which will invoke the <see cref="IDisposable.Dispose"/>
-    /// method of an underlying resource using an asynchronous or synchronous
-    /// operation from a <see cref="SynchronizationContext"/>.
-    /// </summary>
-    /// <param name="disposable">The underlying <see cref="IDisposable"/> instance to synchronize.</param>
-    /// <param name="context">The <see cref="SynchronizationContext"/> to invoke the operation.</param>
-    /// <param name="async"><c>true</c> to asynchronously invoke the operation; otherwise, <c>false</c> to synchronously invoke the operation.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="disposable"/> is <c>null</c>.</exception>
-    /// <exception cref="ArgumentNullException"><paramref name="context"/> is <c>null</c>.</exception>
-    public static IDisposable Context(IDisposable disposable, SynchronizationContext context, bool async = false)
-    {
-        ArgumentNullException.ThrowIfNull(disposable);
-        ArgumentNullException.ThrowIfNull(context);
-
-        return new DisposableContext(disposable, context, async);
-    }
-
-    /// <summary>
-    /// Creates and returns a new instance of <see cref="ISharedReference{T}"/>
-    /// which contains an <see cref="IDisposable"/> resource that uses reference
-    /// counting and only disposes the underlying resource when all the
-    /// references have been released (i.e. reference count is zero).
-    /// </summary>
-    /// <param name="value">The underlying <see cref="IDisposable"/> instance that this <see cref="ISharedReference{T}"/> will contain.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <c>null</c>.</exception>
-    public static ISharedReference<T> Shared<T>(T value)
-        where T : IDisposable
-    {
-        ArgumentNullException.ThrowIfNull(value);
-
-        return SharedReference.Create(value);
-    }
-
-    /// <summary>
-    /// Creates and returns a new instance of <see cref="ISharedReference{T}"/>
-    /// which contains an <see cref="IDisposable"/> resource that uses reference
-    /// counting and only disposes the underlying resource when all the
-    /// references have been released (i.e. reference count is zero).
-    /// </summary>
-    /// <param name="value">The underlying value that the <see cref="ISharedReference{T}"/> will contain.</param>
-    /// <param name="onRelease">The callback method used to release/cleanup the shared reference.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <c>null</c>.</exception>
-    public static ISharedReference<T> Shared<T>(T value, Action<T> onRelease)
-    {
-        ArgumentNullException.ThrowIfNull(value);
-        ArgumentNullException.ThrowIfNull(onRelease);
-
-        return SharedReference.Create(value, onRelease);
-    }
-
-    /// <summary>
-    /// Creates and returns a new instance of <see cref="IDisposableCollection"/>
-    /// which contains other <see cref="IDisposable"/> items that will be
-    /// disposed when the collection itself is disposed. The collection is
-    /// initialized from a variable argument array of <see cref="IDisposable"/>
-    /// items.
-    /// </summary>
-    /// <param name="collection">The collection whose elements are copied to the new <see cref="IDisposableCollection"/>.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <c>null</c>.</exception>
-    public static IDisposableCollection Collection(params IDisposable[] collection)
-    {
-        ArgumentNullException.ThrowIfNull(collection);
-
-        return Collection(collection.AsEnumerable());
-    }
-
-    /// <summary>
-    /// Creates and returns a new instance of <see cref="IDisposableCollection"/>
-    /// which contains other <see cref="IDisposable"/> items that will be
-    /// disposed when the collection itself is disposed. The collection is
-    /// initialized from a variable argument array of <see cref="IDisposable"/>
-    /// items.
-    /// </summary>
-    /// <param name="ignoreExceptions"><c>true</c> to ignore any exceptions thrown while disposing individual items.</param>
-    /// <param name="collection">The collection whose elements are copied to the new <see cref="IDisposableCollection"/>.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <c>null</c>.</exception>
-    public static IDisposableCollection Collection(bool ignoreExceptions, params IDisposable[] collection)
-    {
-        ArgumentNullException.ThrowIfNull(collection);
-
-        return Collection(collection.AsEnumerable(), ignoreExceptions);
-    }
-
-    /// <summary>
-    /// Creates and returns a new instance of <see cref="IDisposableCollection"/>
-    /// which contains other <see cref="IDisposable"/> items that will be
-    /// disposed when the collection itself is disposed. The collection is
-    /// initialized from an enumeration of <see cref="IDisposable"/> items.
-    /// </summary>
-    /// <param name="collection">The collection whose elements are copied to the new <see cref="IDisposableCollection"/>.</param>
-    /// <param name="ignoreExceptions"><c>true</c> to ignore any exceptions thrown while disposing individual items.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <c>null</c>.</exception>
-    public static IDisposableCollection Collection(IEnumerable<IDisposable> collection, bool ignoreExceptions = false)
-    {
-        ArgumentNullException.ThrowIfNull(collection);
-
-        return new DisposableCollection(collection, ignoreExceptions);
     }
 }

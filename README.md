@@ -119,4 +119,4 @@ Please provide any feedback, comments, or issues to this GitHub project [here][i
 * v1.0.1 - Unknown changes
 * v2.0.1 - Unknown changes
 * v2.0.2 - Unknown changes
-* v3.0.0 - Refactor to .NET 8.0
+* v3.0.0 - Update to .NET 8.0 and refactor shared reference implementation

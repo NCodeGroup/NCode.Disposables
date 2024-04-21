@@ -95,7 +95,7 @@ public class DisposableCollectionTests
     [Fact]
     public void Dispose_Reverse()
     {
-        var order = String.Empty;
+        var order = string.Empty;
         var collection = new DisposableCollection();
 
         const int count = 6;
