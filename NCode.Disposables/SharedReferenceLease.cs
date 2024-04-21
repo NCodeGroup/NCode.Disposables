@@ -21,9 +21,9 @@ using System.Diagnostics.CodeAnalysis;
 namespace NCode.Disposables;
 
 internal sealed class SharedReferenceLease<T>(
-    ISharedReference<T> owner,
+    ISharedReferenceScope<T> owner,
     Action onRelease
-) : ISharedReference<T>
+) : ISharedReferenceScope<T>
 {
     private int _released;
 
@@ -40,10 +40,10 @@ internal sealed class SharedReferenceLease<T>(
     }
 
     /// <inheritdoc />
-    public ISharedReference<T> AddReference() =>
+    public ISharedReferenceScope<T> AddReference() =>
         owner.AddReference();
 
     /// <inheritdoc />
-    public bool TryAddReference([MaybeNullWhen(false)] out ISharedReference<T> reference) =>
+    public bool TryAddReference([MaybeNullWhen(false)] out ISharedReferenceScope<T> reference) =>
         owner.TryAddReference(out reference);
 }

@@ -62,14 +62,14 @@ public static class Disposable
     }
 
     /// <summary>
-    /// Creates and returns a new instance of <see cref="ISharedReference{T}"/>
+    /// Creates and returns a new instance of <see cref="ISharedReferenceScope{T}"/>
     /// which contains an <see cref="IDisposable"/> resource that uses reference
     /// counting and only disposes the underlying resource when all the
     /// references have been released (i.e. reference count is zero).
     /// </summary>
-    /// <param name="value">The underlying <see cref="IDisposable"/> instance that this <see cref="ISharedReference{T}"/> will contain.</param>
+    /// <param name="value">The underlying <see cref="IDisposable"/> instance that this <see cref="ISharedReferenceScope{T}"/> will contain.</param>
     /// <exception cref="ArgumentNullException"><paramref name="value"/> is <c>null</c>.</exception>
-    public static ISharedReference<T> Shared<T>(T value)
+    public static ISharedReferenceScope<T> Shared<T>(T value)
         where T : IDisposable
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -78,15 +78,15 @@ public static class Disposable
     }
 
     /// <summary>
-    /// Creates and returns a new instance of <see cref="ISharedReference{T}"/>
+    /// Creates and returns a new instance of <see cref="ISharedReferenceScope{T}"/>
     /// which contains an <see cref="IDisposable"/> resource that uses reference
     /// counting and only disposes the underlying resource when all the
     /// references have been released (i.e. reference count is zero).
     /// </summary>
-    /// <param name="value">The underlying value that the <see cref="ISharedReference{T}"/> will contain.</param>
+    /// <param name="value">The underlying value that the <see cref="ISharedReferenceScope{T}"/> will contain.</param>
     /// <param name="onRelease">The callback method used to release/cleanup the shared reference.</param>
     /// <exception cref="ArgumentNullException"><paramref name="value"/> is <c>null</c>.</exception>
-    public static ISharedReference<T> Shared<T>(T value, Action<T> onRelease)
+    public static ISharedReferenceScope<T> Shared<T>(T value, Action<T> onRelease)
     {
         ArgumentNullException.ThrowIfNull(value);
         ArgumentNullException.ThrowIfNull(onRelease);

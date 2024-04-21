@@ -25,7 +25,7 @@ public class SharedReferenceLeaseTests
     {
         var value = new object();
         var onRelease = () => { };
-        var mockOwner = new Mock<ISharedReference<object>>(MockBehavior.Strict);
+        var mockOwner = new Mock<ISharedReferenceScope<object>>(MockBehavior.Strict);
         mockOwner
             .Setup(x => x.Value)
             .Returns(value)
@@ -40,7 +40,7 @@ public class SharedReferenceLeaseTests
     {
         var releaseCount = 0;
         var onRelease = () => { ++releaseCount; };
-        var mockOwner = new Mock<ISharedReference<object>>(MockBehavior.Strict);
+        var mockOwner = new Mock<ISharedReferenceScope<object>>(MockBehavior.Strict);
         var lease = new SharedReferenceLease<object>(mockOwner.Object, onRelease);
         lease.Dispose();
         lease.Dispose();
@@ -51,8 +51,8 @@ public class SharedReferenceLeaseTests
     public void AddReference_Valid()
     {
         var onRelease = () => { };
-        var mockOwner = new Mock<ISharedReference<object>>(MockBehavior.Strict);
-        var mockReference = new Mock<ISharedReference<object>>(MockBehavior.Strict);
+        var mockOwner = new Mock<ISharedReferenceScope<object>>(MockBehavior.Strict);
+        var mockReference = new Mock<ISharedReferenceScope<object>>(MockBehavior.Strict);
         mockOwner
             .Setup(x => x.AddReference())
             .Returns(mockReference.Object)
@@ -67,9 +67,9 @@ public class SharedReferenceLeaseTests
     public void TryAddReference_Valid()
     {
         var onRelease = () => { };
-        var mockOwner = new Mock<ISharedReference<object>>(MockBehavior.Strict);
-        var mockReference = new Mock<ISharedReference<object>>(MockBehavior.Strict);
-        ISharedReference<object>? newReference = mockReference.Object;
+        var mockOwner = new Mock<ISharedReferenceScope<object>>(MockBehavior.Strict);
+        var mockReference = new Mock<ISharedReferenceScope<object>>(MockBehavior.Strict);
+        ISharedReferenceScope<object>? newReference = mockReference.Object;
         mockOwner
             .Setup(x => x.TryAddReference(out newReference))
             .Returns(true)

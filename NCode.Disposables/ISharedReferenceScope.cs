@@ -1,4 +1,4 @@
-﻿#region Copyright Preamble
+#region Copyright Preamble
 
 // Copyright @ 2024 NCode Group
 //
@@ -16,8 +16,6 @@
 
 #endregion
 
-using System.Diagnostics.CodeAnalysis;
-
 namespace NCode.Disposables;
 
 /// <summary>
@@ -26,12 +24,12 @@ namespace NCode.Disposables;
 /// references have been released (i.e. reference count is zero).
 /// </summary>
 /// <remarks>
-/// The very first instance of <see cref="ISharedReference{T}"/> will be
+/// The very first instance of <see cref="ISharedReferenceScope{T}"/> will be
 /// initialized with a count of one (1) and additional references will
 /// increment that count until they are disposed.
 /// </remarks>
 /// <typeparam name="T">The type of shared reference.</typeparam>
-public interface ISharedReference<T> : IDisposable
+public interface ISharedReferenceScope<T> : ISharedReferenceProvider<T>, IDisposable
 {
     /// <summary>
     /// Gets the value of the shared reference.
@@ -39,22 +37,4 @@ public interface ISharedReference<T> : IDisposable
     /// <exception cref="ObjectDisposedException">The reference count has reached zero (0)
     /// and the underlying resource has been disposed already.</exception>
     T Value { get; }
-
-    /// <summary>
-    /// Increments the reference count and returns a disposable resource that
-    /// can be used to decrement the newly incremented reference count.
-    /// </summary>
-    /// <exception cref="ObjectDisposedException">The reference count has reached zero (0)
-    /// and the underlying resource has been disposed already.</exception>
-    ISharedReference<T> AddReference();
-
-    /// <summary>
-    /// Attempts to increment the reference count and outputs a disposable resource that
-    /// can be used to decrement the newly incremented reference count.
-    /// </summary>
-    /// <param name="reference">Destination for the <see cref="ISharedReference{T}"/> instance
-    /// if the original reference count is greater than zero (0).</param>
-    /// <returns><c>true</c> if the original reference count was greater than zero (0) and
-    /// a new shared reference was successfully created with an incremented reference count.</returns>
-    bool TryAddReference([MaybeNullWhen(false)] out ISharedReference<T> reference);
 }
