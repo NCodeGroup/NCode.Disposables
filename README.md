@@ -120,3 +120,4 @@ Please provide any feedback, comments, or issues to this GitHub project [here][i
 * v2.0.1 - Unknown changes
 * v2.0.2 - Port to .NET Core/Standard
 * v3.0.0 - Port to .NET 8.0 and refactor shared reference implementation
+* v3.0.1 - Updated xml documentation

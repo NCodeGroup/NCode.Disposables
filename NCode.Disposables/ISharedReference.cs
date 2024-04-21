@@ -36,6 +36,8 @@ public interface ISharedReference<T> : IDisposable
     /// <summary>
     /// Gets the value of the shared reference.
     /// </summary>
+    /// <exception cref="ObjectDisposedException">The reference count has reached zero (0)
+    /// and the underlying resource has been disposed already.</exception>
     T Value { get; }
 
     /// <summary>
