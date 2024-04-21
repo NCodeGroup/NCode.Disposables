@@ -19,7 +19,7 @@
 namespace NCode.Disposables;
 
 /// <summary>
-/// Contains factory methods for creating <see cref="ISharedReferenceScope{T}"/> instances.
+/// Contains factory methods for creating <see cref="ISharedReference{T}"/> instances.
 /// </summary>
 public static class SharedReference
 {
@@ -30,25 +30,25 @@ public static class SharedReference
     }
 
     /// <summary>
-    /// Creates a new <see cref="ISharedReferenceScope{T}"/> instance that uses reference counting to share the specified value.
+    /// Creates a new <see cref="ISharedReference{T}"/> instance that uses reference counting to share the specified value.
     /// This variant will automatically dispose the value when the last reference is released.
     /// </summary>
     /// <param name="value">The underlying value to be shared.</param>
     /// <typeparam name="T">The type of the shared value.</typeparam>
-    public static ISharedReferenceScope<T> Create<T>(T value)
+    public static ISharedReference<T> Create<T>(T value)
         where T : IDisposable
     {
         return new SharedReferenceOwner<T>(value, Dispose);
     }
 
     /// <summary>
-    /// Creates a new <see cref="ISharedReferenceScope{T}"/> instance that uses reference counting to share the specified value.
+    /// Creates a new <see cref="ISharedReference{T}"/> instance that uses reference counting to share the specified value.
     /// This variant will call the specified <paramref name="onRelease"/> action when the last reference is released.
     /// </summary>
     /// <param name="value">The underlying value to be shared.</param>
     /// <param name="onRelease">The method to be called when the last reference is released.</param>
     /// <typeparam name="T">The type of the shared value.</typeparam>
-    public static ISharedReferenceScope<T> Create<T>(T value, Action<T> onRelease)
+    public static ISharedReference<T> Create<T>(T value, Action<T> onRelease)
     {
         return new SharedReferenceOwner<T>(value, onRelease);
     }

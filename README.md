@@ -122,3 +122,4 @@ Please provide any feedback, comments, or issues to this GitHub project [here][i
 * v3.0.0 - Port to .NET 8.0 and refactor shared reference implementation
 * v3.0.1 - Updated xml documentation
 * v3.1.0 - Split ISharedReference into ISharedReferenceScope and ISharedReferenceProvider
+* v4.0.0 - Revert the split

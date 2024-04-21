@@ -27,12 +27,12 @@ namespace NCode.Disposables;
 public static class DisposableExtensions
 {
     /// <summary>
-    /// Creates a new <see cref="ISharedReferenceScope{T}"/> instance that uses reference counting to share the specified value.
+    /// Creates a new <see cref="ISharedReference{T}"/> instance that uses reference counting to share the specified value.
     /// This variant will automatically dispose the value when the last reference is released.
     /// </summary>
     /// <param name="value">The underlying value to be shared.</param>
     /// <typeparam name="T">The type of the shared value.</typeparam>
-    public static ISharedReferenceScope<T> AsSharedReference<T>(this T value)
+    public static ISharedReference<T> AsSharedReference<T>(this T value)
         where T : IDisposable
     {
         return SharedReference.Create(value);

@@ -24,7 +24,7 @@ namespace NCode.Disposables;
 internal sealed class SharedReferenceOwner<T>(
     T value,
     Action<T> onRelease
-) : ISharedReferenceScope<T>
+) : ISharedReference<T>
 {
     private int _released;
     private ImmutableCounter _counter = new();
@@ -81,7 +81,7 @@ internal sealed class SharedReferenceOwner<T>(
     }
 
     /// <inheritdoc />
-    public ISharedReferenceScope<T> AddReference()
+    public ISharedReference<T> AddReference()
     {
         if (!TryAddReference(out var reference))
         {
@@ -92,7 +92,7 @@ internal sealed class SharedReferenceOwner<T>(
     }
 
     /// <inheritdoc />
-    public bool TryAddReference([MaybeNullWhen(false)] out ISharedReferenceScope<T> reference)
+    public bool TryAddReference([MaybeNullWhen(false)] out ISharedReference<T> reference)
     {
         var spinWait = new SpinWait();
         while (true)
