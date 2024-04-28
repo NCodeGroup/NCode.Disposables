@@ -20,70 +20,70 @@
 
 namespace NCode.Disposables.Tests;
 
-public class DisposableCollectionTests
+public class AsyncDisposableCollectionTests
 {
     [Fact]
-    public void Dispose_Count_IsEmpty()
+    public async Task Dispose_Count_IsEmpty()
     {
-        var collection = new DisposableCollection();
-        collection.Dispose();
+        var collection = new AsyncDisposableCollection();
+        await collection.DisposeAsync();
 
         var count = collection.Count;
         Assert.Equal(0, count);
     }
 
     [Fact]
-    public void Add_Dispose()
+    public async Task Add_Dispose()
     {
-        var collection = new DisposableCollection();
+        var collection = new AsyncDisposableCollection();
 
-        var disposable = new Mock<IDisposable>(MockBehavior.Strict);
-        disposable.Setup(x => x.Dispose());
+        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        disposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
         collection.Add(disposable.Object);
 
-        collection.Dispose();
-        disposable.Verify(x => x.Dispose(), Times.Once);
+        await collection.DisposeAsync();
+        disposable.Verify(x => x.DisposeAsync(), Times.Once);
         Assert.Empty(collection);
     }
 
     [Fact]
-    public void Add_Remove_Dispose()
+    public async Task Add_Remove_Dispose()
     {
-        var collection = new DisposableCollection();
+        var collection = new AsyncDisposableCollection();
 
-        var disposable = new Mock<IDisposable>(MockBehavior.Strict);
-        disposable.Setup(x => x.Dispose());
+        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        disposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
         collection.Add(disposable.Object);
 
         var contains = collection.Remove(disposable.Object);
         Assert.True(contains);
 
-        collection.Dispose();
-        disposable.Verify(x => x.Dispose(), Times.Never);
+        await collection.DisposeAsync();
+        disposable.Verify(x => x.DisposeAsync(), Times.Never);
         Assert.Empty(collection);
     }
 
     [Fact]
-    public void Add_Clear_Dispose()
+    public async Task Add_Clear_Dispose()
     {
-        var collection = new DisposableCollection();
+        var collection = new AsyncDisposableCollection();
 
-        var disposable = new Mock<IDisposable>(MockBehavior.Strict);
-        disposable.Setup(x => x.Dispose());
+        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        disposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
         collection.Add(disposable.Object);
         collection.Clear();
 
-        collection.Dispose();
-        disposable.Verify(x => x.Dispose(), Times.Never);
+        await collection.DisposeAsync();
+        disposable.Verify(x => x.DisposeAsync(), Times.Never);
         Assert.Empty(collection);
     }
 
     [Fact]
     public void Add_Contains()
     {
-        var collection = new DisposableCollection();
+        var collection = new AsyncDisposableCollection();
 
-        var disposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
         collection.Add(disposable.Object);
 
         var contains = collection.Contains(disposable.Object);
@@ -92,22 +92,22 @@ public class DisposableCollectionTests
     }
 
     [Fact]
-    public void Dispose_Reverse()
+    public async Task Dispose_Reverse()
     {
         var order = string.Empty;
-        var collection = new DisposableCollection();
+        var collection = new AsyncDisposableCollection();
 
         const int count = 6;
         for (var i = 1; i <= count; ++i)
         {
             var local = i;
-            var disposable = new Mock<IDisposable>(MockBehavior.Strict);
-            disposable.Setup(x => x.Dispose()).Callback(() => order += local);
+            var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+            disposable.Setup(x => x.DisposeAsync()).Callback(() => order += local).Returns(ValueTask.CompletedTask);
             collection.Add(disposable.Object);
         }
 
         Assert.Equal(count, collection.Count);
-        collection.Dispose();
+        await collection.DisposeAsync();
 
         Assert.Empty(collection);
         Assert.Equal("654321", order);

@@ -22,29 +22,29 @@ using System.Runtime.ExceptionServices;
 namespace NCode.Disposables;
 
 /// <summary>
-/// Provides various extension methods for <see cref="IDisposable"/> instances.
+/// Provides various extension methods for <see cref="IAsyncDisposable"/> instances.
 /// </summary>
-public static class DisposableExtensions
+public static class AsyncDisposableExtensions
 {
     /// <summary>
-    /// Creates a new <see cref="ISharedReference{T}"/> instance that uses reference counting to share the specified value.
+    /// Creates a new <see cref="IAsyncSharedReference{T}"/> instance that uses reference counting to share the specified value.
     /// This variant will automatically dispose the value when the last reference is released.
     /// </summary>
     /// <param name="value">The underlying value to be shared.</param>
     /// <typeparam name="T">The type of the shared value.</typeparam>
-    public static ISharedReference<T> AsSharedReference<T>(this T value)
-        where T : IDisposable
+    public static IAsyncSharedReference<T> AsAsyncSharedReference<T>(this T value)
+        where T : IAsyncDisposable
     {
-        return SharedReference.Create(value);
+        return AsyncSharedReference.Create(value);
     }
 
     /// <summary>
-    /// Provides a safe way to dispose of a collection of <see cref="IDisposable"/> instances.
+    /// Provides a safe way to dispose of a collection of <see cref="IAsyncDisposable"/> instances.
     /// </summary>
-    /// <param name="collection">The collection of <see cref="IDisposable"/> instances.</param>
+    /// <param name="collection">The collection of <see cref="IAsyncDisposable"/> instances.</param>
     /// <param name="ignoreExceptions"><c>true</c> to ignore any exceptions thrown while disposing individual items.</param>
-    public static void DisposeAll(
-        this IEnumerable<IDisposable?> collection,
+    public static async ValueTask DisposeAllAsync(
+        this IEnumerable<IAsyncDisposable?> collection,
         bool ignoreExceptions = false)
     {
         List<Exception>? exceptions = null;
@@ -53,7 +53,8 @@ public static class DisposableExtensions
         {
             try
             {
-                item?.Dispose();
+                if (item is not null)
+                    await item.DisposeAsync();
             }
             catch (Exception exception)
             {

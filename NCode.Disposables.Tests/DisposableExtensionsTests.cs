@@ -61,7 +61,7 @@ public class DisposableExtensionsTests
             Disposable.Create(() => order += "2"),
             Disposable.Create(() => order += "3")
         };
-        Assert.Throws<InvalidOperationException>(() => { collection.DisposeAll(); });
+        Assert.Throws<InvalidOperationException>(() => collection.DisposeAll());
         collection.DisposeAll();
         Assert.Equal("321", order);
     }
@@ -78,7 +78,7 @@ public class DisposableExtensionsTests
             Disposable.Create(() => throw new InvalidOperationException()),
             Disposable.Create(() => order += "3")
         };
-        var exception = Assert.Throws<AggregateException>(() => { collection.DisposeAll(); });
+        var exception = Assert.Throws<AggregateException>(() => collection.DisposeAll());
         Assert.Equal(2, exception.InnerExceptions.Count);
         collection.DisposeAll();
         Assert.Equal("321", order);
