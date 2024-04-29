@@ -6,6 +6,18 @@ This library provides a set of useful `IDisposable` and `IAsyncDisposable` imple
 the `IDisposable` interface is used in the examples below, but the same implementations are available for
 `IAsyncDisposable` as well.
 
+## Disposable Async Adapter
+Provides an `IAsyncDisposable` adapter that wraps an `IDisposable` resource and forwards the `DisposeAsync` method to the `Dispose` method of the underlying resource.
+
+```csharp
+async ValueTask Example()
+{
+    IDisposable resource = CreateSomeResource();
+    IAsyncDisposable asyncDisposable = AsyncDisposable.Adapt(resource);
+    await asyncDisposable.DisposeAsync();
+}
+```
+
 ## Disposable Empty
 Provides an implementation of `IDisposable` that is empty and performs nothing (i.e. nop) when `Dispose` is called.
 
@@ -126,3 +138,4 @@ Please provide any feedback, comments, or issues to this GitHub project [here][i
 * v3.1.0 - Split ISharedReference into ISharedReferenceScope and ISharedReferenceProvider
 * v4.0.0 - Revert the split
 * v4.1.0 - Added async support
+* v4.2.0 - Added async adapter

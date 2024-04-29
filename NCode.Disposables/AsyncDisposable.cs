@@ -32,6 +32,16 @@ public static class AsyncDisposable
     public static IAsyncDisposable Empty => AsyncDisposableEmpty.Singleton;
 
     /// <summary>
+    /// Creates and returns a new instance of <see cref="IAsyncDisposable"/> that adds asynchronous disposal support
+    /// to an existing <see cref="IDisposable"/> instance.
+    /// </summary>
+    /// <param name="disposable">The underlying <see cref="IDisposable"/> instance to adapt.</param>
+    public static IAsyncDisposable Adapt(IDisposable disposable)
+    {
+        return new AsyncDisposableAdapter(disposable);
+    }
+
+    /// <summary>
     /// Creates and returns a new instance of <see cref="IAsyncDisposableAggregate"/>
     /// that contains (i.e. aggregates) a property to another <see cref="IAsyncDisposable"/>
     /// instance.
