@@ -152,3 +152,4 @@ Please provide any feedback, comments, or issues to this GitHub project [here][i
 * v4.1.0 - Added async support
 * v4.2.0 - Added async adapter
 * v4.3.0 - Added DisposeAsyncIfAvailable extension. Added `idempotent` option to certain methods.
+* v4.4.0 - Refactored the `idempotent` option to use function overloads.

@@ -36,9 +36,19 @@ public static class AsyncDisposable
     /// to an existing <see cref="IDisposable"/> instance.
     /// </summary>
     /// <param name="disposable">The underlying <see cref="IDisposable"/> instance to adapt.</param>
+    public static IAsyncDisposable Adapt(IDisposable disposable)
+    {
+        return new AsyncDisposableAdapter(disposable);
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="IAsyncDisposable"/> that adds asynchronous disposal support
+    /// to an existing <see cref="IDisposable"/> instance.
+    /// </summary>
+    /// <param name="disposable">The underlying <see cref="IDisposable"/> instance to adapt.</param>
     /// <param name="idempotent">Specifies if the adapter should be idempotent where multiple calls to <c>DisposeAsync</c>
     /// will only dispose the underlying instance once. Default is <c>true</c>.</param>
-    public static IAsyncDisposable Adapt(IDisposable disposable, bool idempotent = true)
+    public static IAsyncDisposable Adapt(IDisposable disposable, bool idempotent)
     {
         return new AsyncDisposableAdapter(disposable, idempotent);
     }
@@ -143,10 +153,24 @@ public static class AsyncDisposable
     /// is called.
     /// </summary>
     /// <param name="action">Specifies the <see cref="Func{ValueTask}"/> to invoke when <see cref="IAsyncDisposable.DisposeAsync"/> is called.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
+    public static IAsyncDisposable Create(Func<ValueTask> action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        return new AsyncDisposableAction(action);
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="IAsyncDisposable"/> that
+    /// will invoke an <see cref="Func{ValueTask}"/> when <see cref="IAsyncDisposable.DisposeAsync"/>
+    /// is called.
+    /// </summary>
+    /// <param name="action">Specifies the <see cref="Func{ValueTask}"/> to invoke when <see cref="IAsyncDisposable.DisposeAsync"/> is called.</param>
     /// <param name="idempotent">Specifies if the adapter should be idempotent where multiple calls to <c>DisposeAsync</c>
     /// will only dispose the underlying instance once. Default is <c>true</c>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
-    public static IAsyncDisposable Create(Func<ValueTask> action, bool idempotent = true)
+    public static IAsyncDisposable Create(Func<ValueTask> action, bool idempotent)
     {
         ArgumentNullException.ThrowIfNull(action);
 
@@ -159,10 +183,28 @@ public static class AsyncDisposable
     /// is called.
     /// </summary>
     /// <param name="action">Specifies the <see cref="Action"/> to invoke when <see cref="IAsyncDisposable.DisposeAsync"/> is called.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
+    public static IAsyncDisposable Create(Action action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        return new AsyncDisposableAction(() =>
+        {
+            action();
+            return ValueTask.CompletedTask;
+        });
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="IAsyncDisposable"/> that
+    /// will invoke an <see cref="Action"/> when <see cref="IAsyncDisposable.DisposeAsync"/>
+    /// is called.
+    /// </summary>
+    /// <param name="action">Specifies the <see cref="Action"/> to invoke when <see cref="IAsyncDisposable.DisposeAsync"/> is called.</param>
     /// <param name="idempotent">Specifies if the adapter should be idempotent where multiple calls to <c>DisposeAsync</c>
     /// will only dispose the underlying instance once. Default is <c>true</c>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
-    public static IAsyncDisposable Create(Action action, bool idempotent = true)
+    public static IAsyncDisposable Create(Action action, bool idempotent)
     {
         ArgumentNullException.ThrowIfNull(action);
 
