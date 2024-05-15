@@ -21,6 +21,35 @@ namespace NCode.Disposables.Tests;
 public class DisposableExtensionsTests
 {
     [Fact]
+    public async Task DisposeIfAvailable_WhenAvailable()
+    {
+        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        mockDisposable
+            .As<IAsyncDisposable>()
+            .Setup(x => x.DisposeAsync())
+            .Returns(ValueTask.CompletedTask)
+            .Verifiable();
+
+        await mockDisposable.Object.DisposeAsyncIfAvailable();
+
+        mockDisposable.Verify();
+        mockDisposable.Verify(x => x.Dispose(), Times.Never);
+    }
+
+    [Fact]
+    public async Task DisposeIfAvailable_WhenNotAvailable()
+    {
+        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        mockDisposable
+            .Setup(x => x.Dispose())
+            .Verifiable();
+
+        await mockDisposable.Object.DisposeAsyncIfAvailable();
+
+        mockDisposable.Verify();
+    }
+
+    [Fact]
     public void DisposeAll_Valid()
     {
         var order = string.Empty;

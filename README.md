@@ -6,6 +6,18 @@ This library provides a set of useful `IDisposable` and `IAsyncDisposable` imple
 the `IDisposable` interface is used in the examples below, but the same implementations are available for
 `IAsyncDisposable` as well.
 
+## DisposeAsync If Available
+Provides an extension method that will call the `DisposeAsync` method if it is available on the `IDisposable` resource.
+If the `DisposeAsync` method is not available, then the `Dispose` method is called instead.
+
+```csharp
+async ValueTask Example()
+{
+    IDisposable resource = CreateSomeResource();
+    await resource.DisposeAsyncIfAvailable();
+}
+```
+
 ## Disposable Async Adapter
 Provides an `IAsyncDisposable` adapter that wraps an `IDisposable` resource and forwards the `DisposeAsync` method to the `Dispose` method of the underlying resource.
 
@@ -139,3 +151,4 @@ Please provide any feedback, comments, or issues to this GitHub project [here][i
 * v4.0.0 - Revert the split
 * v4.1.0 - Added async support
 * v4.2.0 - Added async adapter
+* v4.3.0 - Added DisposeAsyncIfAvailable extension. Added `idempotent` option to certain methods.

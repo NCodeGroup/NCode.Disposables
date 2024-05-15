@@ -54,4 +54,22 @@ public class AsyncDisposableActionTests
 
         Assert.Equal(1, count);
     }
+
+    [Fact]
+    public async ValueTask DisposeAsync_ActionIsCalledMultipleTimes()
+    {
+        var count = 0;
+        var action = () =>
+        {
+            ++count;
+            return ValueTask.CompletedTask;
+        };
+        var disposable = new AsyncDisposableAction(action, idempotent: false);
+
+        await disposable.DisposeAsync();
+        await disposable.DisposeAsync();
+        await disposable.DisposeAsync();
+
+        Assert.Equal(3, count);
+    }
 }

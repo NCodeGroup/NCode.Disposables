@@ -46,4 +46,18 @@ public class DisposableActionTests
 
         Assert.Equal(1, count);
     }
+
+    [Fact]
+    public void Dispose_ActionIsCalledMultipleTimes()
+    {
+        var count = 0;
+        Action action = () => ++count;
+        var disposable = new DisposableAction(action, idempotent: false);
+
+        disposable.Dispose();
+        disposable.Dispose();
+        disposable.Dispose();
+
+        Assert.Equal(3, count);
+    }
 }

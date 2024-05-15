@@ -43,4 +43,17 @@ public class AsyncDisposableAdapterTests
         await adapter.DisposeAsync();
         mockDisposable.Verify(x => x.Dispose(), Times.Once);
     }
+
+    [Fact]
+    public async Task DisposeMultipl()
+    {
+        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        mockDisposable.Setup(x => x.Dispose());
+
+        var adapter = new AsyncDisposableAdapter(mockDisposable.Object, idempotent: false);
+        await adapter.DisposeAsync();
+        await adapter.DisposeAsync();
+        await adapter.DisposeAsync();
+        mockDisposable.Verify(x => x.Dispose(), Times.Exactly(3));
+    }
 }

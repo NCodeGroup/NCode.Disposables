@@ -27,6 +27,23 @@ namespace NCode.Disposables;
 public static class DisposableExtensions
 {
     /// <summary>
+    /// Asynchronously disposes the specified <see cref="IDisposable"/> instance if it implements <see cref="IAsyncDisposable"/>
+    /// otherwise it will dispose it synchronously.
+    /// </summary>
+    /// <param name="disposable">The <see cref="IDisposable"/> instance to dispose.</param>
+    public static async ValueTask DisposeAsyncIfAvailable(this IDisposable? disposable)
+    {
+        if (disposable is IAsyncDisposable asyncDisposable)
+        {
+            await asyncDisposable.DisposeAsync();
+        }
+        else
+        {
+            disposable?.Dispose();
+        }
+    }
+
+    /// <summary>
     /// Creates a new <see cref="ISharedReference{T}"/> instance that uses reference counting to share the specified value.
     /// This variant will automatically dispose the value when the last reference is released.
     /// </summary>

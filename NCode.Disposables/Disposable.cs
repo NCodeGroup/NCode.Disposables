@@ -149,12 +149,14 @@ public static class Disposable
     /// is called.
     /// </summary>
     /// <param name="action">Specifies the <see cref="Action"/> to invoke when <see cref="IDisposable.Dispose"/> is called.</param>
+    /// <param name="idempotent">Specifies if the adapter should be idempotent where multiple calls to <c>Dispose</c>
+    /// will only dispose the underlying instance once. Default is <c>true</c>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
-    public static IDisposable Create(Action action)
+    public static IDisposable Create(Action action, bool idempotent = true)
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return new DisposableAction(action);
+        return new DisposableAction(action, idempotent);
     }
 
     /// <summary>
@@ -163,12 +165,14 @@ public static class Disposable
     /// is called. The result of the <see cref="Func{TResult}"/> is disregarded.
     /// </summary>
     /// <param name="action">Specifies the <see cref="Action"/> to invoke when <see cref="IDisposable.Dispose"/> is called.</param>
+    /// <param name="idempotent">Specifies if the adapter should be idempotent where multiple calls to <c>Dispose</c>
+    /// will only dispose the underlying instance once. Default is <c>true</c>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
-    public static IDisposable Create<TResult>(Func<TResult> action)
+    public static IDisposable Create<TResult>(Func<TResult> action, bool idempotent = true)
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return new DisposableAction(() => action());
+        return new DisposableAction(() => action(), idempotent);
     }
 
     /// <summary>
@@ -178,12 +182,14 @@ public static class Disposable
     /// </summary>
     /// <param name="action">Specifies the <see cref="Action"/> to invoke when <see cref="IDisposable.Dispose"/> is called.</param>
     /// <param name="arg">The first parameter of the method that this dispose wrapper encapsulates.</param>
+    /// <param name="idempotent">Specifies if the adapter should be idempotent where multiple calls to <c>Dispose</c>
+    /// will only dispose the underlying instance once. Default is <c>true</c>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
-    public static IDisposable Create<T>(Action<T> action, T arg)
+    public static IDisposable Create<T>(Action<T> action, T arg, bool idempotent = true)
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return new DisposableAction(() => action(arg));
+        return new DisposableAction(() => action(arg), idempotent);
     }
 
     /// <summary>
@@ -193,12 +199,14 @@ public static class Disposable
     /// </summary>
     /// <param name="action">Specifies the <see cref="Action"/> to invoke when <see cref="IDisposable.Dispose"/> is called.</param>
     /// <param name="arg">The first parameter of the method that this dispose wrapper encapsulates.</param>
+    /// <param name="idempotent">Specifies if the adapter should be idempotent where multiple calls to <c>Dispose</c>
+    /// will only dispose the underlying instance once. Default is <c>true</c>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
-    public static IDisposable Create<T, TResult>(Func<T, TResult> action, T arg)
+    public static IDisposable Create<T, TResult>(Func<T, TResult> action, T arg, bool idempotent = true)
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return new DisposableAction(() => action(arg));
+        return new DisposableAction(() => action(arg), idempotent);
     }
 
     /// <summary>
@@ -209,12 +217,14 @@ public static class Disposable
     /// <param name="action">Specifies the <see cref="Action"/> to invoke when <see cref="IDisposable.Dispose"/> is called.</param>
     /// <param name="arg1">The first parameter of the method that this dispose wrapper encapsulates.</param>
     /// <param name="arg2">The second parameter of the method that this dispose wrapper encapsulates.</param>
+    /// <param name="idempotent">Specifies if the adapter should be idempotent where multiple calls to <c>Dispose</c>
+    /// will only dispose the underlying instance once. Default is <c>true</c>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
-    public static IDisposable Create<T1, T2>(Action<T1, T2> action, T1 arg1, T2 arg2)
+    public static IDisposable Create<T1, T2>(Action<T1, T2> action, T1 arg1, T2 arg2, bool idempotent = true)
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return new DisposableAction(() => action(arg1, arg2));
+        return new DisposableAction(() => action(arg1, arg2), idempotent);
     }
 
     /// <summary>
@@ -225,12 +235,17 @@ public static class Disposable
     /// <param name="action">Specifies the <see cref="Action"/> to invoke when <see cref="IDisposable.Dispose"/> is called.</param>
     /// <param name="arg1">The first parameter of the method that this dispose wrapper encapsulates.</param>
     /// <param name="arg2">The second parameter of the method that this dispose wrapper encapsulates.</param>
+    /// <param name="idempotent">Specifies if the adapter should be idempotent where multiple calls to <c>Dispose</c>
+    /// will only dispose the underlying instance once. Default is <c>true</c>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
-    public static IDisposable Create<T1, T2, TResult>(Func<T1, T2, TResult> action, T1 arg1, T2 arg2)
+    public static IDisposable Create<T1, T2, TResult>(Func<T1, T2, TResult> action,
+        T1 arg1,
+        T2 arg2,
+        bool idempotent = true)
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return new DisposableAction(() => action(arg1, arg2));
+        return new DisposableAction(() => action(arg1, arg2), idempotent);
     }
 
     /// <summary>
@@ -242,12 +257,18 @@ public static class Disposable
     /// <param name="arg1">The first parameter of the method that this dispose wrapper encapsulates.</param>
     /// <param name="arg2">The second parameter of the method that this dispose wrapper encapsulates.</param>
     /// <param name="arg3">The third parameter of the method that this dispose wrapper encapsulates.</param>
+    /// <param name="idempotent">Specifies if the adapter should be idempotent where multiple calls to <c>Dispose</c>
+    /// will only dispose the underlying instance once. Default is <c>true</c>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
-    public static IDisposable Create<T1, T2, T3>(Action<T1, T2, T3> action, T1 arg1, T2 arg2, T3 arg3)
+    public static IDisposable Create<T1, T2, T3>(Action<T1, T2, T3> action,
+        T1 arg1,
+        T2 arg2,
+        T3 arg3,
+        bool idempotent = true)
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return new DisposableAction(() => action(arg1, arg2, arg3));
+        return new DisposableAction(() => action(arg1, arg2, arg3), idempotent);
     }
 
     /// <summary>
@@ -259,16 +280,19 @@ public static class Disposable
     /// <param name="arg1">The first parameter of the method that this dispose wrapper encapsulates.</param>
     /// <param name="arg2">The second parameter of the method that this dispose wrapper encapsulates.</param>
     /// <param name="arg3">The third parameter of the method that this dispose wrapper encapsulates.</param>
+    /// <param name="idempotent">Specifies if the adapter should be idempotent where multiple calls to <c>Dispose</c>
+    /// will only dispose the underlying instance once. Default is <c>true</c>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
     public static IDisposable Create<T1, T2, T3, TResult>(
         Func<T1, T2, T3, TResult> action,
         T1 arg1,
         T2 arg2,
-        T3 arg3)
+        T3 arg3,
+        bool idempotent = true)
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return new DisposableAction(() => action(arg1, arg2, arg3));
+        return new DisposableAction(() => action(arg1, arg2, arg3), idempotent);
     }
 
     /// <summary>
@@ -281,17 +305,20 @@ public static class Disposable
     /// <param name="arg2">The second parameter of the method that this dispose wrapper encapsulates.</param>
     /// <param name="arg3">The third parameter of the method that this dispose wrapper encapsulates.</param>
     /// <param name="arg4">The fourth parameter of the method that this dispose wrapper encapsulates.</param>
+    /// <param name="idempotent">Specifies if the adapter should be idempotent where multiple calls to <c>Dispose</c>
+    /// will only dispose the underlying instance once. Default is <c>true</c>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
     public static IDisposable Create<T1, T2, T3, T4>(
         Action<T1, T2, T3, T4> action,
         T1 arg1,
         T2 arg2,
         T3 arg3,
-        T4 arg4)
+        T4 arg4,
+        bool idempotent = true)
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return new DisposableAction(() => action(arg1, arg2, arg3, arg4));
+        return new DisposableAction(() => action(arg1, arg2, arg3, arg4), idempotent);
     }
 
     /// <summary>
@@ -304,17 +331,20 @@ public static class Disposable
     /// <param name="arg2">The second parameter of the method that this dispose wrapper encapsulates.</param>
     /// <param name="arg3">The third parameter of the method that this dispose wrapper encapsulates.</param>
     /// <param name="arg4">The fourth parameter of the method that this dispose wrapper encapsulates.</param>
+    /// <param name="idempotent">Specifies if the adapter should be idempotent where multiple calls to <c>Dispose</c>
+    /// will only dispose the underlying instance once. Default is <c>true</c>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
     public static IDisposable Create<T1, T2, T3, T4, TResult>(
         Func<T1, T2, T3, T4, TResult> action,
         T1 arg1,
         T2 arg2,
         T3 arg3,
-        T4 arg4)
+        T4 arg4,
+        bool idempotent = true)
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return new DisposableAction(() => action(arg1, arg2, arg3, arg4));
+        return new DisposableAction(() => action(arg1, arg2, arg3, arg4), idempotent);
     }
 
     /// <summary>
@@ -328,6 +358,8 @@ public static class Disposable
     /// <param name="arg3">The third parameter of the method that this dispose wrapper encapsulates.</param>
     /// <param name="arg4">The fourth parameter of the method that this dispose wrapper encapsulates.</param>
     /// <param name="arg5">The fifth parameter of the method that this dispose wrapper encapsulates.</param>
+    /// <param name="idempotent">Specifies if the adapter should be idempotent where multiple calls to <c>Dispose</c>
+    /// will only dispose the underlying instance once. Default is <c>true</c>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
     public static IDisposable Create<T1, T2, T3, T4, T5>(
         Action<T1, T2, T3, T4, T5> action,
@@ -335,11 +367,12 @@ public static class Disposable
         T2 arg2,
         T3 arg3,
         T4 arg4,
-        T5 arg5)
+        T5 arg5,
+        bool idempotent = true)
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return new DisposableAction(() => action(arg1, arg2, arg3, arg4, arg5));
+        return new DisposableAction(() => action(arg1, arg2, arg3, arg4, arg5), idempotent);
     }
 
     /// <summary>
@@ -353,6 +386,8 @@ public static class Disposable
     /// <param name="arg3">The third parameter of the method that this dispose wrapper encapsulates.</param>
     /// <param name="arg4">The fourth parameter of the method that this dispose wrapper encapsulates.</param>
     /// <param name="arg5">The fifth parameter of the method that this dispose wrapper encapsulates.</param>
+    /// <param name="idempotent">Specifies if the adapter should be idempotent where multiple calls to <c>Dispose</c>
+    /// will only dispose the underlying instance once. Default is <c>true</c>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
     public static IDisposable Create<T1, T2, T3, T4, T5, TResult>(
         Func<T1, T2, T3, T4, T5, TResult> action,
@@ -360,11 +395,12 @@ public static class Disposable
         T2 arg2,
         T3 arg3,
         T4 arg4,
-        T5 arg5)
+        T5 arg5,
+        bool idempotent = true)
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return new DisposableAction(() => action(arg1, arg2, arg3, arg4, arg5));
+        return new DisposableAction(() => action(arg1, arg2, arg3, arg4, arg5), idempotent);
     }
 
     /// <summary>
@@ -379,6 +415,8 @@ public static class Disposable
     /// <param name="arg4">The fourth parameter of the method that this dispose wrapper encapsulates.</param>
     /// <param name="arg5">The fifth parameter of the method that this dispose wrapper encapsulates.</param>
     /// <param name="arg6">The sixth parameter of the method that this dispose wrapper encapsulates.</param>
+    /// <param name="idempotent">Specifies if the adapter should be idempotent where multiple calls to <c>Dispose</c>
+    /// will only dispose the underlying instance once. Default is <c>true</c>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
     public static IDisposable Create<T1, T2, T3, T4, T5, T6>(
         Action<T1, T2, T3, T4, T5, T6> action,
@@ -387,11 +425,12 @@ public static class Disposable
         T3 arg3,
         T4 arg4,
         T5 arg5,
-        T6 arg6)
+        T6 arg6,
+        bool idempotent = true)
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return new DisposableAction(() => action(arg1, arg2, arg3, arg4, arg5, arg6));
+        return new DisposableAction(() => action(arg1, arg2, arg3, arg4, arg5, arg6), idempotent);
     }
 
     /// <summary>
@@ -406,6 +445,8 @@ public static class Disposable
     /// <param name="arg4">The fourth parameter of the method that this dispose wrapper encapsulates.</param>
     /// <param name="arg5">The fifth parameter of the method that this dispose wrapper encapsulates.</param>
     /// <param name="arg6">The sixth parameter of the method that this dispose wrapper encapsulates.</param>
+    /// <param name="idempotent">Specifies if the adapter should be idempotent where multiple calls to <c>Dispose</c>
+    /// will only dispose the underlying instance once. Default is <c>true</c>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
     public static IDisposable Create<T1, T2, T3, T4, T5, T6, TResult>(
         Func<T1, T2, T3, T4, T5, T6, TResult> action,
@@ -414,11 +455,12 @@ public static class Disposable
         T3 arg3,
         T4 arg4,
         T5 arg5,
-        T6 arg6)
+        T6 arg6,
+        bool idempotent = true)
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return new DisposableAction(() => action(arg1, arg2, arg3, arg4, arg5, arg6));
+        return new DisposableAction(() => action(arg1, arg2, arg3, arg4, arg5, arg6), idempotent);
     }
 
     /// <summary>
@@ -434,6 +476,8 @@ public static class Disposable
     /// <param name="arg5">The fifth parameter of the method that this dispose wrapper encapsulates.</param>
     /// <param name="arg6">The sixth parameter of the method that this dispose wrapper encapsulates.</param>
     /// <param name="arg7">The seventh parameter of the method that this dispose wrapper encapsulates.</param>
+    /// <param name="idempotent">Specifies if the adapter should be idempotent where multiple calls to <c>Dispose</c>
+    /// will only dispose the underlying instance once. Default is <c>true</c>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
     public static IDisposable Create<T1, T2, T3, T4, T5, T6, T7>(
         Action<T1, T2, T3, T4, T5, T6, T7> action,
@@ -443,11 +487,12 @@ public static class Disposable
         T4 arg4,
         T5 arg5,
         T6 arg6,
-        T7 arg7)
+        T7 arg7,
+        bool idempotent = true)
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return new DisposableAction(() => action(arg1, arg2, arg3, arg4, arg5, arg6, arg7));
+        return new DisposableAction(() => action(arg1, arg2, arg3, arg4, arg5, arg6, arg7), idempotent);
     }
 
     /// <summary>
@@ -463,6 +508,8 @@ public static class Disposable
     /// <param name="arg5">The fifth parameter of the method that this dispose wrapper encapsulates.</param>
     /// <param name="arg6">The sixth parameter of the method that this dispose wrapper encapsulates.</param>
     /// <param name="arg7">The seventh parameter of the method that this dispose wrapper encapsulates.</param>
+    /// <param name="idempotent">Specifies if the adapter should be idempotent where multiple calls to <c>Dispose</c>
+    /// will only dispose the underlying instance once. Default is <c>true</c>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
     public static IDisposable Create<T1, T2, T3, T4, T5, T6, T7, TResult>(
         Func<T1, T2, T3, T4, T5, T6, T7, TResult> action,
@@ -472,11 +519,12 @@ public static class Disposable
         T4 arg4,
         T5 arg5,
         T6 arg6,
-        T7 arg7)
+        T7 arg7,
+        bool idempotent = true)
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return new DisposableAction(() => action(arg1, arg2, arg3, arg4, arg5, arg6, arg7));
+        return new DisposableAction(() => action(arg1, arg2, arg3, arg4, arg5, arg6, arg7), idempotent);
     }
 
     /// <summary>
@@ -493,6 +541,8 @@ public static class Disposable
     /// <param name="arg6">The sixth parameter of the method that this dispose wrapper encapsulates.</param>
     /// <param name="arg7">The seventh parameter of the method that this dispose wrapper encapsulates.</param>
     /// <param name="arg8">The eighth parameter of the method that this dispose wrapper encapsulates.</param>
+    /// <param name="idempotent">Specifies if the adapter should be idempotent where multiple calls to <c>Dispose</c>
+    /// will only dispose the underlying instance once. Default is <c>true</c>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
     public static IDisposable Create<T1, T2, T3, T4, T5, T6, T7, T8>(
         Action<T1, T2, T3, T4, T5, T6, T7, T8> action,
@@ -503,11 +553,12 @@ public static class Disposable
         T5 arg5,
         T6 arg6,
         T7 arg7,
-        T8 arg8)
+        T8 arg8,
+        bool idempotent = true)
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return new DisposableAction(() => action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8));
+        return new DisposableAction(() => action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8), idempotent);
     }
 
     /// <summary>
@@ -524,6 +575,8 @@ public static class Disposable
     /// <param name="arg6">The sixth parameter of the method that this dispose wrapper encapsulates.</param>
     /// <param name="arg7">The seventh parameter of the method that this dispose wrapper encapsulates.</param>
     /// <param name="arg8">The eighth parameter of the method that this dispose wrapper encapsulates.</param>
+    /// <param name="idempotent">Specifies if the adapter should be idempotent where multiple calls to <c>Dispose</c>
+    /// will only dispose the underlying instance once. Default is <c>true</c>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
     public static IDisposable Create<T1, T2, T3, T4, T5, T6, T7, T8, TResult>(
         Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> action,
@@ -534,10 +587,11 @@ public static class Disposable
         T5 arg5,
         T6 arg6,
         T7 arg7,
-        T8 arg8)
+        T8 arg8,
+        bool idempotent = true)
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return new DisposableAction(() => action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8));
+        return new DisposableAction(() => action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8), idempotent);
     }
 }

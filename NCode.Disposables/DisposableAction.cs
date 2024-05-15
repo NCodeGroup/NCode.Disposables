@@ -26,16 +26,21 @@ namespace NCode.Disposables;
 public sealed class DisposableAction : IDisposable
 {
     private Action? _action;
+    private readonly bool _idempotent;
 
     /// <summary>
     /// Initializes a new instance of <see cref="DisposableAction"/> with the specified dispose action.
     /// </summary>
     /// <param name="action">Specifies the <see cref="Action"/> to invoke when <see cref="Dispose"/> is called.</param>
+    /// <param name="idempotent">Specifies if the adapter should be idempotent where multiple calls to <c>Dispose</c>
+    /// will only dispose the underlying instance once. Default is <c>true</c>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
-    public DisposableAction(Action action)
+    public DisposableAction(Action action, bool idempotent = true)
     {
         ArgumentNullException.ThrowIfNull(action);
+
         _action = action;
+        _idempotent = idempotent;
     }
 
     /// <summary>
@@ -43,7 +48,7 @@ public sealed class DisposableAction : IDisposable
     /// </summary>
     public void Dispose()
     {
-        var action = Interlocked.Exchange(ref _action, null);
+        var action = _idempotent ? Interlocked.Exchange(ref _action, null) : _action;
         action?.Invoke();
     }
 }

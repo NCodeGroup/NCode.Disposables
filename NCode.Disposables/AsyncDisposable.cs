@@ -36,9 +36,11 @@ public static class AsyncDisposable
     /// to an existing <see cref="IDisposable"/> instance.
     /// </summary>
     /// <param name="disposable">The underlying <see cref="IDisposable"/> instance to adapt.</param>
-    public static IAsyncDisposable Adapt(IDisposable disposable)
+    /// <param name="idempotent">Specifies if the adapter should be idempotent where multiple calls to <c>DisposeAsync</c>
+    /// will only dispose the underlying instance once. Default is <c>true</c>.</param>
+    public static IAsyncDisposable Adapt(IDisposable disposable, bool idempotent = true)
     {
-        return new AsyncDisposableAdapter(disposable);
+        return new AsyncDisposableAdapter(disposable, idempotent);
     }
 
     /// <summary>
@@ -141,12 +143,14 @@ public static class AsyncDisposable
     /// is called.
     /// </summary>
     /// <param name="action">Specifies the <see cref="Func{ValueTask}"/> to invoke when <see cref="IAsyncDisposable.DisposeAsync"/> is called.</param>
+    /// <param name="idempotent">Specifies if the adapter should be idempotent where multiple calls to <c>DisposeAsync</c>
+    /// will only dispose the underlying instance once. Default is <c>true</c>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
-    public static IAsyncDisposable Create(Func<ValueTask> action)
+    public static IAsyncDisposable Create(Func<ValueTask> action, bool idempotent = true)
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return new AsyncDisposableAction(action);
+        return new AsyncDisposableAction(action, idempotent);
     }
 
     /// <summary>
@@ -155,8 +159,10 @@ public static class AsyncDisposable
     /// is called.
     /// </summary>
     /// <param name="action">Specifies the <see cref="Action"/> to invoke when <see cref="IAsyncDisposable.DisposeAsync"/> is called.</param>
+    /// <param name="idempotent">Specifies if the adapter should be idempotent where multiple calls to <c>DisposeAsync</c>
+    /// will only dispose the underlying instance once. Default is <c>true</c>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
-    public static IAsyncDisposable Create(Action action)
+    public static IAsyncDisposable Create(Action action, bool idempotent = true)
     {
         ArgumentNullException.ThrowIfNull(action);
 
@@ -164,6 +170,6 @@ public static class AsyncDisposable
         {
             action();
             return ValueTask.CompletedTask;
-        });
+        }, idempotent);
     }
 }
