@@ -38,7 +38,7 @@ public class AsyncDisposableActionTests
     }
 
     [Fact]
-    public async ValueTask DisposeAsync_ActionIsCalledOnlyOnce()
+    public async Task DisposeAsync_ActionIsCalledOnlyOnce()
     {
         var count = 0;
         var action = () =>
@@ -56,7 +56,7 @@ public class AsyncDisposableActionTests
     }
 
     [Fact]
-    public async ValueTask DisposeAsync_ActionIsCalledMultipleTimes()
+    public async Task DisposeAsync_ActionIsCalledMultipleTimes()
     {
         var count = 0;
         var action = () =>
