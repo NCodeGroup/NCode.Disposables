@@ -27,15 +27,16 @@ namespace NCode.Disposables;
 public static class AsyncDisposableExtensions
 {
     /// <summary>
-    /// Creates a new <see cref="IAsyncSharedReference{T}"/> instance that uses reference counting to share the specified value.
-    /// This variant will automatically dispose the value when the last reference is released.
+    /// Creates a new <see cref="AsyncSharedReferenceLease{T}"/> instance that uses reference counting to share the
+    /// specified <paramref name="value"/>. This variant will automatically dispose the resource when the last lease
+    /// is disposed.
     /// </summary>
-    /// <param name="value">The underlying value to be shared.</param>
-    /// <typeparam name="T">The type of the shared value.</typeparam>
-    public static IAsyncSharedReference<T> AsAsyncSharedReference<T>(this T value)
+    /// <param name="value">The underlying resource to be shared.</param>
+    /// <typeparam name="T">The type of the shared resource.</typeparam>
+    public static async ValueTask<AsyncSharedReferenceLease<T>> AsSharedReferenceAsync<T>(this T value)
         where T : IAsyncDisposable
     {
-        return AsyncSharedReference.Create(value);
+        return await AsyncSharedReference.CreateAsync(value);
     }
 
     /// <summary>

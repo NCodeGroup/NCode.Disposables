@@ -16,10 +16,12 @@
 
 #endregion
 
+using System.Diagnostics;
+
 namespace NCode.Disposables;
 
 /// <summary>
-/// Contains factory methods for creating <see cref="ISharedReference{T}"/> instances.
+/// Contains factory methods for creating <see cref="SharedReferenceLease{T}"/> instances.
 /// </summary>
 public static class SharedReference
 {
@@ -30,26 +32,37 @@ public static class SharedReference
     }
 
     /// <summary>
-    /// Creates a new <see cref="ISharedReference{T}"/> instance that uses reference counting to share the specified value.
-    /// This variant will automatically dispose the value when the last reference is released.
+    /// Creates a new <see cref="SharedReferenceLease{T}"/> instance that uses reference counting to share the
+    /// specified <paramref name="value"/>. This variant will automatically dispose the resource when the last lease
+    /// is disposed.
     /// </summary>
-    /// <param name="value">The underlying value to be shared.</param>
-    /// <typeparam name="T">The type of the shared value.</typeparam>
-    public static ISharedReference<T> Create<T>(T value)
+    /// <param name="value">The underlying resource to be shared.</param>
+    /// <typeparam name="T">The type of the shared resource.</typeparam>
+    public static SharedReferenceLease<T> Create<T>(T value)
         where T : IDisposable
     {
-        return new SharedReferenceOwner<T>(value, Dispose);
+        return Create(value, Dispose);
     }
 
     /// <summary>
-    /// Creates a new <see cref="ISharedReference{T}"/> instance that uses reference counting to share the specified value.
-    /// This variant will call the specified <paramref name="onRelease"/> action when the last reference is released.
+    /// Creates a new <see cref="SharedReferenceLease{T}"/> instance that uses reference counting to share the
+    /// specified <paramref name="value"/>. This variant will call the specified <paramref name="onRelease"/> function
+    /// when the last lease is disposed.
     /// </summary>
-    /// <param name="value">The underlying value to be shared.</param>
-    /// <param name="onRelease">The method to be called when the last reference is released.</param>
-    /// <typeparam name="T">The type of the shared value.</typeparam>
-    public static ISharedReference<T> Create<T>(T value, Action<T> onRelease)
+    /// <param name="value">The underlying resource to be shared.</param>
+    /// <param name="onRelease">The method to be called when the last lease is disposed.</param>
+    /// <typeparam name="T">The type of the shared resource.</typeparam>
+    public static SharedReferenceLease<T> Create<T>(T value, Action<T> onRelease)
     {
-        return new SharedReferenceOwner<T>(value, onRelease);
+        var owner = new SharedReferenceOwner<T>(value, onRelease);
+        try
+        {
+            return owner.AddReference();
+        }
+        finally
+        {
+            var count = owner.ReleaseReference();
+            Debug.Assert(count == 1);
+        }
     }
 }

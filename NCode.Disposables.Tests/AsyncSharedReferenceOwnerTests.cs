@@ -20,76 +20,115 @@ namespace NCode.Disposables.Tests;
 
 public class AsyncSharedReferenceOwnerTests
 {
+    // ohh, the memories from the good old COM days...
+    private static async ValueTask<int> FinalRelease<T>(AsyncSharedReferenceOwner<T> owner)
+    {
+        var count = 0;
+        while (true)
+        {
+            ++count;
+            if (await owner.ReleaseReferenceAsync() == 0)
+            {
+                return count;
+            }
+        }
+    }
+
     [Fact]
     public void Value_Valid()
     {
         var value = new object();
-        var onRelease = (object o) => ValueTask.CompletedTask;
-        var reference = new AsyncSharedReferenceOwner<object>(value, onRelease);
-        Assert.Same(value, reference.Value);
-    }
-
-    [Fact]
-    public async Task Value_Throws_AfterDispose()
-    {
-        var value = new object();
-        var onRelease = (object o) => ValueTask.CompletedTask;
-        var reference = new AsyncSharedReferenceOwner<object>(value, onRelease);
-        await reference.DisposeAsync();
-        Assert.Throws<ObjectDisposedException>(() => reference.Value);
-    }
-
-    [Fact]
-    public async Task Value_Throws_AfterSharedDispose()
-    {
-        var value = new object();
-        var onRelease = (object o) => ValueTask.CompletedTask;
-        var reference0 = new AsyncSharedReferenceOwner<object>(value, onRelease);
-        Assert.Same(value, reference0.Value);
-        var reference1 = reference0.AddReference();
-        Assert.Same(value, reference1.Value);
-        await reference0.DisposeAsync();
-        Assert.Same(value, reference0.Value);
-        await reference1.DisposeAsync();
-        Assert.Throws<ObjectDisposedException>(() => reference0.Value);
-        Assert.Throws<ObjectDisposedException>(() => reference1.Value);
-    }
-
-    [Fact]
-    public async Task Dispose_Once()
-    {
-        var value = new object();
-        var disposeCount = 0;
+        var releaseCount = 0;
         var onRelease = (object o) =>
         {
-            ++disposeCount;
+            ++releaseCount;
             return ValueTask.CompletedTask;
         };
-        var reference = new AsyncSharedReferenceOwner<object>(value, onRelease);
-        await reference.DisposeAsync();
-        await reference.DisposeAsync();
-        Assert.Equal(1, disposeCount);
+        var owner = new AsyncSharedReferenceOwner<object>(value, onRelease);
+        Assert.Same(value, owner.Value);
+        Assert.Equal(0, releaseCount);
+    }
+
+    [Fact]
+    public async Task Value_Throws_AfterFinalRelease()
+    {
+        var value = new object();
+        var releaseCount = 0;
+        var onRelease = (object o) =>
+        {
+            ++releaseCount;
+            return ValueTask.CompletedTask;
+        };
+        var owner = new AsyncSharedReferenceOwner<object>(value, onRelease);
+
+        var finalReleaseCount = await FinalRelease(owner);
+        Assert.Equal(1, releaseCount);
+        Assert.Equal(1, finalReleaseCount);
+
+        Assert.Throws<ObjectDisposedException>(() => owner.Value);
+    }
+
+    [Fact]
+    public async Task AddReference_Valid()
+    {
+        var value = new object();
+        var releaseCount = 0;
+        var onRelease = (object o) =>
+        {
+            ++releaseCount;
+            return ValueTask.CompletedTask;
+        };
+        var owner = new AsyncSharedReferenceOwner<object>(value, onRelease);
+
+        _ = owner.AddReference();
+        _ = owner.AddReference();
+
+        var finalReleaseCount = await FinalRelease(owner);
+        Assert.Equal(1, releaseCount);
+        Assert.Equal(3, finalReleaseCount);
+
+        Assert.Throws<ObjectDisposedException>(() => owner.AddReference());
     }
 
     [Fact]
     public async Task AddReference_Throws_AfterDispose()
     {
         var value = new object();
-        var onRelease = (object o) => ValueTask.CompletedTask;
-        var reference = new AsyncSharedReferenceOwner<object>(value, onRelease);
-        await reference.DisposeAsync();
-        Assert.Throws<ObjectDisposedException>(() => reference.AddReference());
+        var releaseCount = 0;
+        var onRelease = (object o) =>
+        {
+            ++releaseCount;
+            return ValueTask.CompletedTask;
+        };
+        var owner = new AsyncSharedReferenceOwner<object>(value, onRelease);
+
+        var finalReleaseCount = await FinalRelease(owner);
+        Assert.Equal(1, releaseCount);
+        Assert.Equal(1, finalReleaseCount);
+
+        Assert.Throws<ObjectDisposedException>(() => owner.AddReference());
     }
 
     [Fact]
     public async Task TryAddReference_Fails_AfterDispose()
     {
         var value = new object();
-        var onRelease = (object o) => ValueTask.CompletedTask;
-        var reference0 = new AsyncSharedReferenceOwner<object>(value, onRelease);
-        await reference0.DisposeAsync();
-        var result = reference0.TryAddReference(out var reference1);
+        var releaseCount = 0;
+        var onRelease = (object o) =>
+        {
+            ++releaseCount;
+            return ValueTask.CompletedTask;
+        };
+
+        var owner = new AsyncSharedReferenceOwner<object>(value, onRelease);
+
+        var finalReleaseCount = await FinalRelease(owner);
+
+        var result = owner.TryAddReference(out var newReference);
         Assert.False(result);
-        Assert.Null(reference1);
+        Assert.False(newReference.IsActive);
+
+        Assert.Equal(1, releaseCount);
+        Assert.Equal(1, finalReleaseCount);
     }
 }

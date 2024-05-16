@@ -44,12 +44,13 @@ public static class DisposableExtensions
     }
 
     /// <summary>
-    /// Creates a new <see cref="ISharedReference{T}"/> instance that uses reference counting to share the specified value.
-    /// This variant will automatically dispose the value when the last reference is released.
+    /// Creates a new <see cref="SharedReferenceLease{T}"/> instance that uses reference counting to share the
+    /// specified <paramref name="value"/>. This variant will automatically dispose the resource when the last
+    /// lease is disposed.
     /// </summary>
-    /// <param name="value">The underlying value to be shared.</param>
-    /// <typeparam name="T">The type of the shared value.</typeparam>
-    public static ISharedReference<T> AsSharedReference<T>(this T value)
+    /// <param name="value">The underlying resource to be shared.</param>
+    /// <typeparam name="T">The type of the shared resource.</typeparam>
+    public static SharedReferenceLease<T> AsSharedReference<T>(this T value)
         where T : IDisposable
     {
         return SharedReference.Create(value);

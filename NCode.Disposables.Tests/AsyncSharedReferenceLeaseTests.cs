@@ -21,67 +21,122 @@ namespace NCode.Disposables.Tests;
 public class AsyncSharedReferenceLeaseTests
 {
     [Fact]
+    public async Task Default_Valid()
+    {
+        var lease = new AsyncSharedReferenceLease<object>();
+        Assert.False(lease.IsActive);
+        Assert.Null(lease.OwnerOrNull);
+        Assert.Throws<InvalidOperationException>(() => lease.Value);
+        Assert.Throws<InvalidOperationException>(() => lease.AddReference());
+
+        var result = lease.TryAddReference(out var newLease);
+        Assert.False(result);
+        Assert.False(newLease.IsActive);
+        Assert.Null(newLease.OwnerOrNull);
+
+        await lease.DisposeAsync();
+        await lease.DisposeAsync();
+        await lease.DisposeAsync();
+    }
+
+    [Fact]
+    public void IsActive_Valid()
+    {
+        var mockOwner = new Mock<IAsyncSharedReferenceOwner<object>>(MockBehavior.Strict);
+        var lease = new AsyncSharedReferenceLease<object>(mockOwner.Object);
+        Assert.True(lease.IsActive);
+    }
+
+    [Fact]
     public void Value_Valid()
     {
         var value = new object();
-        var onRelease = () => ValueTask.CompletedTask;
-        var mockOwner = new Mock<IAsyncSharedReference<object>>(MockBehavior.Strict);
+
+        var mockOwner = new Mock<IAsyncSharedReferenceOwner<object>>(MockBehavior.Strict);
         mockOwner
             .Setup(x => x.Value)
             .Returns(value)
             .Verifiable();
-        var lease = new AsyncSharedReferenceLease<object>(mockOwner.Object, onRelease);
+
+        var lease = new AsyncSharedReferenceLease<object>(mockOwner.Object);
         Assert.Same(value, lease.Value);
+
         mockOwner.Verify();
     }
 
     [Fact]
-    public async Task Dispose_Once()
+    public void Value_ThrowsWhenInactive()
     {
-        var releaseCount = 0;
-        var onRelease = () =>
-        {
-            ++releaseCount;
-            return ValueTask.CompletedTask;
-        };
-        var mockOwner = new Mock<IAsyncSharedReference<object>>(MockBehavior.Strict);
-        var lease = new AsyncSharedReferenceLease<object>(mockOwner.Object, onRelease);
-        await lease.DisposeAsync();
-        await lease.DisposeAsync();
-        Assert.Equal(1, releaseCount);
+        var lease = new AsyncSharedReferenceLease<object>();
+        var exception = Assert.Throws<InvalidOperationException>(() => lease.Value);
+        Assert.Equal("The lease for the shared reference is not active.", exception.Message);
     }
 
     [Fact]
     public void AddReference_Valid()
     {
-        var onRelease = () => ValueTask.CompletedTask;
-        var mockOwner = new Mock<IAsyncSharedReference<object>>(MockBehavior.Strict);
-        var mockReference = new Mock<IAsyncSharedReference<object>>(MockBehavior.Strict);
+        var mockOwner = new Mock<IAsyncSharedReferenceOwner<object>>(MockBehavior.Strict);
+
+        var newReference = new AsyncSharedReferenceLease<object>(mockOwner.Object);
+        Assert.Same(mockOwner.Object, newReference.OwnerOrNull);
+
+        var lease = new AsyncSharedReferenceLease<object>(mockOwner.Object);
+        Assert.Same(mockOwner.Object, lease.OwnerOrNull);
+
         mockOwner
             .Setup(x => x.AddReference())
-            .Returns(mockReference.Object)
+            .Returns(newReference)
             .Verifiable();
-        var lease = new AsyncSharedReferenceLease<object>(mockOwner.Object, onRelease);
+
         var reference = lease.AddReference();
-        Assert.Same(mockReference.Object, reference);
+        Assert.Same(mockOwner.Object, reference.OwnerOrNull);
+
         mockOwner.Verify();
+    }
+
+    [Fact]
+    public void AddReference_ThrowsWhenInactive()
+    {
+        var lease = new AsyncSharedReferenceLease<object>();
+        var exception = Assert.Throws<InvalidOperationException>(() => lease.AddReference());
+        Assert.Equal("The lease for the shared reference is not active.", exception.Message);
     }
 
     [Fact]
     public void TryAddReference_Valid()
     {
-        var onRelease = () => ValueTask.CompletedTask;
-        var mockOwner = new Mock<IAsyncSharedReference<object>>(MockBehavior.Strict);
-        var mockReference = new Mock<IAsyncSharedReference<object>>(MockBehavior.Strict);
-        IAsyncSharedReference<object>? newReference = mockReference.Object;
+        var mockOwner = new Mock<IAsyncSharedReferenceOwner<object>>(MockBehavior.Strict);
+
+        var newReference = new AsyncSharedReferenceLease<object>(mockOwner.Object);
+        Assert.Same(mockOwner.Object, newReference.OwnerOrNull);
+
         mockOwner
             .Setup(x => x.TryAddReference(out newReference))
             .Returns(true)
             .Verifiable();
-        var lease = new AsyncSharedReferenceLease<object>(mockOwner.Object, onRelease);
+
+        var lease = new AsyncSharedReferenceLease<object>(mockOwner.Object);
+        Assert.Same(mockOwner.Object, lease.OwnerOrNull);
+
         var result = lease.TryAddReference(out var reference);
         Assert.True(result);
-        Assert.Same(mockReference.Object, reference);
+        Assert.Same(mockOwner.Object, reference.OwnerOrNull);
+
+        mockOwner.Verify();
+    }
+
+    [Fact]
+    public async Task DisposeAsync_Valid()
+    {
+        var mockOwner = new Mock<IAsyncSharedReferenceOwner<object>>(MockBehavior.Strict);
+        mockOwner
+            .Setup(x => x.ReleaseReferenceAsync())
+            .ReturnsAsync(0)
+            .Verifiable();
+
+        var lease = new AsyncSharedReferenceLease<object>(mockOwner.Object);
+        await lease.DisposeAsync();
+
         mockOwner.Verify();
     }
 }

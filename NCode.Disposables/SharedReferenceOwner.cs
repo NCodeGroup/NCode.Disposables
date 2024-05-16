@@ -16,25 +16,67 @@
 
 #endregion
 
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-
 namespace NCode.Disposables;
 
-internal sealed class SharedReferenceOwner<T>(
-    T value,
-    Action<T> onRelease
-) : ISharedReference<T>
+/// <summary>
+/// Represents the composition root for a resource that can be shared using reference counting. When the last lease
+/// is disposed, the underlying resource is released by calling the configured <c>onRelease</c> function.
+/// </summary>
+/// <typeparam name="T">The type of the shared resource.</typeparam>
+public interface ISharedReferenceOwner<T>
 {
-    private int _released;
-    private ImmutableCounter _counter = new();
+    /// <summary>
+    /// Gets the value of the shared resource.
+    /// </summary>
+    /// <exception cref="ObjectDisposedException">Thrown when the reference count has reached zero (0)
+    /// and the underlying resource has been released already.</exception>
+    T Value { get; }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Increments the reference count and returns a disposable lease that
+    /// can be used to decrement the newly incremented reference count.
+    /// </summary>
+    /// <exception cref="ObjectDisposedException">Thrown when the reference count has reached zero (0)
+    /// and the underlying resource has been released already.</exception>
+    SharedReferenceLease<T> AddReference();
+
+    /// <summary>
+    /// Attempts to increment the reference count and outputs a disposable lease that
+    /// can be used to decrement the newly incremented reference count.
+    /// </summary>
+    /// <param name="reference">Destination for the <see cref="SharedReferenceLease{T}"/> instance
+    /// if the original reference count is greater than zero (0).</param>
+    /// <returns><c>true</c> if the original reference count was greater than zero (0) and
+    /// a new shared reference was successfully created with an incremented reference count.</returns>
+    bool TryAddReference(out SharedReferenceLease<T> reference);
+
+    /// <summary>
+    /// Decrements the reference count and releases the underlying resource when the reference count reaches zero (0).
+    /// </summary>
+    int ReleaseReference();
+}
+
+/// <summary>
+/// Represents the composition root for a resource that can be shared using reference counting. When the last lease
+/// is disposed, the underlying resource is released by calling the specified <paramref name="onRelease"/> function.
+/// </summary>
+/// <param name="value">The underlying resource to be shared.</param>
+/// <param name="onRelease">The method to be called when the last lease is released.</param>
+/// <typeparam name="T">The type of the shared resource.</typeparam>
+public sealed class SharedReferenceOwner<T>(T value, Action<T> onRelease) : ISharedReferenceOwner<T>
+{
+    private int _count = 1;
+
+    /// <summary>
+    /// Gets the value of the shared resource.
+    /// </summary>
+    /// <exception cref="ObjectDisposedException">Thrown when the reference count has reached zero (0)
+    /// and the underlying resource has been released already.</exception>
     public T Value
     {
         get
         {
-            if (Volatile.Read(ref _counter).Count == 0)
+            if (Volatile.Read(ref _count) == 0)
             {
                 throw new ObjectDisposedException(GetType().FullName);
             }
@@ -43,45 +85,13 @@ internal sealed class SharedReferenceOwner<T>(
         }
     }
 
-    /// <inheritdoc />
-    public void Dispose()
-    {
-        if (Interlocked.CompareExchange(ref _released, 1, 0) == 0)
-        {
-            Release();
-        }
-    }
-
-    private void Release()
-    {
-        var spinWait = new SpinWait();
-        while (true)
-        {
-            var counter = Volatile.Read(ref _counter);
-            if (counter.Count == 0)
-            {
-                Debug.Fail("We should never get here.");
-                return;
-            }
-
-            var newCounter = counter.Decrement();
-            var prevCounter = Interlocked.CompareExchange(ref _counter, newCounter, counter);
-            if (ReferenceEquals(counter, prevCounter))
-            {
-                if (newCounter.Count == 0)
-                {
-                    onRelease(value);
-                }
-
-                return;
-            }
-
-            spinWait.SpinOnce();
-        }
-    }
-
-    /// <inheritdoc />
-    public ISharedReference<T> AddReference()
+    /// <summary>
+    /// Increments the reference count and returns a disposable lease that
+    /// can be used to decrement the newly incremented reference count.
+    /// </summary>
+    /// <exception cref="ObjectDisposedException">Thrown when the reference count has reached zero (0)
+    /// and the underlying resource has been released already.</exception>
+    public SharedReferenceLease<T> AddReference()
     {
         if (!TryAddReference(out var reference))
         {
@@ -91,25 +101,62 @@ internal sealed class SharedReferenceOwner<T>(
         return reference;
     }
 
-    /// <inheritdoc />
-    public bool TryAddReference([MaybeNullWhen(false)] out ISharedReference<T> reference)
+    /// <summary>
+    /// Attempts to increment the reference count and outputs a disposable lease that
+    /// can be used to decrement the newly incremented reference count.
+    /// </summary>
+    /// <param name="reference">Destination for the <see cref="SharedReferenceLease{T}"/> instance
+    /// if the original reference count is greater than zero (0).</param>
+    /// <returns><c>true</c> if the original reference count was greater than zero (0) and
+    /// a new shared reference was successfully created with an incremented reference count.</returns>
+    public bool TryAddReference(out SharedReferenceLease<T> reference)
     {
         var spinWait = new SpinWait();
         while (true)
         {
-            var counter = Volatile.Read(ref _counter);
-            if (counter.Count == 0)
+            var count = Volatile.Read(ref _count);
+            if (count == 0)
             {
                 reference = default;
                 return false;
             }
 
-            var newCounter = counter.Increment();
-            var prevCounter = Interlocked.CompareExchange(ref _counter, newCounter, counter);
-            if (ReferenceEquals(counter, prevCounter))
+            var newCount = count + 1;
+            var prevCount = Interlocked.CompareExchange(ref _count, newCount, count);
+            if (count == prevCount)
             {
-                reference = new SharedReferenceLease<T>(this, Release);
+                reference = new SharedReferenceLease<T>(this);
                 return true;
+            }
+
+            spinWait.SpinOnce();
+        }
+    }
+
+    /// <summary>
+    /// Decrements the reference count and releases the underlying resource when the reference count reaches zero (0).
+    /// </summary>
+    public int ReleaseReference()
+    {
+        var spinWait = new SpinWait();
+        while (true)
+        {
+            var count = Volatile.Read(ref _count);
+            if (count == 0)
+            {
+                return 0;
+            }
+
+            var newCount = count - 1;
+            var prevCount = Interlocked.CompareExchange(ref _count, newCount, count);
+            if (count == prevCount)
+            {
+                if (newCount == 0)
+                {
+                    onRelease(value);
+                }
+
+                return newCount;
             }
 
             spinWait.SpinOnce();

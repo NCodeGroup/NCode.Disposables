@@ -16,10 +16,12 @@
 
 #endregion
 
+using System.Diagnostics;
+
 namespace NCode.Disposables;
 
 /// <summary>
-/// Contains factory methods for creating <see cref="IAsyncSharedReference{T}"/> instances.
+/// Contains factory methods for creating <see cref="AsyncSharedReferenceLease{T}"/> instances.
 /// </summary>
 public static class AsyncSharedReference
 {
@@ -30,26 +32,37 @@ public static class AsyncSharedReference
     }
 
     /// <summary>
-    /// Creates a new <see cref="IAsyncSharedReference{T}"/> instance that uses reference counting to share the specified value.
-    /// This variant will automatically dispose the value when the last reference is released.
+    /// Creates a new <see cref="AsyncSharedReferenceLease{T}"/> instance that uses reference counting to share the
+    /// specified <paramref name="value"/>. This variant will automatically dispose the resource when the last lease
+    /// is disposed.
     /// </summary>
-    /// <param name="value">The underlying value to be shared.</param>
-    /// <typeparam name="T">The type of the shared value.</typeparam>
-    public static IAsyncSharedReference<T> Create<T>(T value)
+    /// <param name="value">The underlying resource to be shared.</param>
+    /// <typeparam name="T">The type of the shared resource.</typeparam>
+    public static async ValueTask<AsyncSharedReferenceLease<T>> CreateAsync<T>(T value)
         where T : IAsyncDisposable
     {
-        return new AsyncSharedReferenceOwner<T>(value, DisposeAsync);
+        return await CreateAsync(value, DisposeAsync);
     }
 
     /// <summary>
-    /// Creates a new <see cref="IAsyncSharedReference{T}"/> instance that uses reference counting to share the specified value.
-    /// This variant will call the specified <paramref name="onRelease"/> action when the last reference is released.
+    /// Creates a new <see cref="AsyncSharedReferenceLease{T}"/> instance that uses reference counting to share the
+    /// specified <paramref name="value"/>. This variant will call the specified <paramref name="onRelease"/> function
+    /// when the last lease is disposed.
     /// </summary>
-    /// <param name="value">The underlying value to be shared.</param>
-    /// <param name="onRelease">The method to be called when the last reference is released.</param>
-    /// <typeparam name="T">The type of the shared value.</typeparam>
-    public static IAsyncSharedReference<T> Create<T>(T value, Func<T, ValueTask> onRelease)
+    /// <param name="value">The underlying resource to be shared.</param>
+    /// <param name="onRelease">The method to be called when the last lease is disposed.</param>
+    /// <typeparam name="T">The type of the shared resource.</typeparam>
+    public static async ValueTask<AsyncSharedReferenceLease<T>> CreateAsync<T>(T value, Func<T, ValueTask> onRelease)
     {
-        return new AsyncSharedReferenceOwner<T>(value, onRelease);
+        var owner = new AsyncSharedReferenceOwner<T>(value, onRelease);
+        try
+        {
+            return owner.AddReference();
+        }
+        finally
+        {
+            var count = await owner.ReleaseReferenceAsync();
+            Debug.Assert(count == 1);
+        }
     }
 }

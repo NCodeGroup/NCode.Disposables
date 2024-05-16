@@ -99,22 +99,32 @@ void Example()
 ```
 
 ## Disposable Reference Count
-Provides an `IDisposable` implementation that uses reference counting and only disposes the underlying resource when all the references have been released (i.e. reference count is zero). Calling the `Dispose` method is idempotent safe and calling it multiple times has the same effect as calling it only once.
+Provides an `IDisposable` implementation that uses reference counting and only disposes the underlying resource when all the leases have been disposed (i.e. reference count is zero).
+The leases are not idempotent safe and consumers must take care to not dispose the same lease multiple times otherwise the underlying resource will be disposed prematurely.
+One solution for consumers is to assign the lease to `default` after disposing it.
 
 ```csharp
 void Example()
 {
     IDisposable resource = CreateResource();
     // ...
-    var first = Disposable.Shared(resource);
-    var second = first.AddReference();
-    var third = second.AddReference();
+    var firstLease = SharedReference.Create(resource);
+    var secondLease = first.AddReference();
+    var thirdLease = second.AddReference();
     // ...
-    first.Dispose();
-    second.Dispose();
-    third.Dispose();
+    firstLease.Value.DoSomething();
+    firstLease.Dispose();
+    firstLease = default;
+    // ...
+    secondLease.Value.DoSomethingElse();
+    secondLease.Dispose();
+    secondLease = default;
+    // ...
+    thirdLease.Value.DoSomethingElse();
+    thirdLease.Dispose();
+    thirdLease = default;
     // the resource will be disposed here after
-    // all 3 references have been disposed...
+    // all 3 leases have been disposed...
 }
 ```
 
@@ -153,3 +163,4 @@ Please provide any feedback, comments, or issues to this GitHub project [here][i
 * v4.2.0 - Added async adapter
 * v4.3.0 - Added DisposeAsyncIfAvailable extension. Added `idempotent` option to certain methods.
 * v4.4.0 - Refactored the `idempotent` option to use function overloads.
+* v5.0.0 - Refactored shared references/leases to use structs

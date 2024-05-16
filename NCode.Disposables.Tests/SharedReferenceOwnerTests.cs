@@ -20,72 +20,95 @@ namespace NCode.Disposables.Tests;
 
 public class SharedReferenceOwnerTests
 {
+    // ohh, the memories from the good old COM days...
+    private static int FinalRelease<T>(SharedReferenceOwner<T> owner)
+    {
+        var count = 0;
+        while (true)
+        {
+            ++count;
+            if (owner.ReleaseReference() == 0)
+            {
+                return count;
+            }
+        }
+    }
+
     [Fact]
     public void Value_Valid()
     {
         var value = new object();
-        var onRelease = (object o) => { };
-        var reference = new SharedReferenceOwner<object>(value, onRelease);
-        Assert.Same(value, reference.Value);
+        var releaseCount = 0;
+        var onRelease = (object o) => { ++releaseCount; };
+        var owner = new SharedReferenceOwner<object>(value, onRelease);
+        Assert.Same(value, owner.Value);
+        Assert.Equal(0, releaseCount);
     }
 
     [Fact]
-    public void Value_Throws_AfterDispose()
+    public void Value_Throws_AfterFinalRelease()
     {
         var value = new object();
-        var onRelease = (object o) => { };
-        var reference = new SharedReferenceOwner<object>(value, onRelease);
-        reference.Dispose();
-        Assert.Throws<ObjectDisposedException>(() => reference.Value);
+        var releaseCount = 0;
+        var onRelease = (object o) => { ++releaseCount; };
+        var owner = new SharedReferenceOwner<object>(value, onRelease);
+
+        var finalReleaseCount = FinalRelease(owner);
+        Assert.Equal(1, releaseCount);
+        Assert.Equal(1, finalReleaseCount);
+
+        Assert.Throws<ObjectDisposedException>(() => owner.Value);
     }
 
     [Fact]
-    public void Value_Throws_AfterSharedDispose()
+    public void AddReference_Valid()
     {
         var value = new object();
-        var onRelease = (object o) => { };
-        var reference0 = new SharedReferenceOwner<object>(value, onRelease);
-        Assert.Same(value, reference0.Value);
-        var reference1 = reference0.AddReference();
-        Assert.Same(value, reference1.Value);
-        reference0.Dispose();
-        Assert.Same(value, reference0.Value);
-        reference1.Dispose();
-        Assert.Throws<ObjectDisposedException>(() => reference0.Value);
-        Assert.Throws<ObjectDisposedException>(() => reference1.Value);
-    }
+        var releaseCount = 0;
+        var onRelease = (object o) => { ++releaseCount; };
+        var owner = new SharedReferenceOwner<object>(value, onRelease);
 
-    [Fact]
-    public void Dispose_Once()
-    {
-        var value = new object();
-        var disposeCount = 0;
-        var onRelease = (object o) => { ++disposeCount; };
-        var reference = new SharedReferenceOwner<object>(value, onRelease);
-        reference.Dispose();
-        reference.Dispose();
-        Assert.Equal(1, disposeCount);
+        _ = owner.AddReference();
+        _ = owner.AddReference();
+
+        var finalReleaseCount = FinalRelease(owner);
+        Assert.Equal(1, releaseCount);
+        Assert.Equal(3, finalReleaseCount);
+
+        Assert.Throws<ObjectDisposedException>(() => owner.AddReference());
     }
 
     [Fact]
     public void AddReference_Throws_AfterDispose()
     {
         var value = new object();
-        var onRelease = (object o) => { };
-        var reference = new SharedReferenceOwner<object>(value, onRelease);
-        reference.Dispose();
-        Assert.Throws<ObjectDisposedException>(() => reference.AddReference());
+        var releaseCount = 0;
+        var onRelease = (object o) => { ++releaseCount; };
+        var owner = new SharedReferenceOwner<object>(value, onRelease);
+
+        var finalReleaseCount = FinalRelease(owner);
+        Assert.Equal(1, releaseCount);
+        Assert.Equal(1, finalReleaseCount);
+
+        Assert.Throws<ObjectDisposedException>(() => owner.AddReference());
     }
 
     [Fact]
     public void TryAddReference_Fails_AfterDispose()
     {
         var value = new object();
-        var onRelease = (object o) => { };
-        var reference0 = new SharedReferenceOwner<object>(value, onRelease);
-        reference0.Dispose();
-        var result = reference0.TryAddReference(out var reference1);
+        var releaseCount = 0;
+        var onRelease = (object o) => { ++releaseCount; };
+
+        var owner = new SharedReferenceOwner<object>(value, onRelease);
+
+        var finalReleaseCount = FinalRelease(owner);
+
+        var result = owner.TryAddReference(out var newReference);
         Assert.False(result);
-        Assert.Null(reference1);
+        Assert.False(newReference.IsActive);
+
+        Assert.Equal(1, releaseCount);
+        Assert.Equal(1, finalReleaseCount);
     }
 }
