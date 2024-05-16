@@ -38,10 +38,10 @@ public static class AsyncSharedReference
     /// </summary>
     /// <param name="value">The underlying resource to be shared.</param>
     /// <typeparam name="T">The type of the shared resource.</typeparam>
-    public static async ValueTask<AsyncSharedReferenceLease<T>> CreateAsync<T>(T value)
+    public static AsyncSharedReferenceLease<T> Create<T>(T value)
         where T : IAsyncDisposable
     {
-        return await CreateAsync(value, DisposeAsync);
+        return Create(value, DisposeAsync);
     }
 
     /// <summary>
@@ -52,7 +52,7 @@ public static class AsyncSharedReference
     /// <param name="value">The underlying resource to be shared.</param>
     /// <param name="onRelease">The method to be called when the last lease is disposed.</param>
     /// <typeparam name="T">The type of the shared resource.</typeparam>
-    public static async ValueTask<AsyncSharedReferenceLease<T>> CreateAsync<T>(T value, Func<T, ValueTask> onRelease)
+    public static AsyncSharedReferenceLease<T> Create<T>(T value, Func<T, ValueTask> onRelease)
     {
         var owner = new AsyncSharedReferenceOwner<T>(value, onRelease);
         try
@@ -61,7 +61,7 @@ public static class AsyncSharedReference
         }
         finally
         {
-            var count = await owner.ReleaseReferenceAsync();
+            var count = owner.UnsafeReleaseReference();
             Debug.Assert(count == 1);
         }
     }

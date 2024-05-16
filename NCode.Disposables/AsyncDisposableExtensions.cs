@@ -33,10 +33,10 @@ public static class AsyncDisposableExtensions
     /// </summary>
     /// <param name="value">The underlying resource to be shared.</param>
     /// <typeparam name="T">The type of the shared resource.</typeparam>
-    public static async ValueTask<AsyncSharedReferenceLease<T>> AsSharedReferenceAsync<T>(this T value)
+    public static AsyncSharedReferenceLease<T> AsSharedReference<T>(this T value)
         where T : IAsyncDisposable
     {
-        return await AsyncSharedReference.CreateAsync(value);
+        return AsyncSharedReference.Create(value);
     }
 
     /// <summary>

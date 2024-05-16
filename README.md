@@ -166,3 +166,4 @@ Please provide any feedback, comments, or issues to this GitHub project [here][i
 * v5.0.0 - Refactored shared references/leases to use structs
 * v5.0.1 - Removing dead code
 * v5.0.2 - Removing more dead code
+* v5.1.0 - Allow creating of async shared references without requiring async callsite

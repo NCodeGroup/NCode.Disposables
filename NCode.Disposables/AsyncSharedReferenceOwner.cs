@@ -16,6 +16,8 @@
 
 #endregion
 
+using System.ComponentModel;
+
 namespace NCode.Disposables;
 
 /// <summary>
@@ -156,6 +158,34 @@ public sealed class AsyncSharedReferenceOwner<T>(T value, Func<T, ValueTask> onR
                     await onRelease(value);
                 }
 
+                return newCount;
+            }
+
+            spinWait.SpinOnce();
+        }
+    }
+
+    /// <summary>
+    /// This is an internal API and should not be used directly.
+    /// Decrements the reference count but does not release the underlying resource when the reference count reaches zero (0).
+    /// </summary>
+    [Browsable(false)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public int UnsafeReleaseReference()
+    {
+        var spinWait = new SpinWait();
+        while (true)
+        {
+            var count = Volatile.Read(ref _count);
+            if (count == 0)
+            {
+                return 0;
+            }
+
+            var newCount = count - 1;
+            var prevCount = Interlocked.CompareExchange(ref _count, newCount, count);
+            if (count == prevCount)
+            {
                 return newCount;
             }
 

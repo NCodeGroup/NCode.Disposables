@@ -72,12 +72,12 @@ public static class AsyncDisposable
     /// </summary>
     /// <param name="value">The underlying <see cref="IAsyncDisposable"/> instance that this <see cref="AsyncSharedReferenceLease{T}"/> will contain.</param>
     /// <exception cref="ArgumentNullException"><paramref name="value"/> is <c>null</c>.</exception>
-    public static async ValueTask<AsyncSharedReferenceLease<T>> SharedAsync<T>(T value)
+    public static AsyncSharedReferenceLease<T> Shared<T>(T value)
         where T : IAsyncDisposable
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        return await AsyncSharedReference.CreateAsync(value);
+        return AsyncSharedReference.Create(value);
     }
 
     /// <summary>
@@ -89,12 +89,12 @@ public static class AsyncDisposable
     /// <param name="value">The underlying value that the <see cref="AsyncSharedReferenceLease{T}"/> will contain.</param>
     /// <param name="onRelease">The callback method used to release/cleanup the shared reference.</param>
     /// <exception cref="ArgumentNullException"><paramref name="value"/> is <c>null</c>.</exception>
-    public static async ValueTask<AsyncSharedReferenceLease<T>> SharedAsync<T>(T value, Func<T, ValueTask> onRelease)
+    public static AsyncSharedReferenceLease<T> Shared<T>(T value, Func<T, ValueTask> onRelease)
     {
         ArgumentNullException.ThrowIfNull(value);
         ArgumentNullException.ThrowIfNull(onRelease);
 
-        return await AsyncSharedReference.CreateAsync(value, onRelease);
+        return AsyncSharedReference.Create(value, onRelease);
     }
 
     /// <summary>
