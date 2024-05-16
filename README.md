@@ -164,3 +164,4 @@ Please provide any feedback, comments, or issues to this GitHub project [here][i
 * v4.3.0 - Added DisposeAsyncIfAvailable extension. Added `idempotent` option to certain methods.
 * v4.4.0 - Refactored the `idempotent` option to use function overloads.
 * v5.0.0 - Refactored shared references/leases to use structs
+* v5.0.1 - Removing dead code
