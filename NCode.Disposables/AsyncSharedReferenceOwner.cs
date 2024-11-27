@@ -78,10 +78,7 @@ public sealed class AsyncSharedReferenceOwner<T>(T value, Func<T, ValueTask> onR
     {
         get
         {
-            if (Volatile.Read(ref _count) == 0)
-            {
-                throw new ObjectDisposedException(GetType().FullName);
-            }
+            ObjectDisposedException.ThrowIf(Volatile.Read(ref _count) == 0, this);
 
             return value;
         }
@@ -95,10 +92,7 @@ public sealed class AsyncSharedReferenceOwner<T>(T value, Func<T, ValueTask> onR
     /// and the underlying resource has been released already.</exception>
     public AsyncSharedReferenceLease<T> AddReference()
     {
-        if (!TryAddReference(out var reference))
-        {
-            throw new ObjectDisposedException(GetType().FullName);
-        }
+        ObjectDisposedException.ThrowIf(!TryAddReference(out var reference), this);
 
         return reference;
     }

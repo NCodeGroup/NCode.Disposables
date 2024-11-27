@@ -48,7 +48,7 @@ public sealed class AsyncDisposableCollection : IAsyncDisposableCollection
     /// <param name="ignoreExceptions"><c>true</c> to ignore any exceptions thrown while disposing individual items.</param>
     public AsyncDisposableCollection(bool ignoreExceptions = false)
     {
-        _list = new List<IAsyncDisposable>();
+        _list = [];
         _ignoreExceptions = ignoreExceptions;
     }
 
