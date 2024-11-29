@@ -168,3 +168,4 @@ Please provide any feedback, comments, or issues to this GitHub project [here][i
 * v5.0.2 - Removing more dead code
 * v5.1.0 - Allow creating of async shared references without requiring async callsite
 * v5.1.1 - Minor resharper cleanup
+* v5.2.1 - Collections can be any object instead of just IDisposable or IAsyncDisposable 

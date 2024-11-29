@@ -57,12 +57,15 @@ public static class DisposableExtensions
     }
 
     /// <summary>
-    /// Provides a safe way to dispose of a collection of <see cref="IDisposable"/> instances.
+    /// Provides a safe way to dispose of a collection of items which may contain <see cref="IDisposable"/> instances.
+    /// This method will throw an <see cref="InvalidOperationException"/> if the collection contains an <see cref="IAsyncDisposable"/> instance
+    /// irrespective of the <paramref name="ignoreExceptions"/> parameter.
     /// </summary>
-    /// <param name="collection">The collection of <see cref="IDisposable"/> instances.</param>
+    /// <param name="collection">The collection of items to dispose.</param>
     /// <param name="ignoreExceptions"><c>true</c> to ignore any exceptions thrown while disposing individual items.</param>
+    /// <exception cref="InvalidOperationException">Thrown when the collection contains an <see cref="IAsyncDisposable"/> instance.</exception>
     public static void DisposeAll(
-        this IEnumerable<IDisposable?> collection,
+        this IEnumerable<object?> collection,
         bool ignoreExceptions = false)
     {
         List<Exception>? exceptions = null;
@@ -71,7 +74,16 @@ public static class DisposableExtensions
         {
             try
             {
-                item?.Dispose();
+                switch (item)
+                {
+                    case IAsyncDisposable:
+                        ignoreExceptions = false;
+                        throw new InvalidOperationException("The collection contains an IAsyncDisposable instance.");
+
+                    case IDisposable disposable:
+                        disposable.Dispose();
+                        break;
+                }
             }
             catch (Exception exception)
             {

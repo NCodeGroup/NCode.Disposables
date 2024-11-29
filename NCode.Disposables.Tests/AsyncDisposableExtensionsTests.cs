@@ -24,10 +24,13 @@ public class AsyncDisposableExtensionsTests
     public async Task DisposeAll_Valid()
     {
         var order = string.Empty;
-        var collection = new[]
+        var collection = new object[]
         {
+            new(),
             AsyncDisposable.Create(() => order += "1"),
+            new(),
             AsyncDisposable.Create(() => order += "2"),
+            new(),
             AsyncDisposable.Create(() => order += "3")
         };
         await collection.DisposeAllAsync();

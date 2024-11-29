@@ -40,12 +40,12 @@ public static class AsyncDisposableExtensions
     }
 
     /// <summary>
-    /// Provides a safe way to dispose of a collection of <see cref="IAsyncDisposable"/> instances.
+    /// Provides a safe way to dispose of a collection of items which may contain <see cref="IAsyncDisposable"/> and <see cref="IDisposable"/> instances.
     /// </summary>
-    /// <param name="collection">The collection of <see cref="IAsyncDisposable"/> instances.</param>
+    /// <param name="collection">The collection of items to dispose.</param>
     /// <param name="ignoreExceptions"><c>true</c> to ignore any exceptions thrown while disposing individual items.</param>
     public static async ValueTask DisposeAllAsync(
-        this IEnumerable<IAsyncDisposable?> collection,
+        this IEnumerable<object?> collection,
         bool ignoreExceptions = false)
     {
         List<Exception>? exceptions = null;
@@ -54,8 +54,16 @@ public static class AsyncDisposableExtensions
         {
             try
             {
-                if (item is not null)
-                    await item.DisposeAsync();
+                switch (item)
+                {
+                    case IAsyncDisposable asyncDisposable:
+                        await asyncDisposable.DisposeAsync();
+                        break;
+
+                    case IDisposable disposable:
+                        disposable.Dispose();
+                        break;
+                }
             }
             catch (Exception exception)
             {
