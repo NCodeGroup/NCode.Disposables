@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
   <PropertyGroup>
-    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(MSBuildProjectName).xml</DocumentationFile>
+
+    <Description>A comprehensive .NET library providing useful `IDisposable` and `IAsyncDisposable` implementations for common resource management patterns.</Description>
+    <PackageTags>disposable;idisposable;iasyncdisposable;dispose;async;resource-management;reference-counting;shared-reference;dispose-pattern;cleanup;using;memory-management;lifecycle;dotnet</PackageTags>
+
   </PropertyGroup>
 </Project>

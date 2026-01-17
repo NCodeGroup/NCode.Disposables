@@ -19,59 +19,99 @@
 namespace NCode.Disposables;
 
 /// <summary>
-/// Represents the composition root for a resource that can be shared using reference counting. When the last lease
-/// is disposed, the underlying resource is released by calling the configured <c>onRelease</c> function.
+/// Represents the owner of a shared resource that uses reference counting for lifetime management.
+/// When the last lease is released (reference count reaches zero), the underlying resource is
+/// disposed by invoking the configured release callback.
 /// </summary>
 /// <typeparam name="T">The type of the shared resource.</typeparam>
+/// <remarks>
+/// <para>
+/// This interface provides the core reference counting mechanism for shared resources.
+/// Consumers should obtain leases via <see cref="AddReference"/> or <see cref="TryAddReference"/>
+/// and dispose those leases when done using the resource.
+/// </para>
+/// <para>
+/// All operations are thread-safe using lock-free atomic operations.
+/// </para>
+/// </remarks>
 public interface ISharedReferenceOwner<T>
 {
     /// <summary>
     /// Gets the value of the shared resource.
     /// </summary>
-    /// <exception cref="ObjectDisposedException">Thrown when the reference count has reached zero (0)
-    /// and the underlying resource has been released already.</exception>
+    /// <value>The underlying shared resource.</value>
+    /// <exception cref="ObjectDisposedException">
+    /// The reference count has reached zero and the underlying resource has been released.
+    /// </exception>
     T Value { get; }
 
     /// <summary>
-    /// Increments the reference count and returns a disposable lease that
-    /// can be used to decrement the newly incremented reference count.
+    /// Increments the reference count and returns a new lease that holds a reference to the shared resource.
     /// </summary>
-    /// <exception cref="ObjectDisposedException">Thrown when the reference count has reached zero (0)
-    /// and the underlying resource has been released already.</exception>
+    /// <returns>
+    /// A new <see cref="SharedReferenceLease{T}"/> that decrements the reference count when disposed.
+    /// </returns>
+    /// <exception cref="ObjectDisposedException">
+    /// The reference count has reached zero and the underlying resource has been released.
+    /// </exception>
+    /// <remarks>
+    /// The caller is responsible for disposing the returned lease when access to the shared resource
+    /// is no longer needed.
+    /// </remarks>
     SharedReferenceLease<T> AddReference();
 
     /// <summary>
-    /// Attempts to increment the reference count and outputs a disposable lease that
-    /// can be used to decrement the newly incremented reference count.
+    /// Attempts to increment the reference count and obtain a new lease to the shared resource.
     /// </summary>
-    /// <param name="reference">Destination for the <see cref="SharedReferenceLease{T}"/> instance
-    /// if the original reference count is greater than zero (0).</param>
-    /// <returns><c>true</c> if the original reference count was greater than zero (0) and
-    /// a new shared reference was successfully created with an incremented reference count.</returns>
+    /// <param name="reference">
+    /// When this method returns <see langword="true"/>, contains a new <see cref="SharedReferenceLease{T}"/>
+    /// that holds a reference to the shared resource; otherwise, the default value.
+    /// </param>
+    /// <returns>
+    /// <see langword="true"/> if the reference count was greater than zero and a new lease was
+    /// successfully created; <see langword="false"/> if the resource has already been released.
+    /// </returns>
+    /// <remarks>
+    /// Use this method when you need to safely check if a shared resource is still available
+    /// without risking an <see cref="ObjectDisposedException"/>.
+    /// </remarks>
     bool TryAddReference(out SharedReferenceLease<T> reference);
 
     /// <summary>
-    /// Decrements the reference count and releases the underlying resource when the reference count reaches zero (0).
+    /// Decrements the reference count and releases the underlying resource if the count reaches zero.
     /// </summary>
+    /// <returns>The new reference count after decrementing.</returns>
+    /// <remarks>
+    /// This method is typically called internally by <see cref="SharedReferenceLease{T}"/> when disposed.
+    /// Direct calls to this method should be rare in normal usage patterns.
+    /// </remarks>
     int ReleaseReference();
 }
 
 /// <summary>
-/// Represents the composition root for a resource that can be shared using reference counting. When the last lease
-/// is disposed, the underlying resource is released by calling the specified <paramref name="onRelease"/> function.
+/// Provides a thread-safe implementation of <see cref="ISharedReferenceOwner{T}"/> that manages
+/// a shared resource using reference counting with lock-free atomic operations.
 /// </summary>
-/// <param name="value">The underlying resource to be shared.</param>
-/// <param name="onRelease">The method to be called when the last lease is released.</param>
 /// <typeparam name="T">The type of the shared resource.</typeparam>
+/// <param name="value">The underlying resource to be shared.</param>
+/// <param name="onRelease">
+/// The callback to invoke when the reference count reaches zero to release the underlying resource.
+/// </param>
+/// <remarks>
+/// <para>
+/// This class is the composition root for shared reference management. The initial reference count is 1,
+/// representing the initial lease returned to the caller.
+/// </para>
+/// <para>
+/// All reference counting operations use lock-free spin-wait patterns for thread-safety and performance.
+/// </para>
+/// </remarks>
 public sealed class SharedReferenceOwner<T>(T value, Action<T> onRelease) : ISharedReferenceOwner<T>
 {
     private int _count = 1;
 
-    /// <summary>
-    /// Gets the value of the shared resource.
-    /// </summary>
-    /// <exception cref="ObjectDisposedException">Thrown when the reference count has reached zero (0)
-    /// and the underlying resource has been released already.</exception>
+    /// <inheritdoc />
+    /// <value>The underlying shared resource.</value>
     public T Value
     {
         get
@@ -85,12 +125,7 @@ public sealed class SharedReferenceOwner<T>(T value, Action<T> onRelease) : ISha
         }
     }
 
-    /// <summary>
-    /// Increments the reference count and returns a disposable lease that
-    /// can be used to decrement the newly incremented reference count.
-    /// </summary>
-    /// <exception cref="ObjectDisposedException">Thrown when the reference count has reached zero (0)
-    /// and the underlying resource has been released already.</exception>
+    /// <inheritdoc />
     public SharedReferenceLease<T> AddReference()
     {
         if (!TryAddReference(out var reference))
@@ -101,14 +136,7 @@ public sealed class SharedReferenceOwner<T>(T value, Action<T> onRelease) : ISha
         return reference;
     }
 
-    /// <summary>
-    /// Attempts to increment the reference count and outputs a disposable lease that
-    /// can be used to decrement the newly incremented reference count.
-    /// </summary>
-    /// <param name="reference">Destination for the <see cref="SharedReferenceLease{T}"/> instance
-    /// if the original reference count is greater than zero (0).</param>
-    /// <returns><c>true</c> if the original reference count was greater than zero (0) and
-    /// a new shared reference was successfully created with an incremented reference count.</returns>
+    /// <inheritdoc />
     public bool TryAddReference(out SharedReferenceLease<T> reference)
     {
         var spinWait = new SpinWait();
@@ -133,9 +161,12 @@ public sealed class SharedReferenceOwner<T>(T value, Action<T> onRelease) : ISha
         }
     }
 
-    /// <summary>
-    /// Decrements the reference count and releases the underlying resource when the reference count reaches zero (0).
-    /// </summary>
+    /// <inheritdoc />
+    /// <remarks>
+    /// Uses a lock-free spin-wait pattern to atomically decrement the reference count.
+    /// When the count reaches zero, the <c>onRelease</c> callback is invoked to release the resource.
+    /// Subsequent calls after the count reaches zero return 0 without invoking the callback again.
+    /// </remarks>
     public int ReleaseReference()
     {
         var spinWait = new SpinWait();

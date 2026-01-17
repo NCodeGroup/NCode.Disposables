@@ -21,8 +21,18 @@ using System.Diagnostics;
 namespace NCode.Disposables;
 
 /// <summary>
-/// Contains factory methods for creating <see cref="AsyncSharedReferenceLease{T}"/> instances.
+/// Provides factory methods for creating <see cref="AsyncSharedReferenceLease{T}"/> instances
+/// that manage shared resources using reference counting with asynchronous release support.
 /// </summary>
+/// <remarks>
+/// <para>
+/// Use this class to create shared references that allow multiple consumers to share access
+/// to a single resource. The resource is automatically released asynchronously when all leases are disposed.
+/// </para>
+/// <para>
+/// This is the asynchronous version. For synchronous disposal, use <see cref="SharedReference"/>.
+/// </para>
+/// </remarks>
 public static class AsyncSharedReference
 {
     private static async ValueTask DisposeAsync<T>(T value)
@@ -32,12 +42,18 @@ public static class AsyncSharedReference
     }
 
     /// <summary>
-    /// Creates a new <see cref="AsyncSharedReferenceLease{T}"/> instance that uses reference counting to share the
-    /// specified <paramref name="value"/>. This variant will automatically dispose the resource when the last lease
-    /// is disposed.
+    /// Creates a new <see cref="AsyncSharedReferenceLease{T}"/> that shares the specified <see cref="IAsyncDisposable"/>
+    /// resource using reference counting. The resource is automatically disposed asynchronously when the last lease is released.
     /// </summary>
+    /// <typeparam name="T">The type of the shared resource, which must implement <see cref="IAsyncDisposable"/>.</typeparam>
     /// <param name="value">The underlying resource to be shared.</param>
-    /// <typeparam name="T">The type of the shared resource.</typeparam>
+    /// <returns>
+    /// A new <see cref="AsyncSharedReferenceLease{T}"/> representing the initial lease on the shared resource.
+    /// </returns>
+    /// <remarks>
+    /// The returned lease holds an initial reference to the resource. Additional references can be obtained
+    /// by calling <see cref="AsyncSharedReferenceLease{T}.AddReference"/> on any active lease.
+    /// </remarks>
     public static AsyncSharedReferenceLease<T> Create<T>(T value)
         where T : IAsyncDisposable
     {
@@ -45,13 +61,27 @@ public static class AsyncSharedReference
     }
 
     /// <summary>
-    /// Creates a new <see cref="AsyncSharedReferenceLease{T}"/> instance that uses reference counting to share the
-    /// specified <paramref name="value"/>. This variant will call the specified <paramref name="onRelease"/> function
-    /// when the last lease is disposed.
+    /// Creates a new <see cref="AsyncSharedReferenceLease{T}"/> that shares the specified resource using reference
+    /// counting with a custom asynchronous release callback. The callback is invoked when the last lease is released.
     /// </summary>
-    /// <param name="value">The underlying resource to be shared.</param>
-    /// <param name="onRelease">The method to be called when the last lease is disposed.</param>
     /// <typeparam name="T">The type of the shared resource.</typeparam>
+    /// <param name="value">The underlying resource to be shared.</param>
+    /// <param name="onRelease">
+    /// The asynchronous callback to invoke when the last lease is released to clean up the shared resource.
+    /// </param>
+    /// <returns>
+    /// A new <see cref="AsyncSharedReferenceLease{T}"/> representing the initial lease on the shared resource.
+    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// Use this overload when the shared resource does not implement <see cref="IAsyncDisposable"/>
+    /// or when custom asynchronous cleanup logic is required.
+    /// </para>
+    /// <para>
+    /// The returned lease holds an initial reference to the resource. Additional references can be obtained
+    /// by calling <see cref="AsyncSharedReferenceLease{T}.AddReference"/> on any active lease.
+    /// </para>
+    /// </remarks>
     public static AsyncSharedReferenceLease<T> Create<T>(T value, Func<T, ValueTask> onRelease)
     {
         var owner = new AsyncSharedReferenceOwner<T>(value, onRelease);

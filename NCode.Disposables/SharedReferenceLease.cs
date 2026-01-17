@@ -21,24 +21,36 @@ using System.Diagnostics.CodeAnalysis;
 namespace NCode.Disposables;
 
 /// <summary>
-/// Represents a lease for a shared reference that will release the underlying resource when the reference count
-/// reaches zero (0). The lease is not idempotent safe and consumers must take care to not dispose the same lease
-/// multiple times otherwise the underlying resource will be released prematurely. One solution for consumers is to
-/// assign the lease to <c>default</c> after disposing it.
+/// Represents a lease for a shared reference that uses reference counting for lifetime management.
+/// When disposed, the lease decrements the reference count, and the underlying resource is released
+/// when the count reaches zero.
 /// </summary>
 /// <typeparam name="T">The type of the shared resource.</typeparam>
-public readonly struct SharedReferenceLease<T> : IDisposable
+/// <remarks>
+/// <para>
+/// This is a <see langword="struct"/> for performance reasons, but this means it is <b>not idempotent-safe</b>.
+/// Consumers must take care not to dispose the same lease multiple times, as this will cause the reference
+/// count to be decremented multiple times, potentially releasing the resource prematurely.
+/// </para>
+/// <para>
+/// A recommended pattern is to assign the lease to <see langword="default"/> after disposing it:
+/// <code>
+/// lease.Dispose();
+/// lease = default;
+/// </code>
+/// </para>
+/// <para>
+/// Use <see cref="IsActive"/> to check if a lease is valid before accessing the shared resource.
+/// </para>
+/// </remarks>
+/// <remarks>
+/// Initializes a new instance of the <see cref="SharedReferenceLease{T}"/> struct
+/// with the specified owner.
+/// </remarks>
+/// <param name="owner">The <see cref="ISharedReferenceOwner{T}"/> instance that owns the shared reference.</param>
+public readonly struct SharedReferenceLease<T>(ISharedReferenceOwner<T> owner) : IDisposable
 {
-    internal readonly ISharedReferenceOwner<T>? OwnerOrNull;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AsyncSharedReferenceLease{T}"/> struct.
-    /// </summary>
-    /// <param name="owner">The <see cref="AsyncSharedReferenceOwner{T}"/> instance that owns the shared reference.</param>
-    public SharedReferenceLease(ISharedReferenceOwner<T> owner)
-    {
-        OwnerOrNull = owner;
-    }
+    internal readonly ISharedReferenceOwner<T>? OwnerOrNull = owner;
 
     private ISharedReferenceOwner<T> Owner =>
         !IsActive
@@ -46,39 +58,65 @@ public readonly struct SharedReferenceLease<T> : IDisposable
             : OwnerOrNull;
 
     /// <summary>
-    /// Gets a value indicating whether the lease is active.
+    /// Gets a value indicating whether the lease is active and can be used to access the shared resource.
     /// </summary>
+    /// <value>
+    /// <see langword="true"/> if the lease is active and associated with a shared reference owner;
+    /// <see langword="false"/> if the lease is the default value or has been invalidated.
+    /// </value>
+    /// <remarks>
+    /// A lease becomes inactive when it is the <see langword="default"/> value of the struct.
+    /// Always check this property before accessing <see cref="Value"/> or calling <see cref="AddReference"/>
+    /// to avoid <see cref="InvalidOperationException"/>.
+    /// </remarks>
     [MemberNotNullWhen(true, nameof(OwnerOrNull))]
     public bool IsActive => OwnerOrNull != null;
 
     /// <summary>
     /// Gets the value of the shared resource.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Thrown when this lease is not active.</exception>
-    /// <exception cref="ObjectDisposedException">Thrown when the reference count has reached zero (0)
-    /// and the underlying resource has been released already.</exception>
+    /// <value>The underlying shared resource.</value>
+    /// <exception cref="InvalidOperationException">The lease is not active (default value).</exception>
+    /// <exception cref="ObjectDisposedException">
+    /// The reference count has reached zero and the underlying resource has been released.
+    /// </exception>
     public T Value => Owner.Value;
 
     /// <summary>
-    /// Increments the reference count and returns a disposable resource that
-    /// can be used to decrement the newly incremented reference count.
+    /// Increments the reference count and returns a new lease that holds a reference to the shared resource.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Thrown when this lease is not active.</exception>
-    /// <exception cref="ObjectDisposedException">Thrown when the reference count has reached zero (0)
-    /// and the underlying resource has been released already.</exception>
+    /// <returns>
+    /// A new <see cref="SharedReferenceLease{T}"/> that decrements the reference count when disposed.
+    /// </returns>
+    /// <exception cref="InvalidOperationException">The lease is not active (default value).</exception>
+    /// <exception cref="ObjectDisposedException">
+    /// The reference count has reached zero and the underlying resource has been released.
+    /// </exception>
+    /// <remarks>
+    /// The caller is responsible for disposing the returned lease when access to the shared resource
+    /// is no longer needed.
+    /// </remarks>
     public SharedReferenceLease<T> AddReference()
     {
         return Owner.AddReference();
     }
 
     /// <summary>
-    /// Attempts to increment the reference count and outputs a disposable resource that
-    /// can be used to decrement the newly incremented reference count.
+    /// Attempts to increment the reference count and obtain a new lease to the shared resource.
     /// </summary>
-    /// <param name="reference">Destination for the <see cref="SharedReferenceLease{T}"/> instance
-    /// if the original reference count is greater than zero (0).</param>
-    /// <returns><c>true</c> if the original reference count was greater than zero (0) and
-    /// a new shared reference was successfully created with an incremented reference count.</returns>
+    /// <param name="reference">
+    /// When this method returns <see langword="true"/>, contains a new <see cref="SharedReferenceLease{T}"/>
+    /// that holds a reference to the shared resource; otherwise, the default value.
+    /// </param>
+    /// <returns>
+    /// <see langword="true"/> if the lease is active, the reference count was greater than zero,
+    /// and a new lease was successfully created; <see langword="false"/> otherwise.
+    /// </returns>
+    /// <remarks>
+    /// This method is safe to call on an inactive lease (default value) and will return <see langword="false"/>
+    /// without throwing an exception. Use this method when you need to safely check if a shared resource
+    /// is still available.
+    /// </remarks>
     public bool TryAddReference(out SharedReferenceLease<T> reference)
     {
         if (OwnerOrNull?.TryAddReference(out reference) ?? false)
@@ -91,6 +129,21 @@ public readonly struct SharedReferenceLease<T> : IDisposable
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// <para>
+    /// Decrements the reference count on the shared resource. When the reference count reaches zero,
+    /// the underlying resource is released.
+    /// </para>
+    /// <para>
+    /// <b>Warning:</b> Because this is a <see langword="struct"/>, there is no built-in protection against
+    /// calling <see cref="Dispose"/> multiple times on the same lease. Each call will decrement the
+    /// reference count, potentially causing premature release of the resource. Consider assigning the
+    /// lease to <see langword="default"/> after disposing.
+    /// </para>
+    /// <para>
+    /// This method is safe to call on an inactive lease (default value) and will have no effect.
+    /// </para>
+    /// </remarks>
     public void Dispose()
     {
         // Unfortunately, because we are a struct, there is nothing we can do to prevent the consumer from

@@ -27,18 +27,13 @@ namespace NCode.Disposables;
 /// assign the lease to <c>default</c> after disposing it.
 /// </summary>
 /// <typeparam name="T">The type of the shared resource.</typeparam>
-public readonly struct AsyncSharedReferenceLease<T> : IAsyncDisposable
+/// <remarks>
+/// Initializes a new instance of the <see cref="AsyncSharedReferenceLease{T}"/> struct.
+/// </remarks>
+/// <param name="owner">The <see cref="AsyncSharedReferenceOwner{T}"/> instance that owns the shared reference.</param>
+public readonly struct AsyncSharedReferenceLease<T>(IAsyncSharedReferenceOwner<T> owner) : IAsyncDisposable
 {
-    internal readonly IAsyncSharedReferenceOwner<T>? OwnerOrNull;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AsyncSharedReferenceLease{T}"/> struct.
-    /// </summary>
-    /// <param name="owner">The <see cref="AsyncSharedReferenceOwner{T}"/> instance that owns the shared reference.</param>
-    public AsyncSharedReferenceLease(IAsyncSharedReferenceOwner<T> owner)
-    {
-        OwnerOrNull = owner;
-    }
+    internal readonly IAsyncSharedReferenceOwner<T>? OwnerOrNull = owner;
 
     private IAsyncSharedReferenceOwner<T> Owner =>
         !IsActive

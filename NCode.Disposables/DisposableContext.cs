@@ -21,10 +21,23 @@
 namespace NCode.Disposables;
 
 /// <summary>
-/// Provides the implementation of an <see cref="IDisposable"/> resource that
-/// will invoke the <see cref="Dispose"/> method of an underlying resource using
-/// an asynchronous or synchronous operation from a <see cref="SynchronizationContext"/>.
+/// Provides an <see cref="IDisposable"/> wrapper that invokes the <see cref="IDisposable.Dispose"/> method
+/// of an underlying resource using a <see cref="SynchronizationContext"/>, enabling disposal on a specific
+/// thread or context (such as a UI thread).
 /// </summary>
+/// <remarks>
+/// <para>
+/// This class is useful when a resource must be disposed on a specific thread, such as UI controls
+/// that must be disposed on the UI thread, or when coordinating disposal with other context-sensitive operations.
+/// </para>
+/// <para>
+/// The disposal operation is idempotent; multiple calls to <see cref="Dispose"/> will only dispose
+/// the underlying resource once.
+/// </para>
+/// <para>
+/// Thread-safety: Concurrent calls to <see cref="Dispose"/> are handled safely using atomic operations.
+/// </para>
+/// </remarks>
 public sealed class DisposableContext : IDisposable
 {
     private IDisposable? _disposable;
@@ -32,16 +45,22 @@ public sealed class DisposableContext : IDisposable
     private readonly bool _async;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="DisposableContext"/> class
-    /// with an underlying <see cref="IDisposable"/> resource that will be
-    /// disposed using an asynchronous or synchronous operation from a
-    /// <see cref="SynchronizationContext"/>.
+    /// Initializes a new instance of the <see cref="DisposableContext"/> class that wraps an
+    /// underlying <see cref="IDisposable"/> resource for disposal via a <see cref="SynchronizationContext"/>.
     /// </summary>
-    /// <param name="disposable">The underlying <see cref="IDisposable"/> instance to synchronize.</param>
-    /// <param name="context">The <see cref="SynchronizationContext"/> to invoke the operation.</param>
-    /// <param name="async"><c>true</c> to asynchronously invoke the operation; otherwise, <c>false</c> to synchronously invoke the operation.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="disposable"/> is <c>null</c>.</exception>
-    /// <exception cref="ArgumentNullException"><paramref name="context"/> is <c>null</c>.</exception>
+    /// <param name="disposable">The underlying <see cref="IDisposable"/> instance to wrap.</param>
+    /// <param name="context">The <see cref="SynchronizationContext"/> used to invoke the disposal operation.</param>
+    /// <param name="async">
+    /// <see langword="true"/> to invoke disposal asynchronously via <see cref="SynchronizationContext.Post"/>;
+    /// <see langword="false"/> (the default) to invoke disposal synchronously via <see cref="SynchronizationContext.Send"/>.
+    /// </param>
+    /// <exception cref="ArgumentNullException"><paramref name="disposable"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="context"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// When <paramref name="async"/> is <see langword="true"/>, the disposal uses
+    /// <see cref="SynchronizationContext.OperationStarted"/> and <see cref="SynchronizationContext.OperationCompleted"/>
+    /// to properly track the asynchronous operation.
+    /// </remarks>
     public DisposableContext(IDisposable disposable, SynchronizationContext context, bool async = false)
     {
         ArgumentNullException.ThrowIfNull(disposable);
@@ -52,10 +71,18 @@ public sealed class DisposableContext : IDisposable
         _async = async;
     }
 
-    /// <summary>
-    /// Invokes the <see cref="Dispose"/> method of the underlying resource by using a <see cref="SynchronizationContext"/>
-    /// only if it already hasn't been invoked.
-    /// </summary>
+    /// <inheritdoc />
+    /// <remarks>
+    /// <para>
+    /// Invokes the underlying resource's <see cref="IDisposable.Dispose"/> method via the configured
+    /// <see cref="SynchronizationContext"/>. This method is idempotent; subsequent calls have no effect.
+    /// </para>
+    /// <para>
+    /// When async mode is enabled, disposal is posted to the context and this method returns immediately
+    /// without waiting for the disposal to complete. When sync mode is used, this method blocks until
+    /// the disposal completes on the target context.
+    /// </para>
+    /// </remarks>
     public void Dispose()
     {
         var disposable = Interlocked.Exchange(ref _disposable, null);

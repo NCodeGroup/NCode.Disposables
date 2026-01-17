@@ -22,64 +22,100 @@ using System.Runtime.ExceptionServices;
 namespace NCode.Disposables;
 
 /// <summary>
-/// Provides various extension methods for <see cref="IAsyncDisposable"/> instances.
+/// Provides extension methods for <see cref="IAsyncDisposable"/> instances and collections
+/// containing disposable items.
 /// </summary>
 public static class AsyncDisposableExtensions
 {
-    /// <summary>
-    /// Creates a new <see cref="AsyncSharedReferenceLease{T}"/> instance that uses reference counting to share the
-    /// specified <paramref name="value"/>. This variant will automatically dispose the resource when the last lease
-    /// is disposed.
-    /// </summary>
     /// <param name="value">The underlying resource to be shared.</param>
-    /// <typeparam name="T">The type of the shared resource.</typeparam>
-    public static AsyncSharedReferenceLease<T> AsSharedReference<T>(this T value)
-        where T : IAsyncDisposable
+    /// <typeparam name="T">The type of the shared resource, which must implement <see cref="IAsyncDisposable"/>.</typeparam>
+    extension<T>(T value) where T : IAsyncDisposable
     {
-        return AsyncSharedReference.Create(value);
+        /// <summary>
+        /// Creates a new <see cref="AsyncSharedReferenceLease{T}"/> that shares the specified <see cref="IAsyncDisposable"/>
+        /// resource using reference counting. The resource is automatically disposed asynchronously when the last lease is released.
+        /// </summary>
+        /// <returns>
+        /// A new <see cref="AsyncSharedReferenceLease{T}"/> representing the initial lease on the shared resource.
+        /// </returns>
+        /// <remarks>
+        /// This is a convenience extension method that wraps <see cref="AsyncSharedReference.Create{T}(T)"/>.
+        /// The returned lease holds an initial reference to the resource. Additional references can be obtained
+        /// by calling <see cref="AsyncSharedReferenceLease{T}.AddReference"/> on any active lease.
+        /// </remarks>
+        public AsyncSharedReferenceLease<T> AsSharedReference()
+        {
+            return AsyncSharedReference.Create(value);
+        }
     }
 
-    /// <summary>
-    /// Provides a safe way to dispose of a collection of items which may contain <see cref="IAsyncDisposable"/> and <see cref="IDisposable"/> instances.
-    /// </summary>
-    /// <param name="collection">The collection of items to dispose.</param>
-    /// <param name="ignoreExceptions"><c>true</c> to ignore any exceptions thrown while disposing individual items.</param>
-    public static async ValueTask DisposeAllAsync(
-        this IEnumerable<object?> collection,
-        bool ignoreExceptions = false)
+    /// <param name="collection">The collection of items to dispose. Items that are <see langword="null"/> or do not
+    /// implement a disposable interface are skipped.</param>
+    extension(IEnumerable<object?> collection)
     {
-        List<Exception>? exceptions = null;
-
-        foreach (var item in collection.Reverse())
+        /// <summary>
+        /// Disposes all items in a collection that implement <see cref="IAsyncDisposable"/> or <see cref="IDisposable"/>,
+        /// processing items in reverse order.
+        /// </summary>
+        /// <param name="ignoreExceptions">
+        /// <see langword="true"/> to suppress exceptions thrown by individual items during disposal and continue
+        /// disposing remaining items; <see langword="false"/> (the default) to collect and throw exceptions.
+        /// </param>
+        /// <returns>A <see cref="ValueTask"/> that represents the asynchronous dispose operation.</returns>
+        /// <remarks>
+        /// <para>
+        /// Items are disposed in reverse order (LIFO), which is typically appropriate for resource cleanup
+        /// scenarios where resources may have dependencies.
+        /// </para>
+        /// <para>
+        /// Items implementing <see cref="IAsyncDisposable"/> are disposed asynchronously via
+        /// <see cref="IAsyncDisposable.DisposeAsync"/>. Items implementing only <see cref="IDisposable"/>
+        /// are disposed synchronously via <see cref="IDisposable.Dispose"/>.
+        /// </para>
+        /// <para>
+        /// When <paramref name="ignoreExceptions"/> is <see langword="false"/> and multiple items throw exceptions,
+        /// an <see cref="AggregateException"/> containing all exceptions is thrown. If only one item throws,
+        /// that exception is rethrown directly with its original stack trace preserved.
+        /// </para>
+        /// </remarks>
+        /// <exception cref="AggregateException">
+        /// Multiple items threw exceptions during disposal and <paramref name="ignoreExceptions"/> is <see langword="false"/>.
+        /// </exception>
+        public async ValueTask DisposeAllAsync(bool ignoreExceptions = false)
         {
-            try
-            {
-                switch (item)
-                {
-                    case IAsyncDisposable asyncDisposable:
-                        await asyncDisposable.DisposeAsync();
-                        break;
+            List<Exception>? exceptions = null;
 
-                    case IDisposable disposable:
-                        disposable.Dispose();
-                        break;
+            foreach (var item in collection.Reverse())
+            {
+                try
+                {
+                    switch (item)
+                    {
+                        case IAsyncDisposable asyncDisposable:
+                            await asyncDisposable.DisposeAsync();
+                            break;
+
+                        case IDisposable disposable:
+                            disposable.Dispose();
+                            break;
+                    }
+                }
+                catch (Exception exception)
+                {
+                    if (ignoreExceptions) continue;
+                    exceptions ??= [];
+                    exceptions.Add(exception);
                 }
             }
-            catch (Exception exception)
+
+            if (exceptions == null) return;
+
+            if (exceptions.Count > 1)
             {
-                if (ignoreExceptions) continue;
-                exceptions ??= [];
-                exceptions.Add(exception);
+                throw new AggregateException(exceptions);
             }
+
+            ExceptionDispatchInfo.Throw(exceptions[0]);
         }
-
-        if (exceptions == null) return;
-
-        if (exceptions.Count > 1)
-        {
-            throw new AggregateException(exceptions);
-        }
-
-        ExceptionDispatchInfo.Throw(exceptions[0]);
     }
 }

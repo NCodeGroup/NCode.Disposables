@@ -21,8 +21,18 @@ using System.Diagnostics;
 namespace NCode.Disposables;
 
 /// <summary>
-/// Contains factory methods for creating <see cref="SharedReferenceLease{T}"/> instances.
+/// Provides factory methods for creating <see cref="SharedReferenceLease{T}"/> instances
+/// that manage shared resources using reference counting.
 /// </summary>
+/// <remarks>
+/// <para>
+/// Use this class to create shared references that allow multiple consumers to share access
+/// to a single resource. The resource is automatically released when all leases are disposed.
+/// </para>
+/// <para>
+/// This is the synchronous version. For asynchronous disposal, use <see cref="AsyncSharedReference"/>.
+/// </para>
+/// </remarks>
 public static class SharedReference
 {
     private static void Dispose<T>(T value)
@@ -32,12 +42,18 @@ public static class SharedReference
     }
 
     /// <summary>
-    /// Creates a new <see cref="SharedReferenceLease{T}"/> instance that uses reference counting to share the
-    /// specified <paramref name="value"/>. This variant will automatically dispose the resource when the last lease
-    /// is disposed.
+    /// Creates a new <see cref="SharedReferenceLease{T}"/> that shares the specified <see cref="IDisposable"/>
+    /// resource using reference counting. The resource is automatically disposed when the last lease is released.
     /// </summary>
+    /// <typeparam name="T">The type of the shared resource, which must implement <see cref="IDisposable"/>.</typeparam>
     /// <param name="value">The underlying resource to be shared.</param>
-    /// <typeparam name="T">The type of the shared resource.</typeparam>
+    /// <returns>
+    /// A new <see cref="SharedReferenceLease{T}"/> representing the initial lease on the shared resource.
+    /// </returns>
+    /// <remarks>
+    /// The returned lease holds an initial reference to the resource. Additional references can be obtained
+    /// by calling <see cref="SharedReferenceLease{T}.AddReference"/> on any active lease.
+    /// </remarks>
     public static SharedReferenceLease<T> Create<T>(T value)
         where T : IDisposable
     {
@@ -45,13 +61,27 @@ public static class SharedReference
     }
 
     /// <summary>
-    /// Creates a new <see cref="SharedReferenceLease{T}"/> instance that uses reference counting to share the
-    /// specified <paramref name="value"/>. This variant will call the specified <paramref name="onRelease"/> function
-    /// when the last lease is disposed.
+    /// Creates a new <see cref="SharedReferenceLease{T}"/> that shares the specified resource using reference
+    /// counting with a custom release callback. The callback is invoked when the last lease is released.
     /// </summary>
-    /// <param name="value">The underlying resource to be shared.</param>
-    /// <param name="onRelease">The method to be called when the last lease is disposed.</param>
     /// <typeparam name="T">The type of the shared resource.</typeparam>
+    /// <param name="value">The underlying resource to be shared.</param>
+    /// <param name="onRelease">
+    /// The callback to invoke when the last lease is released to clean up the shared resource.
+    /// </param>
+    /// <returns>
+    /// A new <see cref="SharedReferenceLease{T}"/> representing the initial lease on the shared resource.
+    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// Use this overload when the shared resource does not implement <see cref="IDisposable"/>
+    /// or when custom cleanup logic is required.
+    /// </para>
+    /// <para>
+    /// The returned lease holds an initial reference to the resource. Additional references can be obtained
+    /// by calling <see cref="SharedReferenceLease{T}.AddReference"/> on any active lease.
+    /// </para>
+    /// </remarks>
     public static SharedReferenceLease<T> Create<T>(T value, Action<T> onRelease)
     {
         var owner = new SharedReferenceOwner<T>(value, onRelease);

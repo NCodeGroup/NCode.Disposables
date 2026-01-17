@@ -2,158 +2,131 @@
 [![Nuget](https://img.shields.io/nuget/v/NCode.Disposables.svg)](https://www.nuget.org/packages/NCode.Disposables/)
 
 # NCode.Disposables
-This library provides a set of useful `IDisposable` and `IAsyncDisposable` implementations. For brevity,
-the `IDisposable` interface is used in the examples below, but the same implementations are available for
-`IAsyncDisposable` as well.
 
-## DisposeAsync If Available
-Provides an extension method that will call the `DisposeAsync` method if it is available on the `IDisposable` resource.
-If the `DisposeAsync` method is not available, then the `Dispose` method is called instead.
+A comprehensive .NET library providing useful `IDisposable` and `IAsyncDisposable` implementations for common resource management patterns.
 
+## Features
+
+### Core Implementations
+- **Empty Disposable** - No-op singleton for null object pattern
+- **Action Disposable** - Execute a delegate on dispose (idempotent)
+- **Aggregate Disposable** - Wrapper with replaceable underlying resource
+- **Collection Disposable** - Manage multiple disposables with LIFO disposal order
+- **Context Disposable** - Dispose on a specific `SynchronizationContext` (e.g., UI thread)
+- **Shared Reference** - Reference-counted resource sharing with lease pattern
+
+### Async Support
+All implementations have async counterparts (`IAsyncDisposable`):
+- `AsyncDisposable.Empty`, `Create()`, `Aggregate()`, `Collection()`, `Shared()`
+- `AsyncDisposableAdapter` - Wraps `IDisposable` as `IAsyncDisposable`
+
+### Extension Methods
+- `DisposeAsyncIfAvailable()` - Calls `DisposeAsync` if available, otherwise `Dispose`
+- `DisposeAll()` / `DisposeAllAsync()` - Dispose all items in a collection (LIFO order)
+- `AsSharedReference()` - Convert a disposable to a shared reference with leasing
+
+## Quick Reference
+
+| Feature | Sync API | Async API |
+|---------|----------|-----------|
+| Empty (no-op) | `Disposable.Empty` | `AsyncDisposable.Empty` |
+| Action callback | `Disposable.Create(action)` | `AsyncDisposable.Create(func)` |
+| Aggregate wrapper | `Disposable.Aggregate(disposable)` | `AsyncDisposable.Aggregate(disposable)` |
+| Collection | `Disposable.Collection(items)` | `AsyncDisposable.Collection(items)` |
+| Shared reference | `SharedReference.Create(value)` | `AsyncSharedReference.Create(value)` |
+| Context disposal | `Disposable.Context(disposable, ctx)` | — |
+| Adapt sync→async | — | `AsyncDisposable.Adapt(disposable)` |
+
+## Usage Examples
+
+### Empty Disposable
 ```csharp
-async ValueTask Example()
-{
-    IDisposable resource = CreateSomeResource();
-    await resource.DisposeAsyncIfAvailable();
-}
+// Singleton instance - useful as default/placeholder
+IDisposable disposable = Disposable.Empty;
+disposable.Dispose(); // no-op
 ```
 
-## Disposable Async Adapter
-Provides an `IAsyncDisposable` adapter that wraps an `IDisposable` resource and forwards the `DisposeAsync` method to the `Dispose` method of the underlying resource.
-
+### Action Disposable
 ```csharp
-async ValueTask Example()
-{
-    IDisposable resource = CreateSomeResource();
-    IAsyncDisposable asyncDisposable = AsyncDisposable.Adapt(resource);
-    await asyncDisposable.DisposeAsync();
-}
+// Execute cleanup logic on dispose (idempotent - runs only once)
+IDisposable disposable = Disposable.Create(() => Console.WriteLine("Disposed!"));
+disposable.Dispose(); // prints "Disposed!"
+disposable.Dispose(); // no-op
 ```
 
-## Disposable Empty
-Provides an implementation of `IDisposable` that is empty and performs nothing (i.e. nop) when `Dispose` is called.
-
+### Aggregate Disposable
 ```csharp
-void Example()
-{
-    // using singleton instance:
-    IDisposable disposable1 = Disposable.Empty;
-    disposable1.Dispose();
-    
-    // using new instance:
-    IDisposable disposable2 = new DisposableEmpty();
-    disposable2.Dispose();
-}
+// Wrapper allowing the underlying resource to be swapped
+var aggregate = Disposable.Aggregate(initialResource);
+aggregate.Disposable = newResource; // swap resource
+aggregate.Dispose(); // disposes current resource
 ```
 
-## Disposable Action
-Provides an `IDisposable` implementation that will invoke an `Action` delegate when `Dispose` is called. If the `Dispose` method is called multiple times, the underlying action is invoked only once on the first call.
-
+### Collection Disposable
 ```csharp
-void Example()
-{
-    IDisposable disposable = Disposable.Create(() =>
-        Console.WriteLine("I am disposed."));
-    // ...
-    disposable.Dispose();
-}
+// Manage multiple disposables - disposed in reverse (LIFO) order
+var collection = Disposable.Collection(resource1, resource2, resource3);
+collection.Add(resource4);
+collection.Remove(resource2); // removed items are NOT disposed
+collection.Dispose(); // disposes: resource4, resource3, resource1
 ```
 
-## Disposable Aggregate
-Provides an `IDisposable` implementation that contains (i.e. aggregates) a property to another underlying `IDisposable` resource. The underlying resource may be assigned or retrieved multiple times as long as the aggregate hasn't been disposed yet.
-
+### Shared Reference (Reference Counting)
 ```csharp
-void Example()
-{
-    IDisposable resource = CreateSomeResource();
-    // ...
-    var aggregate = Disposable.Aggregate(resource);
-    // ...
-    if (SomeCondition) {
-        var previous = aggregate.Disposable;
-        // ...
-        aggregate.Disposable = CreateSomeOtherResource();
-    }
-    aggregate.Dispose();
-    // ...
-}
+// Share a resource with reference counting
+IDisposable resource = CreateExpensiveResource();
+var lease1 = SharedReference.Create(resource);
+var lease2 = lease1.AddReference();
+var lease3 = lease2.AddReference();
+
+lease1.Value.DoWork();
+lease1.Dispose();
+
+lease2.Value.DoWork();
+lease2.Dispose();
+
+lease3.Value.DoWork();
+lease3.Dispose(); // resource disposed here (ref count = 0)
 ```
 
-## Disposable Collection
-Provides an `IDisposable` collection that contains other `IDisposable` resources that will be disposed when the collection itself is disposed. The items in the collection are disposed in reverse order that they are added. The items in the collection may be added, removed, or cleared at any time before the collection is disposed itself.
-
+### Context Disposable
 ```csharp
-void Example()
-{
-    IDisposable resource1 = CreateResource1();
-    IDisposable resource2 = CreateResource2();
-    // ...
-    var collection = Disposable.Collection(resource1, resource2);
-    // ...
-    var resource3 = CreateResource3();
-    if (!collection.Contains(resource3))
-        collection.Add(resource3);
-    // ...
-    collection.Dispose();
-}
+// Dispose on a specific SynchronizationContext (e.g., UI thread)
+var context = SynchronizationContext.Current;
+var disposable = Disposable.Context(uiResource, context, async: false);
+disposable.Dispose(); // runs on the context's thread
 ```
 
-## Disposable Reference Count
-Provides an `IDisposable` implementation that uses reference counting and only disposes the underlying resource when all the leases have been disposed (i.e. reference count is zero).
-The leases are not idempotent safe and consumers must take care to not dispose the same lease multiple times otherwise the underlying resource will be disposed prematurely.
-One solution for consumers is to assign the lease to `default` after disposing it.
-
+### Async Adapter
 ```csharp
-void Example()
-{
-    IDisposable resource = CreateResource();
-    // ...
-    var firstLease = SharedReference.Create(resource);
-    var secondLease = first.AddReference();
-    var thirdLease = second.AddReference();
-    // ...
-    firstLease.Value.DoSomething();
-    firstLease.Dispose();
-    firstLease = default;
-    // ...
-    secondLease.Value.DoSomethingElse();
-    secondLease.Dispose();
-    secondLease = default;
-    // ...
-    thirdLease.Value.DoSomethingElse();
-    thirdLease.Dispose();
-    thirdLease = default;
-    // the resource will be disposed here after
-    // all 3 leases have been disposed...
-}
+// Wrap IDisposable as IAsyncDisposable
+IDisposable syncResource = CreateResource();
+IAsyncDisposable asyncResource = AsyncDisposable.Adapt(syncResource);
+await asyncResource.DisposeAsync();
 ```
 
-## Disposable Context
-Provides an `IDisposable` implementation that will invoke the `Dispose` method of an underlying resource using an asynchronous or synchronous operation from a `SynchronizationContext`. If the `Dispose` method is called multiple times, the underlying resource is only disposed once on the first call.
-
+### Extension Methods
 ```csharp
-void Example()
-{
-    IDisposable resource = CreateResource();
-    // ...
-    const bool async = true;
-    var context = SynchronizationContext.Current;
-    var disposable = Disposable.Context(resource, context, async);
-    // ...
-    disposable.Dispose()
-}
+// Dispose async if available, otherwise sync
+await disposable.DisposeAsyncIfAvailable();
+
+// Dispose all items in a collection (LIFO order)
+var items = new object[] { resource1, resource2, nonDisposable, resource3 };
+items.DisposeAll(); // disposes only IDisposable items, in reverse order
+
+// Convert to shared reference
+using var lease = myDisposable.AsSharedReference();
 ```
 
 ## Feedback
+
 Please provide any feedback, comments, or issues to this GitHub project [here][issues].
 
 [issues]: https://github.com/NCodeGroup/NCode.Disposables/issues
 
 ## Release Notes
- 
+
 * v1.0.0 - Initial release
-* v1.0.1 - Unknown changes
-* v2.0.1 - Unknown changes
 * v2.0.2 - Port to .NET Core/Standard
 * v3.0.0 - Port to .NET 8.0 and refactor shared reference implementation
 * v3.0.1 - Updated xml documentation
@@ -168,4 +141,5 @@ Please provide any feedback, comments, or issues to this GitHub project [here][i
 * v5.0.2 - Removing more dead code
 * v5.1.0 - Allow creating of async shared references without requiring async callsite
 * v5.1.1 - Minor resharper cleanup
-* v5.2.1 - Collections can be any object instead of just IDisposable or IAsyncDisposable 
+* v5.2.1 - Collections can be any object instead of just IDisposable or IAsyncDisposable
+* v5.3.0 - .NET 10 upgrade

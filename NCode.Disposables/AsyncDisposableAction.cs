@@ -21,20 +21,38 @@
 namespace NCode.Disposables;
 
 /// <summary>
-/// Provides an <see cref="IAsyncDisposable"/> implementation that will invoke a <see cref="Func{ValueTask}"/> when <see cref="DisposeAsync"/> is called.
+/// Provides an <see cref="IAsyncDisposable"/> implementation that invokes a specified
+/// <see cref="Func{TResult}">Func&lt;ValueTask&gt;</see> delegate when <see cref="DisposeAsync"/> is called.
 /// </summary>
+/// <remarks>
+/// <para>
+/// This class is useful for wrapping cleanup logic in an <see cref="IAsyncDisposable"/> interface,
+/// enabling use with <see langword="await using"/> statements and other disposal patterns.
+/// </para>
+/// <para>
+/// By default, the action is invoked only once (idempotent behavior) even if <see cref="DisposeAsync"/>
+/// is called multiple times. This behavior can be configured via the constructor.
+/// </para>
+/// <para>
+/// Thread-safety: When idempotent mode is enabled, concurrent calls to <see cref="DisposeAsync"/>
+/// are handled safely using atomic operations.
+/// </para>
+/// </remarks>
 public sealed class AsyncDisposableAction : IAsyncDisposable
 {
     private Func<ValueTask>? _action;
     private readonly bool _idempotent;
 
     /// <summary>
-    /// Initializes a new instance of <see cref="AsyncDisposableAction"/> with the specified dispose action.
+    /// Initializes a new instance of the <see cref="AsyncDisposableAction"/> class with the specified
+    /// asynchronous dispose action and idempotency setting.
     /// </summary>
-    /// <param name="action">Specifies the <see cref="Func{ValueTask}"/> to invoke when <see cref="DisposeAsync"/> is called.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
-    /// <param name="idempotent">Specifies if the adapter should be idempotent where multiple calls to <c>DisposeAsync</c>
-    /// will only dispose the underlying instance once. Default is <c>true</c>.</param>
+    /// <param name="action">The asynchronous delegate to invoke when <see cref="DisposeAsync"/> is called.</param>
+    /// <param name="idempotent">
+    /// <see langword="true"/> (the default) to ensure multiple calls to <see cref="DisposeAsync"/>
+    /// will only invoke the action once; <see langword="false"/> to allow multiple invocations.
+    /// </param>
+    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
     public AsyncDisposableAction(Func<ValueTask> action, bool idempotent = true)
     {
         ArgumentNullException.ThrowIfNull(action);
@@ -43,9 +61,12 @@ public sealed class AsyncDisposableAction : IAsyncDisposable
         _idempotent = idempotent;
     }
 
-    /// <summary>
-    /// Invokes the dispose action only if it already hasn't been invoked.
-    /// </summary>
+    /// <inheritdoc />
+    /// <remarks>
+    /// When idempotent mode is enabled (the default), the action is invoked only on the first call
+    /// to this method; subsequent calls return immediately without invoking the action again.
+    /// When idempotent mode is disabled, the action is invoked on every call.
+    /// </remarks>
     public async ValueTask DisposeAsync()
     {
         var action = _idempotent ? Interlocked.Exchange(ref _action, null) : _action;

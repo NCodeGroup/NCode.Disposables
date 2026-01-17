@@ -23,19 +23,38 @@ using System.Collections;
 namespace NCode.Disposables;
 
 /// <summary>
-/// Represents an <see cref="IDisposable"/> collection that contains other
-/// <see cref="IDisposable"/> items that will be disposed when the collection
-/// itself is disposed. The items in the collection are disposed in reverse
-/// order that they were added.
+/// Represents a collection of <see cref="IDisposable"/> items that are automatically disposed
+/// when the collection itself is disposed. Items are disposed in reverse order of their addition.
 /// </summary>
+/// <remarks>
+/// <para>
+/// This interface combines <see cref="IDisposable"/> and <see cref="ICollection{T}"/> to provide
+/// a managed collection of disposable resources with automatic cleanup.
+/// </para>
+/// <para>
+/// When the collection is disposed, all contained items are disposed in LIFO (last-in, first-out) order,
+/// which is typically appropriate for resource cleanup scenarios where resources may have dependencies.
+/// </para>
+/// </remarks>
 public interface IDisposableCollection : IDisposable, ICollection<IDisposable>
 {
     // nothing
 }
 
 /// <summary>
-/// Provides the implementation for <see cref="IDisposableCollection"/>.
+/// Provides a thread-safe implementation of <see cref="IDisposableCollection"/> that manages
+/// a collection of <see cref="IDisposable"/> items with automatic disposal support.
 /// </summary>
+/// <remarks>
+/// <para>
+/// When the collection is disposed via <see cref="Dispose"/>, all contained items are disposed
+/// in reverse order of their addition (LIFO order). The disposal operation is idempotent.
+/// </para>
+/// <para>
+/// The collection can optionally be configured to ignore exceptions thrown during individual item disposal,
+/// allowing all items to be disposed even if some throw exceptions.
+/// </para>
+/// </remarks>
 public sealed class DisposableCollection : IDisposableCollection
 {
     private int _disposed;
@@ -43,29 +62,45 @@ public sealed class DisposableCollection : IDisposableCollection
     private readonly bool _ignoreExceptions;
 
     /// <summary>
-    /// Initializes a new instance of <see cref="IDisposableCollection"/> with an empty collection.
+    /// Initializes a new instance of the <see cref="DisposableCollection"/> class with an empty collection.
     /// </summary>
-    /// <param name="ignoreExceptions"><c>true</c> to ignore any exceptions thrown while disposing individual items.</param>
+    /// <param name="ignoreExceptions">
+    /// <see langword="true"/> to suppress exceptions thrown by individual items during disposal and continue
+    /// disposing remaining items; <see langword="false"/> (the default) to propagate exceptions.
+    /// </param>
     public DisposableCollection(bool ignoreExceptions = false)
     {
-        _list = new List<IDisposable>();
+        _list = [];
         _ignoreExceptions = ignoreExceptions;
     }
 
     /// <summary>
-    /// Initializes a new instance of <see cref="IDisposableCollection"/> that contains elements copied from the specified collection.
+    /// Initializes a new instance of the <see cref="DisposableCollection"/> class with elements
+    /// copied from the specified collection.
     /// </summary>
-    /// <param name="collection">The collection whose elements are copied to the new <see cref="IDisposableCollection"/>.</param>
-    /// <param name="ignoreExceptions"><c>true</c> to ignore any exceptions thrown while disposing individual items.</param>
+    /// <param name="collection">The collection whose elements are copied to the new collection.</param>
+    /// <param name="ignoreExceptions">
+    /// <see langword="true"/> to suppress exceptions thrown by individual items during disposal and continue
+    /// disposing remaining items; <see langword="false"/> (the default) to propagate exceptions.
+    /// </param>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
     public DisposableCollection(IEnumerable<IDisposable> collection, bool ignoreExceptions = false)
     {
-        _list = collection.ToList();
+        _list = [.. collection];
         _ignoreExceptions = ignoreExceptions;
     }
 
-    /// <summary>
-    /// Removes and disposes all the items contained in this collection.
-    /// </summary>
+    /// <inheritdoc />
+    /// <remarks>
+    /// <para>
+    /// Disposes all items in the collection in reverse order of their addition (LIFO order),
+    /// then clears the collection. This method is idempotent; subsequent calls have no effect.
+    /// </para>
+    /// <para>
+    /// If <c>ignoreExceptions</c> was set to <see langword="true"/> in the constructor, exceptions
+    /// thrown by individual items are suppressed, allowing all items to be disposed.
+    /// </para>
+    /// </remarks>
     public void Dispose()
     {
         if (Interlocked.CompareExchange(ref _disposed, 1, 0) != 0)
@@ -78,20 +113,23 @@ public sealed class DisposableCollection : IDisposableCollection
     }
 
     /// <summary>
-    /// Always returns <c>false</c>.
+    /// Gets a value indicating whether the collection is read-only.
     /// </summary>
+    /// <value>Always returns <see langword="false"/>.</value>
     public bool IsReadOnly => false;
 
     /// <summary>
     /// Gets the number of items contained in the collection.
     /// </summary>
+    /// <value>The number of <see cref="IDisposable"/> items in the collection.</value>
     public int Count => _list.Count;
 
     /// <summary>
-    /// Adds an item to the collection that will be disposed when the collection itself is disposed.
+    /// Adds an <see cref="IDisposable"/> item to the collection.
+    /// The item will be disposed when the collection is disposed.
     /// </summary>
-    /// <param name="item">The item to add to the collection.</param>
-    /// <exception cref="ObjectDisposedException">The <see cref="IDisposableCollection"/> is disposed.</exception>
+    /// <param name="item">The <see cref="IDisposable"/> item to add to the collection.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="item"/> is <see langword="null"/>.</exception>
     public void Add(IDisposable item)
     {
         ArgumentNullException.ThrowIfNull(item);
@@ -100,13 +138,18 @@ public sealed class DisposableCollection : IDisposableCollection
     }
 
     /// <summary>
-    /// Removes the first occurrence of the specific item from the collection but does not dispose it.
+    /// Removes the first occurrence of the specified item from the collection without disposing it.
     /// </summary>
+    /// <param name="item">The <see cref="IDisposable"/> item to remove from the collection.</param>
     /// <returns>
-    /// <c>true</c> if <paramref name="item"/> was successfully removed from the collection; otherwise, <c>false</c>.
+    /// <see langword="true"/> if <paramref name="item"/> was successfully removed from the collection;
+    /// otherwise, <see langword="false"/>. This method also returns <see langword="false"/> if
+    /// <paramref name="item"/> was not found in the collection.
     /// </returns>
-    /// <param name="item">The item to remove from the collection.</param>
-    /// <exception cref="ObjectDisposedException">The <see cref="IDisposableCollection"/> is disposed.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="item"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// The removed item is not disposed. If disposal is required, it must be done explicitly after removal.
+    /// </remarks>
     public bool Remove(IDisposable item)
     {
         ArgumentNullException.ThrowIfNull(item);
@@ -115,22 +158,26 @@ public sealed class DisposableCollection : IDisposableCollection
     }
 
     /// <summary>
-    /// Removes all the items from the collection but does not dispose them.
+    /// Removes all items from the collection without disposing them.
     /// </summary>
-    /// <exception cref="ObjectDisposedException">The <see cref="IDisposableCollection"/> is disposed.</exception>
+    /// <remarks>
+    /// The removed items are not disposed. If disposal is required, it must be done explicitly.
+    /// To dispose all items and clear the collection, use <see cref="Dispose"/> instead.
+    /// </remarks>
     public void Clear()
     {
         _list.Clear();
     }
 
     /// <summary>
-    /// Determines whether the collection contains a specific item.
+    /// Determines whether the collection contains the specified item.
     /// </summary>
+    /// <param name="item">The <see cref="IDisposable"/> item to locate in the collection.</param>
     /// <returns>
-    /// <c>true</c> if <paramref name="item"/> is found in the collection; otherwise, <c>false</c>.
+    /// <see langword="true"/> if <paramref name="item"/> is found in the collection;
+    /// otherwise, <see langword="false"/>.
     /// </returns>
-    /// <param name="item">The item to locate in the collection.</param>
-    /// <exception cref="ObjectDisposedException">The <see cref="IDisposableCollection"/> is disposed.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="item"/> is <see langword="null"/>.</exception>
     public bool Contains(IDisposable item)
     {
         ArgumentNullException.ThrowIfNull(item);
@@ -139,14 +186,19 @@ public sealed class DisposableCollection : IDisposableCollection
     }
 
     /// <summary>
-    /// Copies the elements of the collection to an <see cref="Array"/>, starting at a particular <see cref="Array"/> index.
+    /// Copies the elements of the collection to an array, starting at the specified array index.
     /// </summary>
-    /// <param name="array">The one-dimensional <see cref="Array"/> that is the destination of the elements copied from collection. The <see cref="Array"/> must have zero-based indexing.</param>
+    /// <param name="array">
+    /// The one-dimensional array that is the destination of the elements copied from the collection.
+    /// The array must have zero-based indexing.
+    /// </param>
     /// <param name="arrayIndex">The zero-based index in <paramref name="array"/> at which copying begins.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="array"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="array"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="arrayIndex"/> is less than 0.</exception>
-    /// <exception cref="ArgumentException">The number of elements in the source collection is greater than the available space from <paramref name="arrayIndex"/> to the end of the destination <paramref name="array"/>.</exception>
-    /// <exception cref="ObjectDisposedException">The <see cref="IDisposableCollection"/> is disposed.</exception>
+    /// <exception cref="ArgumentException">
+    /// The number of elements in the source collection is greater than the available space
+    /// from <paramref name="arrayIndex"/> to the end of the destination <paramref name="array"/>.
+    /// </exception>
     public void CopyTo(IDisposable[] array, int arrayIndex)
     {
         ArgumentNullException.ThrowIfNull(array);
@@ -157,15 +209,13 @@ public sealed class DisposableCollection : IDisposableCollection
     /// <summary>
     /// Returns an enumerator that iterates through the collection.
     /// </summary>
-    /// <returns>
-    /// An <see cref="IEnumerator{IDisposable}"/> that can be used to iterate through the collection.
-    /// </returns>
-    /// <exception cref="ObjectDisposedException">The <see cref="IDisposableCollection"/> is disposed.</exception>
+    /// <returns>An enumerator that can be used to iterate through the collection.</returns>
     public IEnumerator<IDisposable> GetEnumerator()
     {
         return _list.GetEnumerator();
     }
 
+    /// <inheritdoc />
     IEnumerator IEnumerable.GetEnumerator()
     {
         return GetEnumerator();
