@@ -1,4 +1,4 @@
-# Copilot Instructions for NCode.Buffers
+# Copilot Instructions
 
 ## Test Project Conventions
 
