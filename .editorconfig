@@ -6,11 +6,21 @@ root = true
 # All Files
 [*]
 charset = utf-8
-end_of_line = crlf
+end_of_line = lf
 insert_final_newline = true
 trim_trailing_whitespace = true
 indent_style = space
 indent_size = 4
+
+csharp_wrap_parameters_style = chop_if_long
+csharp_wrap_before_declaration_lpar = false
+csharp_wrap_after_declaration_lpar = true
+csharp_wrap_before_declaration_rpar = true
+
+csharp_place_method_attribute_on_same_line = never
+csharp_place_constructor_initializer_on_same_line = false
+csharp_wrap_before_first_type_parameter_constraint = true
+csharp_wrap_multiple_type_parameter_constraints_style = chop_always
 
 # Configuration Files
 [*.{json,xml,props,targets,nuspec,resx,ruleset,config,yml}]
