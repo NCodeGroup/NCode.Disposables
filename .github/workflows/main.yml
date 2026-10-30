@@ -68,7 +68,7 @@ jobs:
       - name: Run rests
         run: dotnet test --no-build --verbosity normal --configuration ${BUILD_CONFIGURATION} --logger trx
       - name: Publish tests
-        uses: dorny/test-reporter@v2
+        uses: dorny/test-reporter@v3
         if: success() || failure()
         with:
           name: test report
