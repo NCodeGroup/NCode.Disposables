@@ -1,5 +1,6 @@
 # Dependabot, built into GitHub: each week, a pull request for every newer version, which CI tests and you merge.
-# Minor and patch updates of one kind come together in a single pull request.
+# Every update of one kind, major ones included, comes together in a single pull request, so a library gets one for its
+# actions and one for its packages instead of one per package.
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -9,7 +10,6 @@ updates:
     groups:
       github-actions:
         patterns: ["*"]
-        update-types: [minor, patch]
   - package-ecosystem: nuget
     directory: /
     schedule:
@@ -17,7 +17,6 @@ updates:
     groups:
       nuget:
         patterns: ["*"]
-        update-types: [minor, patch]
   - package-ecosystem: dotnet-sdk
     directory: /
     schedule:
