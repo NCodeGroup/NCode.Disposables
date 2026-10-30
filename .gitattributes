@@ -1,3 +1,21 @@
+# Normalize text to LF in the repository and in working copies.
+* text=auto eol=lf
+
+# Windows command scripts need CRLF.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Binary files.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.snk binary
+
+# Kept from this repository's own .gitattributes when it adopted the project template
 ###############################################################################
 # Set default behavior to automatically normalize line endings.
 ###############################################################################

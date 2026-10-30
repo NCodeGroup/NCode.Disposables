@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
+
+  <!-- Shared settings from the project template; this file's own settings, after the import, override them. -->
+  <Import Project="$(MSBuildThisFileDirectory)build/ProjectTemplate.props" />
+
   <PropertyGroup>
 
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(MSBuildProjectName).xml</DocumentationFile>
