@@ -6,12 +6,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <PackageVersion Include="coverlet.collector" Version="10.1.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.403" />
-    <PackageVersion Include="Moq" Version="4.20.72" />
+    <PackageVersion Include="Moq" Version="4.21.0" />
     <PackageVersion Include="xunit" Version="2.9.3" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.1" />
   </ItemGroup>
 
 </Project>
