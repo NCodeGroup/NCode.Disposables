@@ -1,0 +1,70 @@
+name: Code review
+
+# Reviews each pull request with NCode Review (NCodeGroup/code-review), which posts as ncode-review[bot]: a "Code review"
+# check run, a summary comment with a verdict, and inline threads. Nothing requires it; its findings are advice. It
+# reviews a pull request when it opens (drafts included, since that's when its author reviews it) and when it's marked
+# ready, unless that commit was already reviewed; pushes in between start nothing. A top-level `/review` comment from
+# someone with write access reviews the latest commit on demand. A `skip-review` label skips the automatic reviews.
+#
+# pull_request_target and issue_comment both run this file from the default branch, so a pull request can't change its
+# own review. Its code is checked out only to be read: nothing from it is built, run or installed.
+#
+# This file is yours: template updates show their changes to it and leave your copy alone, so a pin you bumped isn't
+# moved back. The action is pinned to an exact release tag, never a branch or a floating major: it receives the
+# organization's keys, and code-review's tag ruleset forbids moving or deleting a tag. Dependabot's github-actions
+# entry opens each bump. Run tools/Enable-CodeReview.ps1 from a clone of NCodeGroup/code-review once for this
+# repository, which creates the code-review environment and gives it the organization's secrets.
+
+on:
+  pull_request_target:
+    types: [opened, reopened, ready_for_review]
+  issue_comment:
+    types: [created]
+
+permissions: {}
+
+jobs:
+  review:
+    # The engine checks a comment again (exactly `/review`, from a writer, on a pull request that isn't from a fork) and
+    # stops before any model call when it isn't one.
+    if: >-
+      github.event.sender.type != 'Bot' && (
+        (github.event_name == 'pull_request_target' &&
+          github.event.pull_request.head.repo.full_name == github.repository &&
+          !contains(github.event.pull_request.labels.*.name, 'skip-review')) ||
+        (github.event_name == 'issue_comment' && github.event.issue.pull_request &&
+          startsWith(github.event.comment.body, '/review') &&
+          contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)))
+    runs-on: ubuntu-latest
+    # Anthropic's federation rule trusts only jobs in this environment, which only the default branch can deploy to.
+    environment: code-review
+    timeout-minutes: 30
+    concurrency:
+      group: code-review-${{ github.event.pull_request.number || github.event.issue.number }}
+      cancel-in-progress: true
+    permissions:
+      id-token: write
+      contents: read
+      # The issues a pull request closes are context for its intent.
+      issues: read
+      pull-requests: read
+    steps:
+      - name: Check out the default branch for the conventions
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: base
+          persist-credentials: false
+
+      - name: Check out the pull request's head to read
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || format('refs/pull/{0}/head', github.event.issue.number) }}
+          path: pr
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Review
+        uses: NCodeGroup/code-review@v0.1.0
+        with:
+          app-private-key: ${{ secrets.NCODE_REVIEW_APP_PRIVATE_KEY }}
+          bedrock-api-key: ${{ secrets.AWS_BEARER_TOKEN_BEDROCK }}
