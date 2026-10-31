@@ -11,8 +11,9 @@ name: Code review
 #
 # This file is yours: template updates show their changes to it and leave your copy alone, so a pin you bumped isn't
 # moved back. The action is pinned to a release's full commit SHA, with its tag in a comment: never a tag, a branch or
-# a floating major, because it receives the organization's keys, and a SHA is the one pin nobody can move (CodeQL's
-# extended suite flags any other). Dependabot's github-actions entry opens each bump and updates the SHA and the tag.
+# a floating major, because it receives the organization's keys, and a SHA is the one pin nobody can move. CodeQL's
+# extended suite reports any other pin as actions/unpinned-tag. Dependabot's github-actions entry opens each bump and
+# updates the SHA and the tag.
 # Run tools/Enable-CodeReview.ps1 from a clone of NCodeGroup/code-review once for this
 # repository, which creates the code-review environment and gives it the organization's secrets.
 
