@@ -7,7 +7,7 @@ name: Code review
 # someone with write access reviews the latest commit on demand. A `skip-review` label skips the automatic reviews.
 #
 # pull_request_target and issue_comment both run this file from the default branch, so a pull request can't change its
-# own review. Its code is checked out only to be read: nothing from it is built, run or installed.
+# own review. The engine fetches its code only to read it: nothing from it is built, run or installed.
 #
 # This file is yours: template updates show their changes to it and leave your copy alone, so a pin you bumped isn't
 # moved back. The action is pinned to an exact release tag, never a branch or a floating major: it receives the
@@ -55,16 +55,8 @@ jobs:
           path: base
           persist-credentials: false
 
-      - name: Check out the pull request's head to read
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.event.pull_request.head.sha || format('refs/pull/{0}/head', github.event.issue.number) }}
-          path: pr
-          fetch-depth: 0
-          persist-credentials: false
-
       - name: Review
-        uses: NCodeGroup/code-review@v0.2.1
+        uses: NCodeGroup/code-review@v0.3.0
         with:
           app-private-key: ${{ secrets.NCODE_REVIEW_APP_PRIVATE_KEY }}
           bedrock-api-key: ${{ secrets.AWS_BEARER_TOKEN_BEDROCK }}
