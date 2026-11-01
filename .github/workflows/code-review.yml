@@ -4,7 +4,9 @@ name: Code review
 # check run, a summary comment with a verdict, and inline threads. Nothing requires it; its findings are advice. It
 # reviews a pull request when it opens (drafts included, since that's when its author reviews it) and when it's marked
 # ready, unless that commit was already reviewed; pushes in between start nothing. A top-level `/review` comment from
-# someone with write access reviews the latest commit on demand. A `skip-review` label skips the automatic reviews.
+# someone with write access reviews the latest commit on demand; `/review explain F3` says whether a finding still
+# holds, and `/review teach <rule>` files a rule as an issue, both on a closed pull request too. A `skip-review` label
+# skips the automatic reviews.
 # When a pull request closes, merged or not, the outcomes job records what became of each finding (fixed, dismissed,
 # acknowledged or ignored) in the summary comment, by rules alone: no review and no model call. It needs no environment:
 # the app's key is an organization secret, and the code-review environment holds none; it only lets Anthropic's
@@ -17,8 +19,9 @@ name: Code review
 # moved back. The action is pinned to a release's full commit SHA, with its tag in a comment: never a tag, a branch or
 # a floating major, because it receives the organization's keys, and a SHA is the one pin nobody can move (CodeQL's
 # extended suite flags any other). Dependabot's github-actions entry opens each bump and updates the SHA and the tag.
-# Run tools/Enable-CodeReview.ps1 from a clone of NCodeGroup/code-review once for this
-# repository, which creates the code-review environment and gives it the organization's secrets.
+# Run tools/Enable-CodeReview.ps1 from a clone of NCodeGroup/code-review once for this repository: it creates the
+# code-review environment, which only the default branch can deploy to, and gives the repository access to the
+# organization's two secrets.
 
 on:
   pull_request_target:
@@ -32,7 +35,8 @@ jobs:
   review:
     # The engine checks a comment again (`/review`, `/review explain` or `/review teach`, from a writer, on a pull request
     # that isn't from a fork) and stops before any model call when it isn't one. A plain `/review` on a closed pull
-    # request doesn't run, so it can't cancel or displace the outcomes job, which shares its concurrency group.
+    # request doesn't run, so it can't cancel or displace the outcomes job, which shares its concurrency group. The
+    # explain and teach checks here and in the concurrency group must name the same commands.
     if: >-
       (github.event_name == 'pull_request_target' && github.event.action != 'closed' &&
         github.event.pull_request.head.repo.full_name == github.repository &&
