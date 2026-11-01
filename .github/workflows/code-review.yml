@@ -5,10 +5,10 @@ name: Code review
 # reviews a pull request when it opens (drafts included, since that's when its author reviews it) and when it's marked
 # ready, unless that commit was already reviewed; pushes in between start nothing. A top-level `/review` comment from
 # someone with write access reviews the latest commit on demand. A `skip-review` label skips the automatic reviews.
-# When a pull request closes, merged or not, the review records what became of each finding (fixed, dismissed,
-# acknowledged or ignored) in the summary comment, by rules alone: no review and no model call. Releases up to v0.3.1
-# treat a closed pull request like an opened one and would pay to review it, so keep `closed` out of the types below
-# when pinning one of them.
+# When a pull request closes, merged or not, the outcomes job records what became of each finding (fixed, dismissed,
+# acknowledged or ignored) in the summary comment, by rules alone: no review and no model call. It needs no environment:
+# the app's key is an organization secret, and the code-review environment holds none; it only lets Anthropic's
+# federation rule trust the review job.
 #
 # pull_request_target and issue_comment both run this file from the default branch, so a pull request can't change its
 # own review. The engine fetches its code only to read it: nothing from it is built, run or installed.
@@ -30,14 +30,17 @@ permissions: {}
 
 jobs:
   review:
-    # The engine checks a comment again (exactly `/review`, from a writer, on a pull request that isn't from a fork) and
-    # stops before any model call when it isn't one.
+    # The engine checks a comment again (`/review`, `/review explain` or `/review teach`, from a writer, on a pull request
+    # that isn't from a fork) and stops before any model call when it isn't one. A plain `/review` on a closed pull
+    # request doesn't run, so it can't cancel or displace the outcomes job, which shares its concurrency group.
     if: >-
       (github.event_name == 'pull_request_target' && github.event.action != 'closed' &&
         github.event.pull_request.head.repo.full_name == github.repository &&
         github.event.sender.type != 'Bot' && !contains(github.event.pull_request.labels.*.name, 'skip-review')) ||
       (github.event_name == 'issue_comment' && github.event.sender.type != 'Bot' && github.event.issue.pull_request &&
         startsWith(github.event.comment.body, '/review') &&
+        (github.event.issue.state == 'open' || startsWith(github.event.comment.body, '/review explain') ||
+          startsWith(github.event.comment.body, '/review teach')) &&
         contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association))
     runs-on: ubuntu-latest
     # Anthropic's federation rule trusts only jobs in this environment, which only the default branch can deploy to.
