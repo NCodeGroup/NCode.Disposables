@@ -116,10 +116,7 @@ public sealed class SharedReferenceOwner<T>(T value, Action<T> onRelease) : ISha
     {
         get
         {
-            if (Volatile.Read(ref _count) == 0)
-            {
-                throw new ObjectDisposedException(GetType().FullName);
-            }
+            ObjectDisposedException.ThrowIf(Volatile.Read(ref _count) == 0, this);
 
             return value;
         }
@@ -128,10 +125,8 @@ public sealed class SharedReferenceOwner<T>(T value, Action<T> onRelease) : ISha
     /// <inheritdoc />
     public SharedReferenceLease<T> AddReference()
     {
-        if (!TryAddReference(out var reference))
-        {
-            throw new ObjectDisposedException(GetType().FullName);
-        }
+        var added = TryAddReference(out var reference);
+        ObjectDisposedException.ThrowIf(!added, this);
 
         return reference;
     }
