@@ -24,12 +24,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
       - name: Extract version from tag
-        uses: dhkatz/get-version-action@v3.0.0
+        uses: dhkatz/get-version-action@9166b8a614609209809cdef096d62b39287139cb # v3.0.0
         id: extract_version
       - name: Restore dependencies
         run: dotnet restore
@@ -55,6 +57,8 @@ jobs:
       checks: write
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Download artifacts
         uses: actions/download-artifact@v8
         with:
@@ -68,7 +72,7 @@ jobs:
       - name: Run rests
         run: dotnet test --no-build --verbosity normal --configuration ${BUILD_CONFIGURATION} --logger trx
       - name: Publish tests
-        uses: dorny/test-reporter@v3
+        uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
         if: success() || failure()
         with:
           name: test report
@@ -83,14 +87,17 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Download artifacts
         uses: actions/download-artifact@v8
         with:
           name: binaries
       - name: Upload release artifacts
-        run: gh release upload ${{ github.event.release.tag_name }} ./*/bin/${BUILD_CONFIGURATION}/*.nupkg ./*/bin/${BUILD_CONFIGURATION}/*.snupkg
+        run: gh release upload "${TAG_NAME}" ./*/bin/${BUILD_CONFIGURATION}/*.nupkg ./*/bin/${BUILD_CONFIGURATION}/*.snupkg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ github.event.release.tag_name }}
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
