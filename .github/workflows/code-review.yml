@@ -53,7 +53,7 @@ jobs:
     # `/review explain` and `/review teach` answer with a comment of their own, so each runs apart and never cancels a
     # review. A newer review of the same pull request cancels the one in progress.
     concurrency:
-      group: code-review-${{ (startsWith(github.event.comment.body, '/review explain') || startsWith(github.event.comment.body, '/review teach')) && format('command-{0}', github.event.comment.id) || github.event.pull_request.number || github.event.issue.number }}
+      group: code-review-${{ github.event_name == 'issue_comment' && !(github.event.comment.body == '/review' || startsWith(github.event.comment.body, format('/review{0}', fromJSON('"\n"'))) || startsWith(github.event.comment.body, format('/review{0}', fromJSON('"\r\n"')))) && format('command-{0}', github.event.comment.id) || github.event.pull_request.number || github.event.issue.number }}
       cancel-in-progress: true
     permissions:
       id-token: write
@@ -70,7 +70,7 @@ jobs:
           persist-credentials: false
 
       - name: Review
-        uses: NCodeGroup/code-review@d14405f82771819586a5ccbff636929dc894b780 # v1.0.0
+        uses: NCodeGroup/code-review@564bb16f8f4f25f88dcc47baae10d7edf55ca504 # v1.1.2
         with:
           app-private-key: ${{ secrets.NCODE_REVIEW_APP_PRIVATE_KEY }}
           bedrock-api-key: ${{ secrets.AWS_BEARER_TOKEN_BEDROCK }}
@@ -94,6 +94,6 @@ jobs:
       pull-requests: read
     steps:
       - name: Record the outcomes
-        uses: NCodeGroup/code-review@d14405f82771819586a5ccbff636929dc894b780 # v1.0.0
+        uses: NCodeGroup/code-review@564bb16f8f4f25f88dcc47baae10d7edf55ca504 # v1.1.2
         with:
           app-private-key: ${{ secrets.NCODE_REVIEW_APP_PRIVATE_KEY }}
