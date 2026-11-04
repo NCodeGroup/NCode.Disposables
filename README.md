@@ -143,3 +143,15 @@ Please provide any feedback, comments, or issues to this GitHub project [here][i
 * v5.1.1 - Minor resharper cleanup
 * v5.2.1 - Collections can be any object instead of just IDisposable or IAsyncDisposable
 * v5.3.0 - .NET 10 upgrade
+
+## Project
+
+- [CONTRIBUTING.md](CONTRIBUTING.md): how to set up, build, test and propose a change.
+- [SECURITY.md](SECURITY.md): how to report a vulnerability privately.
+- [docs/decisions/](docs/decisions/README.md): the decisions behind the design, the project's and the template's.
+- [CHANGELOG.md](CHANGELOG.md): what changed in each release, in the Keep a Changelog format.
+- [LICENSE.txt](LICENSE.txt): the license.
+
+## License
+
+NCode.Disposables is licensed under the [Apache License 2.0](LICENSE.txt).
