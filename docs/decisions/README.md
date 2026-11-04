@@ -60,5 +60,7 @@ override in `AGENTS.md`.
 
 ## Index
 
+NCode.Disposables has no decision records of its own yet; its records will be numbered from 1000.
+
 | ADR | Decision | Status |
 | --- | --- | --- |

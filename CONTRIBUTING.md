@@ -50,7 +50,7 @@ Commits record the people who wrote them. Never add a `Co-authored-by:` trailer 
 
 ## AI-Assisted Work
 
-Most changes here are planned and executed with coding agents: a frontier model plans each change into `PLAN.md`, and a cheaper one executes it one verified step at a time. [README.md](README.md#ai-assisted-workflow) lists the commands. The agents follow the rules above, and so does a change written by hand.
+Most changes here are planned and executed with coding agents: a frontier model plans each change into `PLAN.md`, and a cheaper one executes it one verified step at a time. [AGENTS.md](AGENTS.md) indexes the instructions, and [.github/instructions/project-template.instructions.md](.github/instructions/project-template.instructions.md) describes the workflow and its commands. The agents follow the rules above, and so does a change written by hand.
 
 ## Maintainers and Scope
 

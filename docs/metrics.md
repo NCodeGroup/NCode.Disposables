@@ -33,7 +33,11 @@ Built-in instruments and spans of .NET and ASP.NET Core are not listed unless th
 | Name | Type | Unit | Attributes and their values | Owner |
 | --- | --- | --- | --- | --- |
 
+NCode.Disposables defines no meters, instruments, activity sources or spans yet.
+
 ## Activity Sources and Spans
 
 | Activity source | Span | Mirrors histogram | Attributes and their values | Owner |
 | --- | --- | --- | --- | --- |
+
+NCode.Disposables defines no meters, instruments, activity sources or spans yet.
