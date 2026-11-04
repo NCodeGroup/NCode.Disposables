@@ -37,6 +37,14 @@ csharp_place_constructor_initializer_on_same_line = false
 csharp_wrap_before_first_type_parameter_constraint = true
 csharp_wrap_multiple_type_parameter_constraints_style = chop_always
 
+# The header each new C# file starts with: the copyright line, and an SPDX line for the license answered. Visual Studio and Rider add it, and IDE0073 offers the fix. A suggestion, so files without it still build. Roslyn ends a value at the first ; or #, so the header holds neither.
+file_header_template = Copyright © NCode Group\nSPDX-License-Identifier: Apache-2.0
+dotnet_diagnostic.IDE0073.severity = suggestion
+
+# EF Core migrations are scaffolded by dotnet ef, not written by hand: the analyzers treat them as generated code.
+[**/Migrations/**.cs]
+generated_code = true
+
 # Kept from this repository's own .editorconfig when it adopted the project template
 # http://editorconfig.org
 

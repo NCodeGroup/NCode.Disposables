@@ -5,8 +5,8 @@
 .DESCRIPTION
     Reads the Git repository that contains the folder and prints one "key: value" line per fact, in a fixed order:
     folder, worktree, branch, default, host, plan, issue, refs, release, steps, reviewed, landing, protected, ahead, behind, landed,
-    pr, merge, tag, renumber, conflicts, changelog-format, changelog-version, changelog-backfill, published, issue-state, issue-states, unfiled, dirty, plans and next. A fact that does not apply prints
-    "-". With an origin remote, the script first fetches it, ignoring a failure, unless -NoFetch is given. landed is
+    pr, merge, tag, renumber, conflicts, changelog-format, changelog-version, changelog-backfill, changelog-duplicates, published, issue-state, issue-states, unfiled, dirty, plans and next. A fact that does not apply prints
+    "-". With an origin remote, the script fetches it, ignoring a failure, unless -NoFetch is given. The calls that wait on the network start together, each in a runspace of its own: the fetch, git ls-remote for origin's tags, and, through gh's REST API (gh api, which works where GitHub's GraphQL API is refused, as in a Claude Code cloud session) or glab, the pull request or merge request list, the branch protection, each issue's state and the release. The release check starts with them only when the clone already has the Release: tag, and otherwise once the fetch shows origin has it. The script waits for the fetch before it reads origin's refs, and for each other call where it uses the answer. landed is
     yes when HEAD is on the default branch, or when any of the branch's merged pull requests or merge requests has its
     merge commit there and its head holds HEAD or has HEAD's tree. pr names that request, or else the newest one.
     merge is the commit that request merged as, when it merged. issue is the plan's Issue: line, which names one
@@ -15,11 +15,16 @@
     landing gives each key of AGENTS.md's Landing section that the workflow reads as key=value, with its default when
     the section leaves it out; a value may be written in backticks, and a value with a space is printed in double quotes.
     gate is the command /ship-plan runs before it pushes, or none.
+    prelude is the PowerShell command that sets up the shell, such as putting a tool on PATH, before the gate and each Done-when command, or none. It is invalid unless it is one command on one line, with no ;, |, &, &&, || or # comment: a script in the repository, written as ./<path>.ps1, that exists, or another command with its arguments.
     pr-format is <file>#<heading>, the section that sets a pull request's title and description, or none.
+    review-bots names the review bots whose findings /run-issues and /address-feedback may act on, by login without
+    the [bot] suffix GitHub's REST API adds, joined by commas: ncode-review by default, or none.
+    max-review-rounds is the number of rounds of pull request feedback after which /run-issues recommends the merge
+    and stops adding steps for the bots' findings, 3 by default; a value that isn't a whole number from 1 to 999 reads as 3.
     renumber is the version the plan moves to when another plan has landed its Release: version, or a later one, first: the newest version tag on origin (the clone's tags when origin's can't be read) or newest release heading of the changelog, ## [<version>] - <date> or ## <version>, on origin's default branch, raised as the plan's version was raised (patch, else minor, else major). It is - when that version is older, release is none, or the plan has landed. next is ship-plan rather than wait while a pull request is open and renumber isn't -, so /ship-plan renumbers the plan.
     tag is present when origin has the plan's Release: version tag, local when only this clone has it, such as one a failed push left, absent when neither has it, and unknown when git ls-remote can't read origin's tags. Without an origin remote, it reads the clone's tags: present or absent.
     conflicts names the files that conflict when origin's default branch merges into HEAD, joined by ", ", from git merge-tree --write-tree, which changes neither the index nor the working tree; none when the merge is clean, unknown when Git can't say, such as Git older than 2.38, and - on the default branch or once the plan has landed. next is ship-plan rather than wait while a pull request is open and conflicts names files, so /ship-plan adds a step that merges the default branch in.
-    changelog-format is keep-a-changelog when the changelog has a ## [Unreleased] or ## [<version>] heading, other when it has neither, and missing without the file; changelog-version is its newest release, with a leading v when the plan's Release: version has one, or -. changelog-backfill names the version tags merged into HEAD, shaped like v1.2.3 or 1.2.3, that have no release heading in the changelog, as <oldest>..<newest>, the tag alone when there is one, or - when there is none.
+    changelog-format is keep-a-changelog when the changelog has a ## [Unreleased] or ## [<version>] heading, other when it has neither, and missing without the file; changelog-version is its newest release, with a leading v when the plan's Release: version has one, or -. changelog-backfill names the version tags merged into HEAD, shaped like v1.2.3 or 1.2.3, that have no release heading in the changelog, as <oldest>..<newest>, the tag alone when there is one, or - when there is none. changelog-duplicates names each Keep a Changelog heading (### Added, Changed, Deprecated, Removed, Fixed or Security) that a section of the changelog has more than once, as <section> <heading> joined by ", ", such as [Unreleased] Changed, or - when every section has at most one of each; two pull requests that each add the same heading to a section leave it twice once both merge.
     unfiled counts the lines of PLAN.md's ## Follow-ups section, up to the next ## heading, that start with "- " or "* " and don't end with a mark /ship-plan appends: an em dash, then "filed as #<number>" or "already tracked as #<number>", either with <owner/repo> before the #, or "dropped". A line that says only None or Nothing doesn't count. It is 0 without the section and - without a plan. next is ship-plan rather than finish-plan for a landed plan while unfiled is above 0 and the Landing section's follow-ups isn't none, so /ship-plan files them.
     protected is hook when protect is hook and Git runs .githooks/pre-push, host when GitHub or GitLab requires pull
     requests into the default branch, no when it does not, unknown when the host or its CLI cannot say, and - without
@@ -53,6 +58,25 @@ function Get-LandingValue([string]$Text, [switch]$Spaced) {
     $value
 }
 
+# Whether a Landing section's prelude is one command the workflow can dot-source: a script in the repository, as
+# ./<path>.ps1, that exists, or another command with its arguments, and nothing that chains or pipes commands.
+# Invoke-PlanSteps.ps1 loads this function from this file to check a plan's - Prelude: line by the same rule.
+function Test-Prelude([string]$Command, [string]$Root) {
+    $tokens = $null; $errors = $null
+    $ast = [Management.Automation.Language.Parser]::ParseInput($Command, [ref]$tokens, [ref]$errors)
+    # A comment would hide the rest of the one-line command the workflow wraps the prelude in.
+    if ($errors.Count -or ($tokens | Where-Object Kind -EQ 'Comment') -or $ast.ParamBlock -or $ast.BeginBlock -or $ast.ProcessBlock -or $ast.DynamicParamBlock -or -not $ast.EndBlock -or $ast.EndBlock.Traps) { return $false }
+    $statements = @($ast.EndBlock.Statements)
+    if ($statements.Count -ne 1 -or $statements[0] -isnot [Management.Automation.Language.PipelineAst] -or $statements[0].Background) { return $false }
+    $elements = @($statements[0].PipelineElements)
+    if ($elements.Count -ne 1 -or $elements[0] -isnot [Management.Automation.Language.CommandAst] -or $elements[0].InvocationOperator -ne 'Unknown') { return $false }
+    $name = $elements[0].GetCommandName()
+    if (-not $name) { return $false }
+    if ($name -notmatch '\.ps1$') { return $true }
+    if ($name -notmatch '^\.[\\/]' -or ($name -split '[\\/]') -contains '..') { return $false }
+    Test-Path -LiteralPath (Join-Path $Root ($name.Substring(2) -replace '\\', '/')) -PathType Leaf
+}
+
 function ConvertTo-PlanVersion([string]$Text) {
     if ($Text -match '^v?(\d+)\.(\d+)\.(\d+)$') { return [version]::new([int]$Matches[1], [int]$Matches[2], [int]$Matches[3]) }
     $null
@@ -82,6 +106,28 @@ function Get-ChangelogBackfill([string[]]$Lines) {
     if ($missing.Count -eq 0) { '-' } elseif ($missing.Count -eq 1) { $missing[0].Tag } else { "$($missing[0].Tag)..$($missing[-1].Tag)" }
 }
 
+# The Keep a Changelog headings that a changelog section has more than once, as "<section> <heading>" joined by ", ", or -.
+function Get-ChangelogDuplicate([string[]]$Lines) {
+    $found = [Collections.Generic.List[string]]::new()
+    $section = $null; $seen = @{}; $fence = $null
+    foreach ($line in $Lines) {
+        # As in Markdown, a fence closes only on a bare run of its own character at least as long as the one that opened it,
+        # and a fence that never closes runs to the end of the file.
+        if ($null -ne $fence) {
+            if ("$line" -match '^\s*(`{3,}|~{3,})\s*$' -and $Matches[1][0] -eq $fence[0] -and $Matches[1].Length -ge $fence.Length) { $fence = $null }
+            continue
+        }
+        if ("$line" -match '^\s*(`{3,}|~{3,})') { $fence = $Matches[1]; continue }
+        if ("$line" -match '^## +(\[[^\]]+\]|\S+)') { $section = $Matches[1]; $seen = @{}; continue }
+        if ($null -ne $section -and "$line" -cmatch '^### +(Added|Changed|Deprecated|Removed|Fixed|Security)\s*$') {
+            $heading = $Matches[1]
+            $seen[$heading] = 1 + [int]$seen[$heading]
+            if ($seen[$heading] -eq 2) { $found.Add("$section $heading") }
+        }
+    }
+    if ($found.Count) { $found -join ', ' } else { '-' }
+}
+
 # The number of follow-ups in a plan's ## Follow-ups section that /ship-plan has not filed, tracked or dropped.
 function Get-UnfiledFollowUps([string[]]$Lines) {
     $count = 0; $inSection = $false
@@ -105,13 +151,20 @@ function Get-IssueState([string]$Ref, [string]$HostName) {
     if ($HostName -in 'github', 'gitlab' -and $numbers.Count -gt 0) {
         $issueNumber = $numbers[$numbers.Count - 1].Value
         $repoArgs = @()
-        if ($Ref -match '^(?<r>[^\s/#:]+/[^\s/#:]+)#\d+') { $repoArgs = @('--repo', $Matches['r']) }
-        elseif ($Ref -match '^https?://[^/\s]+/(?<r>.+?)/(?:-/)?issues/\d+') { $repoArgs = @('--repo', $Matches['r']) }
+        $apiRepo = '{owner}/{repo}'
+        if ($Ref -match '^(?<r>[^\s/#:]+/[^\s/#:]+)#\d+') { $repoArgs = @('--repo', $Matches['r']); $apiRepo = $Matches['r'] }
+        elseif ($Ref -match '^https?://[^/\s]+/(?<r>.+?)/(?:-/)?issues/\d+') { $repoArgs = @('--repo', $Matches['r']); $apiRepo = $Matches['r'] }
         $cli = if ($HostName -eq 'github') { 'gh' } else { 'glab' }
         if (Get-Command $cli -ErrorAction SilentlyContinue) {
             if ($HostName -eq 'github') {
-                $out = (& gh issue view $issueNumber @repoArgs --json state --jq .state 2>$null | Out-String).Trim()
-                if ($LASTEXITCODE -eq 0 -and $out) { $issueState = $out.ToUpperInvariant() }
+                $out = & gh api "repos/$apiRepo/issues/$issueNumber" 2>$null | Out-String
+                if ($LASTEXITCODE -eq 0) {
+                    try {
+                        $s = "$(($out | ConvertFrom-Json -ErrorAction Stop).state)"
+                        if ($s) { $issueState = $s.ToUpperInvariant() }
+                    }
+                    catch { $issueState = 'unknown' }
+                }
             }
             else {
                 $out = & glab issue view $issueNumber @repoArgs --output json 2>$null | Out-String
@@ -137,6 +190,19 @@ function Test-RequestLanded([string]$Merge, [string]$Head, [string]$Default) {
     $mergeOnDefault -and ($headInPr -or ($prTree -and $headTreeNow -and $prTree -eq $headTreeNow))
 }
 
+# Calls the host's API and returns the HTTP status and the body. The status comes from the response's own status line
+# (--include), never from the CLI's wording, and stderr stays out of the body, so a warning can't spoil the JSON. A call
+# that got no response at all (no network, no login) has no status.
+function Invoke-HostApi([string]$Cli, [string]$Path) {
+    $lines = @(& $Cli api --include $Path 2>$null)
+    $status = $null
+    if ($lines.Count -and $lines[0] -match '^HTTP/\S+\s+(\d{3})\b') { $status = [int]$Matches[1] }
+    $blank = -1
+    for ($i = 0; $i -lt $lines.Count; $i++) { if (-not $lines[$i].Trim()) { $blank = $i; break } }
+    $body = if ($blank -ge 0 -and $blank -lt $lines.Count - 1) { $lines[($blank + 1)..($lines.Count - 1)] -join "`n" } else { '' }
+    [pscustomobject]@{ Status = $status; Body = $body }
+}
+
 function Get-Protected([string]$HostName, [string]$Default, [string]$Protect) {
     if ($Protect -eq 'hook') {
         $h = (& git rev-parse --git-path hooks 2>$null | Out-String).Trim()
@@ -146,25 +212,32 @@ function Get-Protected([string]$HostName, [string]$Default, [string]$Protect) {
     if ($HostName -notin 'github', 'gitlab') { return 'unknown' }
     $cli = if ($HostName -eq 'github') { 'gh' } else { 'glab' }
     if (-not (Get-Command $cli -ErrorAction SilentlyContinue)) { return 'unknown' }
+    # The answer is no only when the host says so: rules without a pull request rule, or "not found" (HTTP 404). Any
+    # other status, no response at all, or a body that can't be read may hide a rule that requires pull requests, so that
+    # is unknown.
     if ($HostName -eq 'github') {
-        $out = & gh api "repos/{owner}/{repo}/rules/branches/$Default" 2>$null | Out-String
-        if ($LASTEXITCODE -eq 0) {
+        $unknown = $false
+        $rules = Invoke-HostApi gh "repos/{owner}/{repo}/rules/branches/$Default"
+        if ($rules.Status -eq 200) {
             try {
-                if (@($out | ConvertFrom-Json -ErrorAction Stop | Where-Object { $_.type -eq 'pull_request' }).Count -gt 0) { return 'host' }
+                if (@($rules.Body | ConvertFrom-Json -ErrorAction Stop | Where-Object { $_.type -eq 'pull_request' }).Count -gt 0) { return 'host' }
             }
-            catch { }
+            catch { $unknown = $true }
         }
-        & gh api "repos/{owner}/{repo}/branches/$Default/protection/required_pull_request_reviews" 2>$null | Out-Null
-        if ($LASTEXITCODE -eq 0) { return 'host' }
+        elseif ($rules.Status -ne 404) { $unknown = $true }
+        $protection = Invoke-HostApi gh "repos/{owner}/{repo}/branches/$Default/protection/required_pull_request_reviews"
+        if ($protection.Status -eq 200) { return 'host' }
+        if ($protection.Status -ne 404) { $unknown = $true }
+        if ($unknown) { return 'unknown' }
         return 'no'
     }
-    $out = & glab api "projects/:id/protected_branches/$Default" 2>$null | Out-String
-    if ($LASTEXITCODE -eq 0) {
-        try {
-            if (@(($out | ConvertFrom-Json -ErrorAction Stop).push_access_levels | Where-Object { $_.access_level -ne 0 }).Count -eq 0) { return 'host' }
-        }
-        catch { }
+    $protection = Invoke-HostApi glab "projects/:id/protected_branches/$Default"
+    if ($protection.Status -eq 404) { return 'no' }
+    if ($protection.Status -ne 200) { return 'unknown' }
+    try {
+        if (@(($protection.Body | ConvertFrom-Json -ErrorAction Stop).push_access_levels | Where-Object { $_.access_level -ne 0 }).Count -eq 0) { return 'host' }
     }
+    catch { return 'unknown' }
     'no'
 }
 
@@ -179,6 +252,43 @@ function Get-Conflicts([string]$Default) {
         if ($files.Count) { return ($files -join ', ') }
     }
     'unknown'
+}
+
+# The calls Start-Concurrent started, so the script's finally can stop any that a step never received.
+$concurrentCalls = [Collections.Generic.List[object]]::new()
+
+# Starts Command, a native command or one of this script's functions, in a runspace of its own whose current folder is
+# Folder, and returns the call without waiting for it, so the calls that wait on the network run at the same time.
+# Functions names the script's functions the runspace needs: Command, when it is one, and each function it calls.
+function Start-Concurrent([string]$Folder, [string]$Command, [object[]]$Arguments = @(), [string[]]$Functions = @()) {
+    $state = [initialsessionstate]::CreateDefault()
+    foreach ($name in $Functions) { $state.Commands.Add([Management.Automation.Runspaces.SessionStateFunctionEntry]::new($name, (Get-Item -LiteralPath "function:$name").Definition)) }
+    $shell = [powershell]::Create($state)
+    $null = $shell.AddScript({
+            param($Folder, $Command, $Arguments)
+            $ErrorActionPreference = 'Stop'
+            Set-Location -LiteralPath $Folder
+            $value = & $Command @Arguments 2>$null
+            [pscustomobject]@{ Value = $value; ExitCode = $LASTEXITCODE }
+        }.ToString()).AddArgument($Folder).AddArgument($Command).AddArgument($Arguments)
+    $call = [pscustomobject]@{ Shell = $shell; Handle = $shell.BeginInvoke(); Done = $false }
+    $concurrentCalls.Add($call)
+    $call
+}
+
+# Closes a call Start-Concurrent started: disposing of the call alone leaves its runspace open.
+function Close-Concurrent([object]$Call) {
+    $runspace = $Call.Shell.Runspace
+    try { $Call.Shell.Dispose() }
+    finally { $runspace.Dispose() }
+}
+
+# Waits for a call Start-Concurrent started, closes it, and returns what Command returned, as Value,
+# and its exit code, as ExitCode.
+function Receive-Concurrent([object]$Call) {
+    $Call.Done = $true
+    try { @($Call.Shell.EndInvoke($Call.Handle))[0] }
+    finally { Close-Concurrent $Call }
 }
 
 Push-Location -LiteralPath $Path
@@ -198,7 +308,6 @@ try {
     }
     else {
         $hostName = if ($originUrl -match 'gitlab') { 'gitlab' } elseif ($originUrl -match 'github\.com') { 'github' } else { 'other' }
-        if (-not $NoFetch) { & git fetch origin --prune --tags --quiet 2>$null | Out-Null }
     }
 
     if ($hostName -eq 'none') { $default = '-' }
@@ -249,8 +358,8 @@ try {
 
     # Landing policy from AGENTS.md
     # Each key the workflow reads, with its default, in the order the landing line prints them.
-    $policy = [ordered]@{ integrate = 'pull-request'; release = 'none'; changelog = 'CHANGELOG.md'; draft = 'no'; 'follow-ups' = 'issues'; 'follow-up-label' = 'follow-up'; gate = 'none'; protect = 'none'; 'pr-format' = 'none' }
-    $spacedKeys = @('follow-up-label', 'gate', 'pr-format')   # keys whose value keeps its spaces
+    $policy = [ordered]@{ integrate = 'pull-request'; release = 'none'; changelog = 'CHANGELOG.md'; draft = 'no'; 'follow-ups' = 'issues'; 'follow-up-label' = 'follow-up'; gate = 'none'; protect = 'none'; 'pr-format' = 'none'; 'review-bots' = 'ncode-review'; 'max-review-rounds' = '3'; prelude = 'none' }
+    $spacedKeys = @('follow-up-label', 'gate', 'pr-format', 'review-bots', 'prelude')   # keys whose value keeps its spaces
     $agents = Join-Path $folder 'AGENTS.md'
     if (Test-Path -LiteralPath $agents) {
         $inLanding = $false
@@ -262,9 +371,45 @@ try {
             }
         }
     }
+    if ($policy['prelude'] -ne 'none' -and -not (Test-Prelude $policy['prelude'] $folder)) { $policy['prelude'] = 'invalid' }
+    # review-bots lists logins without the [bot] suffix REST adds, joined by commas.
+    $bots = @($policy['review-bots'] -split '[\s,]+' | ForEach-Object { $_ -replace '\[bot\]\z', '' } | Where-Object { $_ })
+    $policy['review-bots'] = if ($bots.Count) { $bots -join ',' } else { 'none' }
+    if ($policy['max-review-rounds'] -notmatch '^[1-9]\d{0,2}\z') { $policy['max-review-rounds'] = '3' }
     $integrate = $policy['integrate']; $releasePolicy = $policy['release']
     $landing = @(foreach ($key in $policy.Keys) { if ($policy[$key] -match '\s') { "$key=`"$($policy[$key])`"" } else { "$key=$($policy[$key])" } }) -join ' '
-    $protected = Get-Protected $hostName $default $policy['protect']
+
+    # Start the calls that wait on the network at the same time; each part below receives its own.
+    $fetchCall = $null; $tagsCall = $null
+    $cli = if ($hostName -eq 'github') { 'gh' } elseif ($hostName -eq 'gitlab') { 'glab' } else { '' }
+    $hasCli = $cli -and [bool](Get-Command $cli -ErrorAction SilentlyContinue)
+    $requestsCall = $null; $releaseCall = $null
+    if ($hostName -ne 'none' -and -not $NoFetch) { $fetchCall = Start-Concurrent $folder 'git' @('fetch', 'origin', '--prune', '--tags', '--quiet') }
+    if ($hostName -ne 'none' -and $release -ne '-') { $tagsCall = Start-Concurrent $folder 'Get-OriginTags' -Functions 'Get-OriginTags' }
+    $protectedCall = Start-Concurrent $folder 'Get-Protected' @($hostName, $default, $policy['protect']) -Functions 'Get-Protected', 'Invoke-HostApi'
+    if ($hasCli -and $branch -ne '-' -and $branch -ne $default) {
+        # The colon is written %3A: gh api fills :owner, :repo and :branch as well as {owner}, so a branch such as repo-x would lose its name.
+        # One page of 100, as gh pr list --limit 100 read before: a branch's own pull requests are far fewer.
+        $requestsCall = if ($hostName -eq 'github') { Start-Concurrent $folder 'gh' @('api', "repos/{owner}/{repo}/pulls?head={owner}%3A$([uri]::EscapeDataString($branch))&state=all&per_page=100") }
+        else { Start-Concurrent $folder 'glab' @('mr', 'list', '--source-branch', $branch, '--all', '--output', 'json') }
+    }
+    $releaseArgs = if ($hostName -eq 'github') { @('api', "repos/{owner}/{repo}/releases/tags/$release") } else { @('release', 'view', $release) }
+    if ($hasCli -and $releasePolicy -eq 'tag+release' -and $release -ne '-') {
+        & git rev-parse -q --verify "refs/tags/$release" 2>$null | Out-Null
+        if ($LASTEXITCODE -eq 0) { $releaseCall = Start-Concurrent $folder $cli $releaseArgs }
+    }
+    $issueRefs = @($issue -split '[\s,]+' | Where-Object { $_ -and $_ -ne '-' })
+    $issueCalls = @(foreach ($ref in $issueRefs) { Start-Concurrent $folder 'Get-IssueState' @($ref, $hostName) -Functions 'Get-IssueState' })
+    if ($fetchCall) { $null = Receive-Concurrent $fetchCall }
+
+    # The fetch may have brought the release tag in: then start the release check now, alongside the calls still running.
+    $localTag = $false
+    if ($release -ne '-') {
+        & git rev-parse -q --verify "refs/tags/$release" 2>$null | Out-Null
+        $localTag = ($LASTEXITCODE -eq 0)
+    }
+    if (-not $releaseCall -and $localTag -and $hasCli -and $releasePolicy -eq 'tag+release') { $releaseCall = Start-Concurrent $folder $cli $releaseArgs }
+    $protected = (Receive-Concurrent $protectedCall).Value
 
     # Position against the default branch
     $ahead = '-'; $behind = '-'; $landed = '-'
@@ -279,10 +424,8 @@ try {
 
     $tag = '-'
     $originTags = $null
-    if ($hostName -ne 'none' -and $release -ne '-') { $originTags = Get-OriginTags }
+    if ($tagsCall) { $originTags = (Receive-Concurrent $tagsCall).Value }
     if ($release -ne '-') {
-        & git rev-parse -q --verify "refs/tags/$release" 2>$null | Out-Null
-        $localTag = ($LASTEXITCODE -eq 0)
         if ($hostName -eq 'none') { $tag = if ($localTag) { 'present' } else { 'absent' } }
         elseif ($null -eq $originTags) { $tag = 'unknown' }
         elseif ($originTags -ccontains $release) { $tag = 'present' }
@@ -291,25 +434,22 @@ try {
     }
 
     # Pull request or merge request
-    $pr = '-'; $prNumber = ''; $prState = ''; $prMerge = ''; $prHead = ''; $prBase = ''
+    $pr = '-'; $prNumber = ''; $prState = ''; $prMerge = ''; $prBase = ''
     if ($hostName -in 'github', 'gitlab' -and $branch -ne '-' -and $branch -ne $default) {
-        $cli = if ($hostName -eq 'github') { 'gh' } else { 'glab' }
         $pr = 'unknown'
-        if (Get-Command $cli -ErrorAction SilentlyContinue) {
-            $json = if ($hostName -eq 'github') {
-                & gh pr list --head $branch --state all --limit 100 --json number,state,mergeCommit,headRefOid,baseRefName 2>$null | Out-String
-            }
-            else {
-                & glab mr list --source-branch $branch --all --output json 2>$null | Out-String
-            }
-            if ($LASTEXITCODE -eq 0) {
+        if ($requestsCall) {
+            $requestsResult = Receive-Concurrent $requestsCall
+            $json = $requestsResult.Value | Out-String
+            if ($requestsResult.ExitCode -eq 0) {
                 try {
                     $items = @($json | ConvertFrom-Json -ErrorAction Stop)
                     $requests = @(foreach ($item in $items) {
                         if ($hostName -eq 'github') {
                             [pscustomobject]@{
-                                Number = "$($item.number)"; State = "$($item.state)".ToUpperInvariant()
-                                Merge = "$($item.mergeCommit.oid)"; Head = "$($item.headRefOid)"; Base = "$($item.baseRefName)"
+                                Number = "$($item.number)"
+                                State = if ($item.merged_at) { 'MERGED' } else { "$($item.state)".ToUpperInvariant() }
+                                Merge = if ($item.merged_at) { "$($item.merge_commit_sha)" } else { '' }
+                                Head = "$($item.head.sha)"; Base = "$($item.base.ref)"
                             }
                         }
                         else {
@@ -328,11 +468,11 @@ try {
                         foreach ($request in $requests) {
                             if ($request.State -eq 'MERGED' -and $request.Merge -and $request.Head -and (Test-RequestLanded $request.Merge $request.Head $default)) { $landed = 'yes'; $chosen = $request; break }
                         }
-                        $prNumber = $chosen.Number; $prState = $chosen.State; $prMerge = $chosen.Merge; $prHead = $chosen.Head; $prBase = $chosen.Base
+                        $prNumber = $chosen.Number; $prState = $chosen.State; $prMerge = $chosen.Merge; $prBase = $chosen.Base
                         $pr = "$prNumber $prState"
                     }
                 }
-                catch { $pr = 'unknown'; $prNumber = ''; $prState = ''; $prMerge = ''; $prHead = ''; $prBase = '' }
+                catch { $pr = 'unknown'; $prNumber = ''; $prState = ''; $prMerge = ''; $prBase = '' }
             }
         }
     }
@@ -352,6 +492,7 @@ try {
         }
     }
     $changelogBackfill = Get-ChangelogBackfill $changelogLines
+    $changelogDuplicates = Get-ChangelogDuplicate $changelogLines
 
     # Version still free for the plan
     $renumber = '-'
@@ -386,23 +527,20 @@ try {
 
     # Release published on the host
     $published = '-'
+    $releaseResult = if ($releaseCall) { Receive-Concurrent $releaseCall } else { $null }
     if ($releasePolicy -eq 'tag+release' -and $tag -eq 'present') {
         $published = 'unknown'
-        if ($hostName -in 'github', 'gitlab') {
-            $cli = if ($hostName -eq 'github') { 'gh' } else { 'glab' }
-            if (Get-Command $cli -ErrorAction SilentlyContinue) {
-                if ($hostName -eq 'github') { & gh release view $release --json tagName 2>$null | Out-Null }
-                else { & glab release view $release 2>$null | Out-Null }
-                $published = if ($LASTEXITCODE -eq 0) { 'yes' } else { 'no' }
-            }
+        if ($hasCli) {
+            if (-not $releaseResult) { $releaseResult = Receive-Concurrent (Start-Concurrent $folder $cli $releaseArgs) }
+            $published = if ($releaseResult.ExitCode -eq 0) { 'yes' } else { 'no' }
         }
     }
 
     # State of the linked issue
     $issueState = '-'; $issueStates = '-'
     if ($issue -ne '-') {
-        $refs = @($issue -split '[\s,]+' | Where-Object { $_ })
-        $states = @(foreach ($ref in $refs) { Get-IssueState $ref $hostName })
+        $refs = $issueRefs
+        $states = @(foreach ($call in $issueCalls) { (Receive-Concurrent $call).Value })
         $issueStates = @(for ($i = 0; $i -lt $refs.Count; $i++) { "$($refs[$i])=$($states[$i])" }) -join ' '
         $issueState = if ($states -contains 'OPEN') { 'OPEN' } elseif (@($states | Where-Object { $_ -ne 'CLOSED' }).Count -eq 0) { 'CLOSED' } else { 'unknown' }
     }
@@ -484,6 +622,7 @@ try {
     Write-Output "changelog-format: $changelogFormat"
     Write-Output "changelog-version: $changelogVersion"
     Write-Output "changelog-backfill: $changelogBackfill"
+    Write-Output "changelog-duplicates: $changelogDuplicates"
     Write-Output "published: $published"
     Write-Output "issue-state: $issueState"
     Write-Output "issue-states: $issueStates"
@@ -492,4 +631,15 @@ try {
     Write-Output "plans: $plans"
     Write-Output "next: $next"
 }
-finally { Pop-Location }
+finally {
+    # Every call is received on the way to the output, so a call left here means the script stopped with an error.
+    # Nothing reads its answer then: stop it instead of waiting for it, and ignore its own error, which the script's
+    # error already outranks.
+    foreach ($call in $concurrentCalls) {
+        if ($call.Done) { continue }
+        $call.Done = $true
+        try { $call.Shell.Stop() } catch { $null = $_ }
+        Close-Concurrent $call
+    }
+    Pop-Location
+}

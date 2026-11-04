@@ -17,6 +17,7 @@
 
 #endregion
 
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.ExceptionServices;
 
 namespace NCode.Disposables;
@@ -25,6 +26,10 @@ namespace NCode.Disposables;
 /// Provides extension methods for <see cref="IDisposable"/> instances and collections
 /// containing disposable items.
 /// </summary>
+[SuppressMessage(
+    "Naming",
+    "CA1708:Identifiers should differ by more than case",
+    Justification = "False positive: the analyzer compares the compiler-generated names of the C# 14 extension blocks.")]
 public static class DisposableExtensions
 {
     /// <param name="disposable">The <see cref="IDisposable"/> instance to dispose, or <see langword="null"/>.</param>
