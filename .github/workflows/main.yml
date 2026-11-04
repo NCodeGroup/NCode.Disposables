@@ -24,6 +24,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
@@ -55,6 +57,8 @@ jobs:
       checks: write
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Download artifacts
         uses: actions/download-artifact@v8
         with:
@@ -83,14 +87,17 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Download artifacts
         uses: actions/download-artifact@v8
         with:
           name: binaries
       - name: Upload release artifacts
-        run: gh release upload ${{ github.event.release.tag_name }} ./*/bin/${BUILD_CONFIGURATION}/*.nupkg ./*/bin/${BUILD_CONFIGURATION}/*.snupkg
+        run: gh release upload "${TAG_NAME}" ./*/bin/${BUILD_CONFIGURATION}/*.nupkg ./*/bin/${BUILD_CONFIGURATION}/*.snupkg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ github.event.release.tag_name }}
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
