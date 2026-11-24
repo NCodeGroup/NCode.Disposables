@@ -14,7 +14,7 @@ and [ADR-0150](decisions/project-template/0150-a-workflow-raises-the-package-val
 ## What checks it
 
 1. The PublicAPI analyzer, on every build: `RS0016` for a public symbol that is not listed and `RS0017` for a listed symbol that is gone, against `PublicAPI.Shipped.txt` and `PublicAPI.Unshipped.txt`.
-2. Package validation (`CP` diagnostics), on every `dotnet pack`: the full `./build/dod.ps1`, CI and `.github/workflows/main.yml`, but not `./build/dod.ps1 -Fast`. It compares each target framework with the others and, once the project sets a baseline, the package with the last published one.
+2. Package validation (`CP` diagnostics), on every `dotnet pack`: the full `./build/dod.ps1`, CI and `publish.yml`, but not `./build/dod.ps1 -Fast`. It compares each target framework with the others and, once the project sets a baseline, the package with the last published one.
 
 ## Changing the public API
 
@@ -22,7 +22,7 @@ Run `./build/Update-PublicApi.ps1` and review the `PublicAPI.Unshipped.txt` diff
 
 ## Releasing and the baseline
 
-The release change runs `./build/Update-PublicApi.ps1 -Release` and sets `version.json`. The project sets `<PackageValidationBaselineVersion>` once, to the last version on nuget.org, in `Directory.Build.props` after the import or in the packable project's `.csproj`; `.\.template\Update-Project.ps1` and the template's `Adopt-Project.ps1` name that version. From then on `./build/Update-Baseline.ps1 -Version <version>` raises it once nuget.org lists a release. A baseline one release behind still compares against a real release and only misses the breaks since then, so a late raise is safe too.
+The release change runs `./build/Update-PublicApi.ps1 -Release` and sets `version.json`. The project sets `<PackageValidationBaselineVersion>` once, to the last version on nuget.org, in `Directory.Build.props` after the import or in the packable project's `.csproj`; `.\.template\Update-Project.ps1` and the template's `Adopt-Project.ps1` name that version. From then on `./build/Update-Baseline.ps1 -Version <version>` raises it once nuget.org lists a release, and on GitHub `.github/workflows/raise-baseline.yml` runs it after each release, pushes its branch and opens an issue whose link opens the pull request to merge. A baseline one release behind still compares against a real release and only misses the breaks since then, so a late raise is safe too.
 
 ## An intended break
 

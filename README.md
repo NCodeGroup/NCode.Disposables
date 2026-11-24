@@ -1,4 +1,4 @@
-[![ci](https://github.com/NCodeGroup/NCode.Disposables/actions/workflows/main.yml/badge.svg)](https://github.com/NCodeGroup/NCode.Disposables/actions)
+[![ci](https://github.com/NCodeGroup/NCode.Disposables/actions/workflows/ci.yml/badge.svg)](https://github.com/NCodeGroup/NCode.Disposables/actions/workflows/ci.yml)
 [![Nuget](https://img.shields.io/nuget/v/NCode.Disposables.svg)](https://www.nuget.org/packages/NCode.Disposables/)
 
 # NCode.Disposables

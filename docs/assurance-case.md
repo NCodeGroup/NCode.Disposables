@@ -52,7 +52,12 @@ Not written yet.
   a new version ([ADR-0009](decisions/project-template/0009-new-dependency-versions-wait-a-cooldown.md)). Dependabot proposes the updates. Central package management keeps one version of each package
   ([ADR-0101](decisions/project-template/0101-central-package-management.md)).
 - **Release integrity:** packages are deterministic and source-linked
-  ([ADR-0130](decisions/project-template/0130-source-link-and-symbol-packages.md)). The project's own workflow, `.github/workflows/main.yml`, publishes them to nuget.org. [SECURITY.md](../SECURITY.md#verify-a-package) says how to verify a package.
+  ([ADR-0130](decisions/project-template/0130-source-link-and-symbol-packages.md)). `publish.yml` builds them from a tagged commit the default branch holds and pushes them through
+  nuget.org trusted publishing with no stored key, after a maintainer approves
+  ([ADR-0135](decisions/project-template/0135-packages-are-published-from-a-github-release-through-trusted-publishing.md),
+  [ADR-0137](decisions/project-template/0137-the-release-workflow-starts-package-publishing.md)), and each release
+  carries signed provenance and an SBOM ([ADR-0139](decisions/project-template/0139-releases-carry-build-provenance.md),
+  [ADR-0151](decisions/project-template/0151-release-follow-ups-are-jobs-publish-calls.md)). [SECURITY.md](../SECURITY.md#verify-a-package) says how to verify a package.
 - **Response:** [SECURITY.md](../SECURITY.md) defines private reporting, coordinated disclosure and credit.
 
 ## Security Reviews

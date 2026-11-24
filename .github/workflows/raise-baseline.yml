@@ -1,0 +1,121 @@
+# Raise the package validation baseline: publish.yml calls this workflow as its baseline job after it publishes a stable
+# release, or a person runs it by hand with a release tag. It runs build/Update-Baseline.ps1, which waits for nuget.org
+# to list the version and raises PackageValidationBaselineVersion to it, removing the baseline suppressions a new major
+# version leaves behind, then pushes baseline-<version> and opens an issue with a link that opens the pull request, its
+# title and description filled in, `Closes #<issue>` included. A person opens it, which starts CI and NCode Review's
+# review, so the workflow needs no "Allow GitHub Actions to create and approve pull requests", which
+# tools/Set-RepositoryBaseline.ps1 keeps off (ADR-0036). A rerun finds the branch and its open issue, pushes nothing,
+# and writes the issue's link again, so a run that failed after the push is finished by running it again. It is not
+# started by a workflow-run trigger, which GitHub never fires for the run tag-release.yml starts with GITHUB_TOKEN. The
+# template's ADR-0150 and ADR-0151 say why; it changes nothing until the project sets the baseline once (ADR-0147).
+#
+# The checkout keeps no credential; the branch check and the push get the token for that one command. The template
+# owns this file.
+name: Raise the package validation baseline
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: The release tag whose version becomes the baseline, such as v1.2.3
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: The release tag whose version becomes the baseline, such as v1.2.3
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  raise:
+    name: Push the baseline branch and open its issue
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    # One raise at a time; a second waits, so two releases never race to one branch.
+    concurrency:
+      group: raise-baseline
+      cancel-in-progress: false
+    permissions:
+      # To push the branch.
+      contents: write
+      # To open the issue.
+      issues: write
+    steps:
+      # The tag reaches the script through env, and only after it is known to be a version, so it can't inject anything.
+      - name: Read the tag
+        id: tag
+        shell: pwsh
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          if ($env:TAG -match '^v(\d+\.\d+\.\d+)$') { "version=$($Matches[1])" >> $env:GITHUB_OUTPUT; exit 0 }
+          if ($env:TAG -match '^v\d+\.\d+\.\d+-[0-9A-Za-z.-]+$') { "$env:TAG is a prerelease, which is never a baseline." >> $env:GITHUB_STEP_SUMMARY; exit 0 }
+          throw "The tag '$env:TAG' isn't a version such as v1.2.3."
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.tag.outputs.version
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+      - name: Raise the baseline
+        id: baseline
+        if: steps.tag.outputs.version
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.tag.outputs.version }}
+        run: |
+          $set = ./build/Update-Baseline.ps1 -Version $env:VERSION
+          "set=$(([bool]$set).ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+      - name: Open the issue with the pull request's link
+        if: steps.baseline.outputs.set == 'true'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ steps.tag.outputs.version }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+        run: |
+          $branch = "baseline-$env:VERSION"
+          $auth = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes("x-access-token:$env:GH_TOKEN"))
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" ls-remote --exit-code --heads origin $branch *> $null
+          $exists = $LASTEXITCODE -eq 0
+          if (-not $exists -and $LASTEXITCODE -ne 2) { throw "git ls-remote failed with exit code $LASTEXITCODE." }
+          git config user.name 'github-actions[bot]'
+          if ($LASTEXITCODE) { throw "git config user.name failed with exit code $LASTEXITCODE." }
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if ($LASTEXITCODE) { throw "git config user.email failed with exit code $LASTEXITCODE." }
+          git switch -c $branch
+          if ($LASTEXITCODE) { throw "git switch failed with exit code $LASTEXITCODE." }
+          $deleted = @(git ls-files --deleted -- '*CompatibilitySuppressions.xml')
+          if ($LASTEXITCODE) { throw "git ls-files failed with exit code $LASTEXITCODE." }
+          $edited = @(git ls-files --modified -- '*CompatibilitySuppressions.xml' | Where-Object { $_ -notin $deleted })
+          if ($LASTEXITCODE) { throw "git ls-files failed with exit code $LASTEXITCODE." }
+          # A rerun after the push, such as one that failed at the issue, pushes nothing and goes on to the issue.
+          if (-not $exists) {
+              git commit -am "Raise the package validation baseline to $env:VERSION"
+              if ($LASTEXITCODE) { throw "git commit failed with exit code $LASTEXITCODE." }
+              git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" push origin $branch
+              if ($LASTEXITCODE) { throw "git push failed with exit code $LASTEXITCODE." }
+          }
+          $body = 'Raises `PackageValidationBaselineVersion` to {0}, which nuget.org now lists, so each pack is validated against the newest release (the template''s ADR-0150). Pushed by `.github/workflows/raise-baseline.yml`.' -f $env:VERSION
+          if ($deleted.Count) { $body += "`n`n" + ('Deletes {0}: the baseline reached a new major version, and its suppressions all compared with the previous one, which package validation would now reject as unnecessary.' -f (($deleted | ForEach-Object { '`' + $_ + '`' }) -join ', ')) }
+          if ($edited.Count) { $body += "`n`n" + ('Removes the suppressions that compared with the previous major version from {0}, keeping the others.' -f (($edited | ForEach-Object { '`' + $_ + '`' }) -join ', ')) }
+          $title = "Raise the package validation baseline to $env:VERSION"
+          # The branch's open issue, from an earlier run that stopped before its link was written, or a new one. gh prints
+          # the new issue's URL last.
+          $issueTitle = "Open the pull request that raises the package validation baseline to $env:VERSION"
+          $open = @(gh issue list --state open --search "in:title $issueTitle" --json 'number,title' | ConvertFrom-Json | Where-Object title -eq $issueTitle)
+          if ($LASTEXITCODE) { throw "gh issue list failed with exit code $LASTEXITCODE." }
+          if ($open.Count) { $number = $open[0].number }
+          else {
+              $url = @(gh issue create --title $issueTitle --body "``$branch`` raises ``PackageValidationBaselineVersion`` to $env:VERSION. Its pull request link follows.")[-1]
+              if ($LASTEXITCODE) { throw "gh issue create failed with exit code $LASTEXITCODE." }
+              $number = $url.Split('/')[-1]
+          }
+          $link = "$env:GITHUB_SERVER_URL/$env:GH_REPO/compare/$env:DEFAULT_BRANCH...${branch}?quick_pull=1&title=$([uri]::EscapeDataString($title))&body=$([uri]::EscapeDataString("$body`n`nCloses #$number"))"
+          gh issue edit $number --body "``$branch`` raises ``PackageValidationBaselineVersion`` to $env:VERSION, which nuget.org now lists. [Open its pull request]($link): opening it starts CI and NCode Review's review, and merging it closes this issue (the template's ADR-0150 and ADR-0036)."
+          if ($LASTEXITCODE) { throw "gh issue edit failed with exit code $LASTEXITCODE." }
+          "Issue #$number links the pull request from $branch." >> $env:GITHUB_STEP_SUMMARY

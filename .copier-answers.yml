@@ -10,7 +10,6 @@ csharp_format: true
 git_host: github
 license: Apache-2.0
 nuget_package: true
-nuget_publisher: .github/workflows/main.yml
 package_icon: NCodeGroup.png
 project_description: ''
 project_name: NCode.Disposables

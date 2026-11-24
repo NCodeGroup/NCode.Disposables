@@ -1,0 +1,185 @@
+# Publish packages: when a GitHub release is published, or when the Tag and publish release workflow (tag-release.yml)
+# starts it for the release it published, packs every packable project with the version its tag names, which
+# version.json must hold when the project has one, and pushes the packages, with their symbol packages, to nuget.org.
+# docs/decisions/project-template/ says why.
+#
+# Four jobs, so the job that builds the code never holds a publishing credential:
+#   - pack checks the tag is a version (v1.2.3 or v1.2.3-rc.1) and names a commit the default branch holds, so a tag on
+#     an unreviewed commit publishes nothing; then it tests and packs in Release, and uploads the packages;
+#   - publish runs in the protected `nuget` environment, exchanges the job's OIDC token for a short-lived nuget.org API
+#     key through nuget.org trusted publishing, and pushes them. A rerun skips the packages already pushed;
+#   - provenance calls release-provenance.yml, which attests the packages and attaches them, the provenance and an SBOM
+#     to the release, and baseline calls raise-baseline.yml, which pushes the branch that raises the package validation
+#     baseline and opens an issue whose link opens its pull request, for a stable version only (the template's ADR-0151
+#     and ADR-0036).
+#
+# A release made with a workflow's GITHUB_TOKEN, as tag-release.yml makes it, starts no workflow, so tag-release.yml
+# starts this one through workflow_dispatch, on the tag and with the tag as input. To publish a release by hand:
+# Actions > Publish packages > Run workflow, with its tag.
+#
+# Set up once: on nuget.org, a trusted publishing policy for this repository and the workflow file publish.yml; in the
+# repository, the `nuget` environment, with required reviewers, and the variable NUGET_USER naming the nuget.org account
+# that owns the policy. The project owns this file: template updates never change it. A project that publishes from a
+# workflow of its own deletes it; the template's update and adoption leave it out of a repository where another
+# workflow runs nuget push, and the update warns when both do.
+name: Publish packages
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: The release tag to publish, such as v1.2.3
+        required: true
+        type: string
+
+permissions: {}
+
+# One publication at a time; a second waits rather than racing the first to nuget.org.
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  pack:
+    name: Pack
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Read the version from the tag
+        id: version
+        shell: pwsh
+        env:
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          if ($env:TAG -cnotmatch '^v([0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?)\z') { throw "The release tag '$env:TAG' isn't a version such as v1.2.3." }
+          "version=$($Matches[1])" >> $env:GITHUB_OUTPUT
+          "tag=$env:TAG" >> $env:GITHUB_OUTPUT
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The tagged commit, also in a run started by hand from another branch.
+          ref: refs/tags/${{ steps.version.outputs.tag }}
+          # Every branch's history, for the check below.
+          fetch-depth: 0
+          persist-credentials: false
+      # Only reviewed code publishes: the tag must name a commit the default branch already holds.
+      - name: Check the tagged commit is on the default branch
+        shell: pwsh
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          git merge-base --is-ancestor HEAD "origin/$env:DEFAULT_BRANCH"
+          if ($LASTEXITCODE -eq 1) { throw "The release tag names a commit that isn't on $env:DEFAULT_BRANCH: tag a commit that is." }
+          if ($LASTEXITCODE) { throw "git merge-base failed with exit code $LASTEXITCODE." }
+      # The SDK global.json selects and the runtime of each older .NET a test project targets.
+      - uses: ./.github/actions/install-dotnet
+      - name: Test
+        run: dotnet test --configuration Release -p:PublicRelease=true
+      # With version.json, Nerdbank.GitVersioning packs its version and ignores -p:Version, and PublicRelease drops
+      # the -g<commit> suffix, as this is the tagged commit; without version.json, -p:Version is the tag's (ADR-0138).
+      - name: Pack
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: dotnet pack --configuration Release --output artifacts/packages -p:PublicRelease=true "-p:Version=$VERSION"
+      # A version.json that holds another version, or a project that sets its own Version, would pack a version the tag
+      # doesn't name.
+      - name: Check every package has the tag's version
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          $packages = @(Get-ChildItem artifacts/packages -Filter '*.nupkg')
+          if (-not $packages) { throw 'dotnet pack produced no package: set IsPackable to false only on the projects that are not published.' }
+          $wrong = @($packages | Where-Object { -not $_.Name.EndsWith(".$env:VERSION.nupkg", [StringComparison]::OrdinalIgnoreCase) })
+          if ($wrong) { throw "These packages don't have version $env:VERSION, the tag's: $($wrong.Name -join ', '). Set version in version.json to $env:VERSION, or remove the Version a project sets itself." }
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: packages
+          path: |
+            artifacts/packages/*.nupkg
+            artifacts/packages/*.snupkg
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Publish to nuget.org
+    needs: pack
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: nuget
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: packages
+          path: packages
+      # A version already on nuget.org can't be replaced: when every package has it, this release publishes nothing.
+      # When only some do, a run that failed part way is being run again, and the push below completes it.
+      # Only a 404 means a package has no published version; any other failed lookup stops the job rather than miscount.
+      - name: Check the version is new
+        id: new
+        shell: pwsh
+        env:
+          VERSION: ${{ needs.pack.outputs.version }}
+        run: |
+          $packages = @(Get-ChildItem packages -Filter '*.nupkg')
+          $published = 0
+          foreach ($package in $packages) {
+            $id = $package.Name.Substring(0, $package.Name.Length - ".$env:VERSION.nupkg".Length).ToLowerInvariant()
+            $answer = Invoke-RestMethod -Uri "https://api.nuget.org/v3-flatcontainer/$id/index.json" -SkipHttpErrorCheck -StatusCodeVariable status
+            $versions = if ($status -eq 404) { @() } elseif ($status -eq 200) { @($answer.versions) } else { throw "nuget.org answered HTTP $status for ${id}: run the workflow again once it answers." }
+            if ($versions -contains $env:VERSION.ToLowerInvariant()) { $published++ }
+          }
+          if ($published -eq $packages.Count) { throw "Every package is already on nuget.org at $env:VERSION; publish a new version." }
+          "pushed=$($packages.Count - $published)" >> $env:GITHUB_OUTPUT
+          "total=$($packages.Count)" >> $env:GITHUB_OUTPUT
+      - name: Log in to nuget.org
+        id: login
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
+        with:
+          user: ${{ vars.NUGET_USER }}
+      # dotnet nuget push also pushes each package's .snupkg, found beside it, to the nuget.org symbol server.
+      - name: Push packages
+        env:
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
+          VERSION: ${{ needs.pack.outputs.version }}
+          PUSHED: ${{ steps.new.outputs.pushed }}
+          TOTAL: ${{ steps.new.outputs.total }}
+        run: |
+          dotnet nuget push 'packages/*.nupkg' --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+          echo "Published $PUSHED of $TOTAL packages at **$VERSION** to nuget.org; the others were already there." >> "$GITHUB_STEP_SUMMARY"
+
+  # Attests the packages this run published and attaches them, the provenance and an SBOM to the release. It is a job
+  # of this run, not a workflow_run of its own, because tag-release.yml starts this run with GITHUB_TOKEN, and such a
+  # run fires no workflow_run event (the template's ADR-0151). Only this job holds the write permissions it needs.
+  provenance:
+    name: Attach release provenance
+    needs: [pack, publish]
+    permissions:
+      actions: read
+      attestations: write
+      contents: write
+      id-token: write
+    uses: ./.github/workflows/release-provenance.yml
+    with:
+      tag: v${{ needs.pack.outputs.version }}
+
+  # Pushes the branch that raises the package validation baseline to this version and opens an issue whose link opens
+  # its pull request (the template's ADR-0150 and ADR-0036), for a stable version only: a pre-release is never a
+  # baseline. A job of this run for the same reason as provenance (the template's ADR-0151).
+  baseline:
+    name: Raise the package validation baseline
+    needs: [pack, publish]
+    if: ${{ !contains(needs.pack.outputs.version, '-') }}
+    permissions:
+      contents: write
+      issues: write
+    uses: ./.github/workflows/raise-baseline.yml
+    with:
+      tag: v${{ needs.pack.outputs.version }}
