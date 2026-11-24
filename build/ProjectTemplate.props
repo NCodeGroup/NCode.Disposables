@@ -18,7 +18,7 @@
     <Product>NCode.Disposables</Product>
     <Authors>NCode Group</Authors>
     <Company>NCode Group</Company>
-    <Copyright>Copyright © $([System.DateTime]::Now.Year) NCode Group</Copyright>
+    <Copyright>Copyright © NCode Group</Copyright>
     <NeutralLanguage>en-US</NeutralLanguage>
   </PropertyGroup>
 
@@ -33,8 +33,9 @@
     <PackageReference Include="Nullable.Extended.Analyzer" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
   </ItemGroup>
 
-  <!-- NuGet packages: license expression, README and icon in each package, Source Link (built into the .NET SDK) with untracked sources, symbol packages and XML documentation. A project's own README.md is its package's readme; without one, the repository's is. -->
+  <!-- NuGet packages: license expression, README and icon in each package, Source Link (built into the .NET SDK) with untracked sources, symbol packages and XML documentation. A project's own README.md is its package's readme; without one, the repository's is. Package validation compares each pack with its other target frameworks and with PackageValidationBaselineVersion, which the project sets. -->
   <PropertyGroup>
+    <EnablePackageValidation>true</EnablePackageValidation>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>NCodeGroup.png</PackageIcon>
@@ -55,7 +56,18 @@
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
   </ItemGroup>
 
-  <!-- The package's project page and release notes point at the repository Source Link finds from the git remote, unless the project sets them. -->
+  <!-- Nerdbank.GitVersioning stamps every assembly and package with the version in the root version.json: exactly that version from a release tag or with -p:PublicRelease=true, <version>-g<commit> from any other commit, and its assemblyVersion keeps AssemblyVersion on the major version. Without version.json, the version comes from -p:Version and the target below pins AssemblyVersion (ADR-0136, ADR-0138). -->
+  <ItemGroup Condition="Exists('$(MSBuildThisFileDirectory)../version.json')">
+    <PackageReference Include="Nerdbank.GitVersioning" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- A documentation site built with the NCodeGroup/docs toolchain is the package's project page: site.url in docs/site/site.config.json, read here, so a PackageProjectUrl the project sets later still wins (ADR-0152). -->
+  <PropertyGroup Condition="'$(PackageProjectUrl)' == '' and Exists('$(MSBuildThisFileDirectory)../docs/site/site.config.json')">
+    <_ProjectTemplateSiteUrl>$([System.Text.RegularExpressions.Regex]::Replace($([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)../docs/site/site.config.json')), '(?s)^(?:.*?"site"\s*:\s*\{[^{}]*?"url"\s*:\s*"(https?://[^"\s]+)".*|.*)$', '$1').TrimEnd('/'))</_ProjectTemplateSiteUrl>
+    <PackageProjectUrl Condition="'$(_ProjectTemplateSiteUrl)' != ''">$(_ProjectTemplateSiteUrl)/</PackageProjectUrl>
+  </PropertyGroup>
+
+  <!-- Without a documentation site, the package's project page points at the repository Source Link finds from the git remote, and its release notes at the changelog there, unless the project sets them. -->
   <Target Name="ProjectTemplateRepositoryLinks" BeforeTargets="GenerateNuspec" DependsOnTargets="InitializeSourceControlInformation" Condition="'$(RepositoryUrl)' != '' or '$(PrivateRepositoryUrl)' != ''">
     <PropertyGroup>
       <_ProjectTemplateRepository>$(RepositoryUrl)</_ProjectTemplateRepository>
@@ -67,7 +79,7 @@
   </Target>
 
   <!-- Semantic versioning for the assemblies: AssemblyVersion moves only with the major version, so a minor or patch upgrade is a drop-in replacement and two majors load side by side; FileVersion and InformationalVersion keep the exact version. A target, so it reads the final Version, from the project file or the command line. -->
-  <Target Name="ProjectTemplatePinAssemblyVersion" BeforeTargets="GetAssemblyVersion" Condition="'$(AssemblyVersion)' == ''">
+  <Target Name="ProjectTemplatePinAssemblyVersion" BeforeTargets="GetAssemblyVersion" Condition="'$(AssemblyVersion)' == '' and !Exists('$(MSBuildThisFileDirectory)../version.json')">
     <PropertyGroup>
       <FileVersion Condition="'$(FileVersion)' == ''">$(Version.Split('-')[0].Split('+')[0])</FileVersion>
       <AssemblyVersion>$([System.Version]::Parse($(Version.Split('-')[0].Split('+')[0])).Major).0.0.0</AssemblyVersion>

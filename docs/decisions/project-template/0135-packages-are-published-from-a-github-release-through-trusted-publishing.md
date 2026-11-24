@@ -1,6 +1,6 @@
 # 0135. Packages are published from a GitHub release through trusted publishing
 
-- **Status:** Accepted
+- **Status:** Accepted (amended by 0137 and 0138)
 - **Date:** 2026-10-31
 
 ## Context
@@ -30,13 +30,15 @@ publishing, with no long-lived API key.
 1. The trigger is a published release. The workflow runs on `release: published`, never on a push or a merge, so
    publishing follows the same deliberate act that publishes the release notes.
 2. The version is the release tag. The tag must be a version, `v1.2.3` or `v1.2.3-rc.1`, and the leading `v` is
-   dropped: `v1.2.3` packs `1.2.3`. There is no version file to bump and forget, and the package, the tag, the release
-   and the changelog section all name one version.
+   dropped: `v1.2.3` packs `1.2.3`. With `version.json`, the packages take its version, which must be the tag's
+   ([ADR-0138](0138-package-versions-come-from-version-json-through-nerdbank-gitversioning.md)), so the package, the
+   tag, the release and the changelog section all name one version.
 3. Two jobs. `pack` checks out the tagged commit with read-only permissions and no credential, runs the tests and
-   `dotnet pack` in Release with `-p:Version=<version>`, and uploads the `.nupkg` and `.snupkg` files. `publish` runs
-   no build code: in the protected `nuget` environment, with only `id-token: write`, it downloads the packages,
-   exchanges the job's OIDC token for a short-lived key with `NuGet/login`, and runs `dotnet nuget push
-   --skip-duplicate`, which also pushes each symbol package beside its package.
+   `dotnet pack` in Release with `-p:PublicRelease=true` and `-p:Version=<version>`, and uploads the `.nupkg` and
+   `.snupkg` files. `publish` runs no build code: in the protected `nuget` environment, with only
+   `id-token: write`, it downloads the packages, exchanges the job's OIDC token for a short-lived key with
+   `NuGet/login`, and runs `dotnet nuget push --skip-duplicate`, which also pushes each symbol package beside its
+   package.
 4. One publication at a time. A second run waits for the first instead of racing it to nuget.org.
 
 The maintainer sets up once:
@@ -57,6 +59,7 @@ The maintainer sets up once:
 - Publishing on every merge to the default branch, with a computed version. Rejected: nuget.org versions are permanent,
   and a version per merge buries the ones consumers need.
 - A version in a file such as `Directory.Build.props`. Rejected: a second source of truth that drifts from the tag.
+  ADR-0138 later chose `version.json`, which the release checks against the tag, so it can't drift.
 - Publishing from a release through trusted publishing (chosen).
 
 ## Consequences
@@ -64,11 +67,11 @@ The maintainer sets up once:
 - No secret holds a nuget.org key, and nothing needs rotating; a leaked short-lived key expires within the hour.
 - Each publication waits for an approval in the `nuget` environment.
 - A tag that is not a version fails the `pack` job, and nothing is published.
-- `pack` fails when a package doesn't carry the tag's version, as when a project sets its own `Version`, and `publish`
-  fails when every package is already on nuget.org at that version, so a release that would publish nothing never looks
-  like a success. A run that failed part way is run again: `--skip-duplicate` skips the packages already pushed, and
-  the job summary says how many it pushed. A published version cannot be replaced; a bad release is fixed by the next
-  version.
+- `pack` fails when a package doesn't carry the tag's version, as when `version.json` holds another version or a
+  project sets its own `Version`, and `publish` fails when every package is already on nuget.org at that version, so a
+  release that would publish nothing never looks like a success. A run that failed part way is run again:
+  `--skip-duplicate` skips the packages already pushed, and the job summary says how many it pushed. A published
+  version cannot be replaced; a bad release is fixed by the next version.
 - `publish.yml` is project-owned: template updates never change it, and Dependabot moves its action pins. A project
   that publishes from a workflow of its own deletes it and records that in its own decision record.
 - On GitLab the template generates no publishing pipeline; a project there publishes from a pipeline of its own and

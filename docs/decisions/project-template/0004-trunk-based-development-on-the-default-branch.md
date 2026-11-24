@@ -18,10 +18,15 @@ there.
 
 Develop on one trunk, the default branch, `main`. There is no long-lived integration branch.
 
-- Every change starts on a short-lived branch cut from `main`: a plan's branch (`worktree-<name>` in Claude Code,
-  `issue-<number>` from `/run-issues`), a Dependabot branch, or a person's topic branch.
+- Every change starts on a short-lived branch cut from `main`: a plan's branch (`worktree-<name>`, or
+  `worktree-issue-<number>` from `/run-issues`), a Dependabot branch, or a person's topic branch.
 - A branch lives for one change. It lands on `main` as the Landing section of `AGENTS.md` says, then it is deleted:
   `/finish-plan` deletes a plan's merged branch, and the host deletes a pull request's head branch when it merges.
+- A session whose host made a branch for it before it started and limits its pushes to that branch, such as a
+  Claude Code cloud session's `claude/<words>-<id>` branch, still makes each plan on the plan's own branch and pushes
+  it to that branch, which then carries one change at a time: once its pull request merges, the next plan restarts it
+  from `main`, never stacking new commits on merged history. The session takes that branch from its own instructions
+  or a `push-branch:<name>` word, never from a branch's name.
 - How a change reaches `main` (a pull request whose checks pass, by default) is
   [ADR-0005](0005-the-default-branch-accepts-changes-only-through-pull-requests.md). The method that merges it, which
   decides whether the plan's `Plan step N` commits stay on `main`, is

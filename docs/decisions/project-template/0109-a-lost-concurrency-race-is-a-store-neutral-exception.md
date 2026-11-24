@@ -3,10 +3,10 @@
 - **Status:** Accepted
 - **Date:** 2026-10-31
 
+## Context
+
 This decision applies to code that reads and writes through a store or repository abstraction with optimistic
 concurrency. Code that uses a `DbContext` directly handles Entity Framework's exception where it saves.
-
-## Context
 
 Optimistic concurrency makes a write atomic without locks: each row carries a concurrency token, the `UPDATE` includes
 the token read earlier in its `WHERE` clause, and of two writers that read the same version at most one succeeds.

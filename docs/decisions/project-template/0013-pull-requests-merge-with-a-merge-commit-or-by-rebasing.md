@@ -1,6 +1,6 @@
 # 0013. Pull requests merge with a merge commit or by rebasing
 
-- **Status:** Accepted
+- **Status:** Accepted (amended by 0018)
 - **Date:** 2026-11-01
 
 ## Context

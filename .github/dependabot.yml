@@ -9,7 +9,8 @@
 version: 2
 updates:
   - package-ecosystem: github-actions
-    directory: /
+    # The workflows' actions, and those of the composite actions they call, such as .github/actions/install-dotnet.
+    directories: ["/", "/.github/actions/*"]
     schedule:
       interval: weekly
     cooldown:

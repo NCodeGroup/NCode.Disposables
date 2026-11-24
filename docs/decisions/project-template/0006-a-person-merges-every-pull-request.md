@@ -1,6 +1,6 @@
 # 0006. A person merges every pull request; an agent never does
 
-- **Status:** Accepted
+- **Status:** Accepted (amended by 0022 and 0034)
 - **Date:** 2026-10-31
 
 ## Context
@@ -9,7 +9,8 @@ The default branch takes changes only through pull requests
 ([ADR-0005](0005-the-default-branch-accepts-changes-only-through-pull-requests.md)), and agents open many of them:
 `/ship-plan` lands a reviewed plan, `/run-issues` opens one per issue, and `/address-feedback` pushes fixes to an open
 one. In a repository with one maintainer, the host does not let the author approve their own pull request, so the
-author's review cannot be a formal approval; the merge itself is the approval.
+author's review cannot be a formal approval; the merge itself is the approval. Where NCode Review approves ([ADR-0022](0022-ncode-reviews-approval-gates-the-merge.md)), its approval is
+the formal one, and marking a draft ready is the author's review.
 
 If an agent can merge, mark a pull request ready or turn on auto-merge, the pull request can merge while its author is
 still reviewing it: once the checks pass and no conversation is open, nothing waits for the person.
@@ -25,8 +26,10 @@ turns on auto-merge, resolves a review thread, dismisses a review or force-pushe
    conversation rule keeps from merging. Approving is resolving every thread, marking a draft ready, and merging, or
    turning on auto-merge with the merge method
    [ADR-0013](0013-pull-requests-merge-with-a-merge-commit-or-by-rebasing.md) sets; those are the author's actions.
-3. `/run-issues` answers review feedback and fixes the review bot's findings that hold, then recommends the merge after
-   `max-review-rounds` rounds, or a round of only minor findings; the person merges.
+3. `/run-issues` answers review feedback and fixes the review bot's findings that hold, whatever their severity, then
+   recommends the merge once each finding is fixed, declined, answered or left as a follow-up and the bot's review of
+   the last push it asked for is in; after `max-review-rounds` rounds it asks the bot for no further review. The person
+   merges.
 4. After the merge, the next `/ship-plan` tags the release when the Landing section asks for one and closes any of the
    plan's issues still open, and `/finish-plan` cleans up.
 
@@ -39,7 +42,8 @@ At the maintainer's request ([NCodeGroup/code-review#33](https://github.com/NCod
 workflow turns on auto-merge: `.github/workflows/code-review-auto-merge.yml`. Its scope is narrow. It acts only on a
 pull request that Dependabot opened from the repository itself, whose only change is the
 `uses: NCodeGroup/code-review@<full commit SHA> # vX.Y.Z` line of a workflow, moving it to a minor or patch release, and
-the pull request merges only after the checks the default branch requires pass, by the first merge method that both
+the pull request merges only after the checks the default branch requires pass and, where the ruleset requires an approval ([ADR-0022](0022-ncode-reviews-approval-gates-the-merge.md)),
+after a maintainer approves it, by the first merge method that both
 the repository's settings and the branch's rules allow: a merge commit, else a rebase, else a squash.
 
 The rule exists so that nothing merges while its author is still reviewing it, over a review thread no person read.
@@ -53,11 +57,13 @@ a pull request that updates anything else, and every other pull request are stil
 
 - An agent opens the pull request ready and turns on auto-merge. Rejected: it can merge before the author has
   reviewed.
-- Every pull request a draft. Available with `draft: yes`; not the default, because a ready pull request that only a
+- Every pull request a draft. Available with `draft: yes`, and the default for a new project that runs NCode Review
+  ([ADR-0022](0022-ncode-reviews-approval-gates-the-merge.md)); not the default elsewhere, because a ready pull request that only a
   person can merge already keeps the merge with the person, and a draft adds a click to every change.
 - A second account that approves. Rejected: it is a ritual the author performs on themselves, and a host's terms may not
   allow a second personal account for it.
-- Require one approving review. Rejected while there is one maintainer: it cannot be met.
+- Require one approving review. Rejected while there is one maintainer: it cannot be met, except by NCode Review's
+  approval ([ADR-0022](0022-ncode-reviews-approval-gates-the-merge.md)).
 
 ## Consequences
 

@@ -30,10 +30,12 @@ evolves additively.
   format` fills an empty file but does not create one), and lists the `RS0017` symbols to delete or mark `*REMOVED*`.
   With `-Release`, in the change that releases a version, it moves the `PublicAPI.Unshipped.txt` entries into
   `PublicAPI.Shipped.txt`, applying the `*REMOVED*` lines.
-- The template's `Adopt-Project.ps1` runs it when it verifies an adopted library's build, so the API at adoption is
-  the baseline.
+- When the project template adopts an existing library, its adoption script runs it while verifying the library's
+  build, so the API at adoption is the baseline.
 - Before 1.0, the whole surface may stay in `PublicAPI.Unshipped.txt`, so every change is visible while the surface may
-  still break. At 1.0 it moves to `PublicAPI.Shipped.txt`.
+  still break. At 1.0 it moves to `PublicAPI.Shipped.txt`. In a pre-release project
+  ([ADR-0015](0015-a-pre-release-project-describes-the-product-as-it-is.md)), a public member changes or goes in place,
+  with no `[Obsolete]` step and no compatibility overload; the `PublicAPI.Unshipped.txt` diff is its record.
 - After the first stable release, a shipped surface evolves backward-compatibly:
   - additions only; a new overload instead of a changed signature;
   - required inputs as constructor parameters, optional inputs as `init` properties, never a new constructor
@@ -66,6 +68,9 @@ evolves additively.
 - [PublicApiAnalyzers](https://github.com/dotnet/roslyn-analyzers/blob/main/src/PublicApiAnalyzers/PublicApiAnalyzers.Help.md)
 - [.NET library guidance: breaking changes](https://learn.microsoft.com/dotnet/standard/library-guidance/breaking-changes)
 - [ADR-0100](0100-warnings-are-errors-in-every-project.md): warnings are errors in every project.
+- [ADR-0015](0015-a-pre-release-project-describes-the-product-as-it-is.md): a pre-release project describes the product
+  as it is and keeps no compatibility.
 - [ADR-0134](0134-evolving-optional-parameters-are-a-dto.md): a growing set of optional criteria is an init-only DTO.
 - [ADR-0136](0136-packages-follow-semantic-versioning-and-the-assembly-version-moves-only-with-the-major.md): packages
   follow Semantic Versioning, and the assembly version moves only with the major.
+- [ADR-0147](0147-packages-are-validated-against-the-last-published-package.md): packages are validated against the last published package.

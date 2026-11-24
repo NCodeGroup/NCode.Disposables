@@ -17,7 +17,7 @@ Include:
 
 ## What to Expect
 
-- An acknowledgement of the report, then whether it is confirmed.
+- An acknowledgement of the report within 14 days, then whether it is confirmed.
 - A fix developed in private and released as soon as it is ready, with an entry under `### Security` in the changelog.
 - Disclosure coordinated with you: the security advisory is published once the fix is released. Keep the details private until then.
 - Credit for the report in the advisory, unless you'd rather not be named.

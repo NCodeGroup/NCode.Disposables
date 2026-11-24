@@ -3,16 +3,27 @@
 # itself. GitHub reads the job only from the default branch and only under the name copilot-setup-steps, and takes only
 # its steps, permissions, runs-on, services, snapshot and timeout-minutes, so each step names its own shell. When a step
 # fails, the rest are skipped and the session starts anyway. The push and pull_request triggers run it when this file
-# changes, to show it still works.
+# or a file it runs changes, to show it still works: a step that runs a file of the repository, such as a local action
+# or a script, adds that file to both paths lists.
 name: Copilot Setup Steps
 
 on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: [.github/workflows/copilot-setup-steps.yml]
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+      - .github/actions/install-dotnet/**
+      - build/Get-TestRuntimes.ps1
   pull_request:
-    paths: [.github/workflows/copilot-setup-steps.yml]
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+      - .github/actions/install-dotnet/**
+      - build/Get-TestRuntimes.ps1
+
+# Read-only by default, so a job added later can't hold more without saying so.
+permissions:
+  contents: read
 
 jobs:
   copilot-setup-steps:
@@ -25,10 +36,11 @@ jobs:
       # The agent gets a token of its own, so the checkout keeps none.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # Nerdbank.GitVersioning computes the version from the history and fails on a shallow clone.
+          fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
-        with:
-          global-json-file: global.json
+      # The SDK global.json selects and the runtime of each older .NET a test project targets.
+      - uses: ./.github/actions/install-dotnet
       # The same key as CI's, so a session reuses the packages CI restored.
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
