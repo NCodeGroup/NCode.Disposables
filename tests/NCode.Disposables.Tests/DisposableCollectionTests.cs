@@ -392,6 +392,19 @@ public class DisposableCollectionTests
     #region Dispose Tests
 
     [Fact]
+    public void Dispose_WithItemImplementingBothInterfaces_CallsDispose()
+    {
+        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        _ = mockDisposable.As<IAsyncDisposable>();
+        mockDisposable.Setup(x => x.Dispose());
+        var collection = new DisposableCollection([mockDisposable.Object]);
+
+        collection.Dispose();
+
+        mockDisposable.Verify(x => x.Dispose(), Times.Once);
+    }
+
+    [Fact]
     public void Dispose_EmptyCollection_Succeeds()
     {
         var collection = new DisposableCollection();

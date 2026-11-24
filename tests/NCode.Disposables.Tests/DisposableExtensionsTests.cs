@@ -132,6 +132,19 @@ public class DisposableExtensionsTests
     #region DisposeAll Tests
 
     [Fact]
+    public void DisposeAll_WithItemImplementingBothInterfaces_CallsDispose()
+    {
+        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        _ = mockDisposable.As<IAsyncDisposable>();
+        mockDisposable.Setup(x => x.Dispose());
+        var collection = new object[] { mockDisposable.Object };
+
+        collection.DisposeAll();
+
+        mockDisposable.Verify(x => x.Dispose(), Times.Once);
+    }
+
+    [Fact]
     public void DisposeAll_WithDisposableItems_DisposesAll()
     {
         var disposeCount = 0;
