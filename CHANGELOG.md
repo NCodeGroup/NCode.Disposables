@@ -17,5 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `SharedReferenceOwner` throws through `ObjectDisposedException.ThrowIf`; the exception type and object name are unchanged.
 - Updated the project from project-template v0.41.0 to v0.61.2: stricter analyzers, shared build settings, a Definition of Done script and CI updates.
 - Updated the project from project-template v0.61.2 to v0.112.2: package versions now come from `version.json` through Nerdbank.GitVersioning, the CI workflow checks out the full history and builds a release with `-p:PublicRelease=true`, the Commit attribution check and `commit-msg` hook are gone, and the project gains a code of conduct, governance, roadmap, architecture and assurance documents, a coverage and reproducible-build toolkit, and the Scorecard workflow.
+- The solution file is `NCode.Disposables.slnx`, the XML solution format current .NET SDKs create, in place of `NCode.Disposables.sln`, and the ReSharper and Rider settings layer moves with it to `NCode.Disposables.slnx.DotSettings`. `dotnet build` and `dotnet test` at the repository root work as before.
 
 [Unreleased]: https://github.com/NCodeGroup/NCode.Disposables/compare/v5.3.0...HEAD
