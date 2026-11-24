@@ -70,7 +70,7 @@ flowchart LR
 
 | Component | Role |
 | --- | --- |
-| `Disposable` | Static factory: `Empty`, `Create` (an `Action`, or one taking up to eight arguments), `Aggregate`, `Collection`, `Context`, and `Shared`, which calls `SharedReference.Create`. |
+| `Disposable` | Static factory: `Empty`, `Create` (an `Action` or a `Func<TResult>`, each also taking up to eight arguments, and `Create(Action, idempotent)`), `Aggregate`, `Collection`, `Context`, and `Shared`, which calls `SharedReference.Create`. |
 | `AsyncDisposable` | Static factory: `Empty`, `Create` (a `Func<ValueTask>` or an `Action`), `Adapt`, `Aggregate`, `Collection`, and `Shared`, which calls `AsyncSharedReference.Create`. |
 | `DisposableEmpty`, `AsyncDisposableEmpty` | Do nothing; `Singleton` is the instance `Empty` returns. |
 | `DisposableAction`, `AsyncDisposableAction` | Run a delegate on the first dispose, taken with `Interlocked.Exchange` so it runs once across threads, or on every dispose with `idempotent: false`. |
