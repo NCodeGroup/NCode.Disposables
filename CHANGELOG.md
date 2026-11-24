@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.0.0] - 2026-11-24
+
 ### Added
 
-- Public API tracking: the public surface of v5.3.0, unchanged, is recorded in `PublicAPI.Shipped.txt`, and `PublicAPI.Unshipped.txt` is empty.
+- Public API tracking: each release's public surface is recorded in `PublicAPI.Shipped.txt`, and the changes since the last release in `PublicAPI.Unshipped.txt`, so the build fails on a public API change neither file records.
 - Each pack is validated against NCode.Disposables 5.3.0, the last version on nuget.org, through `PackageValidationBaselineVersion`, so a change that would break 5.3.0's public API fails the pack. ([#37](https://github.com/NCodeGroup/NCode.Disposables/issues/37), [ADR-0147](docs/decisions/project-template/0147-packages-are-validated-against-the-last-published-package.md))
 - The changelog has a section for every release from 1.0.0 to 5.3.0, from their release notes. ([#27](https://github.com/NCodeGroup/NCode.Disposables/issues/27))
 - `src/NCode.Disposables/README.md` is the package readme nuget.org shows: installation, the main samples, and absolute links to the full guide, the API overview, the changelog and the security policy.
@@ -159,7 +161,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release for .NET Framework 4.5.1: `IDisposable` implementations for common resource management patterns, such as actions, aggregates, collections and shared references.
 
-[Unreleased]: https://github.com/NCodeGroup/NCode.Disposables/compare/v5.3.0...HEAD
+[Unreleased]: https://github.com/NCodeGroup/NCode.Disposables/compare/v6.0.0...HEAD
+[6.0.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v5.3.0...v6.0.0
 [5.3.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v5.2.1...v5.3.0
 [5.2.1]: https://github.com/NCodeGroup/NCode.Disposables/compare/v5.1.1...v5.2.1
 [5.1.1]: https://github.com/NCodeGroup/NCode.Disposables/compare/v5.1.0...v5.1.1
