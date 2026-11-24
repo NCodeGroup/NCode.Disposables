@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="src/NCode.Disposables/NCode.Disposables.csproj" />
+  <Project Path="tests/NCode.Disposables.Tests/NCode.Disposables.Tests.csproj" />
+</Solution>
