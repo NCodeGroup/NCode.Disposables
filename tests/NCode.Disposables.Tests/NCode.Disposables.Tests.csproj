@@ -23,7 +23,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\NCode.Disposables\NCode.Disposables.csproj"/>
+        <ProjectReference Include="..\..\src\NCode.Disposables\NCode.Disposables.csproj"/>
     </ItemGroup>
 
 </Project>
