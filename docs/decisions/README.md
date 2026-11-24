@@ -63,3 +63,4 @@ override in `AGENTS.md`.
 | ADR | Decision | Status |
 | --- | --- | --- |
 | [1000](1000-readme-samples-are-compiled-tests-that-markdownsnippets-copies-into-the-readmes.md) | README samples are compiled tests that MarkdownSnippets copies into the READMEs | Accepted |
+| [1001](1001-synchronous-disposal-disposes-an-item-that-implements-both-interfaces-through-idisposable.md) | Synchronous disposal disposes an item that implements both interfaces through IDisposable | Accepted |
