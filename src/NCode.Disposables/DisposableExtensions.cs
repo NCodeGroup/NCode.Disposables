@@ -68,6 +68,10 @@ public static class DisposableExtensions
         /// This is a convenience extension method that wraps <see cref="SharedReference.Create{T}(T)"/>.
         /// The returned lease holds an initial reference to the resource. Additional references can be obtained
         /// by calling <see cref="SharedReferenceLease{T}.AddReference"/> on any active lease.
+        /// For a type that also implements <see cref="IAsyncDisposable"/>, the call is ambiguous with the
+        /// asynchronous extension of the same name: call <see cref="SharedReference.Create{T}(T)"/> for a lease
+        /// that disposes the resource synchronously, or <c>AsAsyncSharedReference()</c> for one that disposes it
+        /// asynchronously.
         /// </remarks>
         public SharedReferenceLease<T> AsSharedReference()
         {

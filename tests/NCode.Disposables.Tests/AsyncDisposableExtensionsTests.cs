@@ -1,6 +1,8 @@
 // Copyright © NCode Group
 // SPDX-License-Identifier: Apache-2.0
 
+using System.Reflection;
+
 namespace NCode.Disposables.Tests;
 
 public class AsyncDisposableExtensionsTests
@@ -370,6 +372,36 @@ public class AsyncDisposableExtensionsTests
 
         Assert.True(resource.DisposeAsyncCalled);
         Assert.False(resource.DisposeCalled);
+    }
+
+    #endregion
+
+    #region AsSharedReference Tests
+
+    [Fact]
+    public void AsSharedReference_ReturnsLeaseOnSameValue()
+    {
+        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+
+#pragma warning disable NCDISP001 // the obsolete member keeps working until the next major version deletes it
+        var lease = disposable.Object.AsSharedReference();
+#pragma warning restore NCDISP001
+
+        Assert.Same(disposable.Object, lease.Value);
+    }
+
+    [Fact]
+    public void AsSharedReference_IsObsoleteWithDiagnosticId()
+    {
+        const string methodName = "AsSharedReference";
+
+        var method = typeof(AsyncDisposableExtensions).GetMethod(methodName);
+        Assert.NotNull(method);
+
+        var attribute = method.GetCustomAttribute<ObsoleteAttribute>();
+        Assert.NotNull(attribute);
+
+        Assert.Equal("NCDISP001", attribute.DiagnosticId);
     }
 
     #endregion
