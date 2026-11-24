@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The changelog has a section for every release from 1.0.0 to 5.3.0, from their release notes. ([#27](https://github.com/NCodeGroup/NCode.Disposables/issues/27))
 - `src/NCode.Disposables/README.md` is the package readme nuget.org shows: installation, the main samples, and absolute links to the full guide, the API overview, the changelog and the security policy.
 - Every C# sample in the READMEs is a compiled test in `tests/NCode.Disposables.Tests/ReadmeSamplesTests.cs` that MarkdownSnippets copies into the READMEs, and `./build/gate.ps1`, which CI and the Landing section's `gate` run, fails when a README differs from its test, then runs `./build/dod.ps1`. ([ADR-1000](docs/decisions/1000-readme-samples-are-compiled-tests-that-markdownsnippets-copies-into-the-readmes.md))
+- The `AsAsyncSharedReference()` extension puts an `IAsyncDisposable` behind a reference count and returns its first `AsyncSharedReferenceLease<T>`, also for a type that implements `IDisposable` too, such as a `Stream`, where `AsSharedReference()` is ambiguous. ([#55](https://github.com/NCodeGroup/NCode.Disposables/issues/55), [ADR-1002](docs/decisions/1002-the-async-shared-reference-extension-is-asasyncsharedreference.md))
 
 ### Changed
 
@@ -30,10 +31,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `README.md` is a guide to every type, in the layout of the other NCode Group projects: a tested sample for each disposable, the shared references, the async adapter and the extensions, their errors and edge cases, an API overview, thread safety, and NuGet, CI, target framework, license and OpenSSF Scorecard badges. Its hand-kept release notes are gone; [CHANGELOG.md](CHANGELOG.md) covers every release.
 - The package description reads "Building blocks for IDisposable and IAsyncDisposable in .NET", followed by what the library does, without the Markdown backticks nuget.org showed as text.
 - Updated the project from project-template v0.112.2 to v0.113.1: Claude Code's project settings no longer ask before a command that mentions `.env` or `secrets/`, the release workflows and the template's scripts accept a version only in ASCII digits after a lowercase `v`, and the template's Best Practices record is ADR-0037, renumbered from ADR-0153.
+- `docs/architecture.md` describes the components, the factories, the disposables, the shared references and the extensions, as a diagram and a table. ([#56](https://github.com/NCodeGroup/NCode.Disposables/issues/56))
+
+### Deprecated
+
+- `AsyncDisposableExtensions.AsSharedReference()` is obsolete and reports warning `NCDISP001`: call `AsAsyncSharedReference()` instead. It keeps working until the next major version deletes it. ([#55](https://github.com/NCodeGroup/NCode.Disposables/issues/55), [ADR-1002](docs/decisions/1002-the-async-shared-reference-extension-is-asasyncsharedreference.md))
 
 ### Removed
 
 - `.github/workflows/main.yml`: its build and test jobs repeated `ci.yml`'s `build-and-test` on every push and pull request, and `publish.yml` replaces its publish job. ([#43](https://github.com/NCodeGroup/NCode.Disposables/issues/43), [#44](https://github.com/NCodeGroup/NCode.Disposables/issues/44))
+
+### Fixed
+
+- `DisposeAll(ignoreExceptions: true)` ignores the failures of the items disposed after an item that implements only `IAsyncDisposable`; the `InvalidOperationException` for that item is still thrown. ([#53](https://github.com/NCodeGroup/NCode.Disposables/issues/53))
+- `Disposable.Collection(...).Dispose()` and `DisposeAll()` dispose an item that implements both `IDisposable` and `IAsyncDisposable`, such as a `Stream` or a `DbConnection`, through `IDisposable.Dispose` instead of throwing `InvalidOperationException`, which `DisposeAll()` throws only for an item that implements `IAsyncDisposable` alone. ([#54](https://github.com/NCodeGroup/NCode.Disposables/issues/54), [ADR-1001](docs/decisions/1001-synchronous-disposal-disposes-an-item-that-implements-both-interfaces-through-idisposable.md))
 
 ## [5.3.0] - 2026-01-17
 
