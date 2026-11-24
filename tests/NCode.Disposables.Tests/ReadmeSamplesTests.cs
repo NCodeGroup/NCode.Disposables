@@ -171,6 +171,25 @@ public class ReadmeSamplesTests
         Assert.Equal(["third", "first"], log);
     }
 
+    [Fact]
+    public void CollectionStreamSample_Runs()
+    {
+        var stream = new RecordingStream();
+
+        // begin-snippet: CollectionStream
+        // stream is an open Stream, such as a FileStream.
+        using (var resources = Disposable.Collection(stream))
+        {
+            stream.WriteByte(42);
+        }
+
+        // stream.Dispose ran: the collection disposes every item through IDisposable
+        // end-snippet
+
+        Assert.False(stream.CanWrite);
+        Assert.False(stream.DisposeAsyncCalled);
+    }
+
     #endregion
 
     #region Shared Reference Tests
