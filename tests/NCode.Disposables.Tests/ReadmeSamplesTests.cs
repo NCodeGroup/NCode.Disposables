@@ -16,11 +16,13 @@ public class ReadmeSamplesTests
     {
         // begin-snippet: QuickStart
         var log = new List<string>();
+        var connection = Disposable.Create(() => log.Add("connection closed"));
+        var fileLock = Disposable.Create(() => log.Add("lock released"));
 
         using (var resources = Disposable.Collection())
         {
-            resources.Add(Disposable.Create(() => log.Add("connection closed")));
-            resources.Add(Disposable.Create(() => log.Add("lock released")));
+            resources.Add(connection);
+            resources.Add(fileLock);
         }
 
         // log: "lock released", "connection closed": the last resource added is disposed first
@@ -156,12 +158,12 @@ public class ReadmeSamplesTests
     {
         // begin-snippet: CollectionErrors
         var log = new List<string>();
-        var resources = Disposable.Collection(
-            ignoreExceptions: true,
-            Disposable.Create(() => log.Add("first")),
-            Disposable.Create(() => throw new InvalidOperationException("Failed to close.")),
-            Disposable.Create(() => log.Add("third"))
+        var first = Disposable.Create(() => log.Add("first"));
+        var failing = Disposable.Create(() =>
+            throw new InvalidOperationException("Failed to close.")
         );
+        var third = Disposable.Create(() => log.Add("third"));
+        var resources = Disposable.Collection(ignoreExceptions: true, first, failing, third);
 
         resources.Dispose(); // log: "third", "first": the failure is ignored
         // end-snippet
@@ -194,7 +196,8 @@ public class ReadmeSamplesTests
     public void SharedReferenceTryAddSample_Runs()
     {
         // begin-snippet: SharedReferenceTryAdd
-        var lease = SharedReference.Create(Disposable.Create(() => { }));
+        var resource = Disposable.Create(() => { });
+        var lease = SharedReference.Create(resource);
         lease.Dispose(); // the last lease is released, so the resource is disposed
 
         var added = lease.TryAddReference(out var extra); // false: no lease can be added
@@ -220,7 +223,9 @@ public class ReadmeSamplesTests
         // the buffer is back in the pool
         // end-snippet
 
-        Assert.Same(buffer, pool.Rent(1024));
+        var rented = pool.Rent(1024);
+
+        Assert.Same(buffer, rented);
     }
 
     [Fact]

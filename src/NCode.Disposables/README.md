@@ -19,11 +19,13 @@ Every type is in the `NCode.Disposables` namespace. `Disposable.Create` turns a 
 <!-- snippet: QuickStart -->
 ```cs
 var log = new List<string>();
+var connection = Disposable.Create(() => log.Add("connection closed"));
+var fileLock = Disposable.Create(() => log.Add("lock released"));
 
 using (var resources = Disposable.Collection())
 {
-    resources.Add(Disposable.Create(() => log.Add("connection closed")));
-    resources.Add(Disposable.Create(() => log.Add("lock released")));
+    resources.Add(connection);
+    resources.Add(fileLock);
 }
 
 // log: "lock released", "connection closed": the last resource added is disposed first
