@@ -17,6 +17,10 @@ namespace NCode.Disposables;
 )]
 public static class DisposableExtensions
 {
+    // ADR-1001: an item that implements both interfaces is disposed through IDisposable.
+    private const string AsyncOnlyMessage =
+        "The collection contains an item that implements IAsyncDisposable but not IDisposable; dispose it with DisposeAllAsync.";
+
     /// <param name="disposable">The <see cref="IDisposable"/> instance to dispose, or <see langword="null"/>.</param>
     extension(IDisposable? disposable)
     {
@@ -81,7 +85,7 @@ public static class DisposableExtensions
         /// <param name="ignoreExceptions">
         /// <see langword="true"/> to suppress exceptions thrown by individual items during disposal and continue
         /// disposing remaining items; <see langword="false"/> (the default) to collect and throw exceptions.
-        /// Note: <see cref="InvalidOperationException"/> thrown for <see cref="IAsyncDisposable"/> items is never ignored.
+        /// Note: The <see cref="InvalidOperationException"/> for an item that implements only <see cref="IAsyncDisposable"/> is never ignored.
         /// </param>
         /// <remarks>
         /// <para>
@@ -89,9 +93,11 @@ public static class DisposableExtensions
         /// scenarios where resources may have dependencies.
         /// </para>
         /// <para>
-        /// <b>Important:</b> This method does not support <see cref="IAsyncDisposable"/> items. If the collection
-        /// contains any <see cref="IAsyncDisposable"/> items, an <see cref="InvalidOperationException"/> is thrown.
-        /// Use <see cref="AsyncDisposableExtensions.DisposeAllAsync"/> for collections that may contain async disposables.
+        /// <b>Important:</b> An item that implements both <see cref="IDisposable"/> and <see cref="IAsyncDisposable"/>
+        /// is disposed through <see cref="IDisposable.Dispose"/>. An item that implements only
+        /// <see cref="IAsyncDisposable"/> is not disposed, and once the other items are disposed an
+        /// <see cref="InvalidOperationException"/> is thrown for it. Use
+        /// <see cref="AsyncDisposableExtensions.DisposeAllAsync"/> for such items.
         /// </para>
         /// <para>
         /// When <paramref name="ignoreExceptions"/> is <see langword="false"/> and multiple items throw exceptions,
@@ -100,7 +106,7 @@ public static class DisposableExtensions
         /// </para>
         /// </remarks>
         /// <exception cref="InvalidOperationException">
-        /// The collection contains an <see cref="IAsyncDisposable"/> instance.
+        /// The collection contains an item that implements <see cref="IAsyncDisposable"/> but not <see cref="IDisposable"/>.
         /// </exception>
         /// <exception cref="AggregateException">
         /// Multiple items threw exceptions during disposal and <paramref name="ignoreExceptions"/> is <see langword="false"/>.
@@ -113,15 +119,6 @@ public static class DisposableExtensions
             {
                 switch (item)
                 {
-                    case IAsyncDisposable:
-                        exceptions ??= [];
-                        exceptions.Add(
-                            new InvalidOperationException(
-                                "The collection contains an IAsyncDisposable instance."
-                            )
-                        );
-                        break;
-
                     case IDisposable disposable:
                         try
                         {
@@ -136,6 +133,11 @@ public static class DisposableExtensions
                             }
                         }
 
+                        break;
+
+                    case IAsyncDisposable:
+                        exceptions ??= [];
+                        exceptions.Add(new InvalidOperationException(AsyncOnlyMessage));
                         break;
                 }
             }

@@ -294,7 +294,10 @@ public class DisposableExtensionsTests
             collection.DisposeAll(ignoreExceptions: true)
         );
 
-        Assert.Equal("The collection contains an IAsyncDisposable instance.", exception.Message);
+        Assert.Equal(
+            "The collection contains an item that implements IAsyncDisposable but not IDisposable; dispose it with DisposeAllAsync.",
+            exception.Message
+        );
         Assert.Equal(["last", "first"], log);
     }
 
@@ -311,7 +314,10 @@ public class DisposableExtensionsTests
             collection.DisposeAll(ignoreExceptions)
         );
 
-        Assert.Equal("The collection contains an IAsyncDisposable instance.", exception.Message);
+        Assert.Equal(
+            "The collection contains an item that implements IAsyncDisposable but not IDisposable; dispose it with DisposeAllAsync.",
+            exception.Message
+        );
     }
 
     [Fact]

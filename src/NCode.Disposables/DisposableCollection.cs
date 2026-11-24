@@ -83,6 +83,9 @@ public sealed class DisposableCollection : IDisposableCollection
     /// If <c>ignoreExceptions</c> was set to <see langword="true"/> in the constructor, exceptions
     /// thrown by individual items are suppressed, allowing all items to be disposed.
     /// </para>
+    /// <para>
+    /// An item that also implements <see cref="IAsyncDisposable"/> is disposed through <see cref="IDisposable.Dispose"/>.
+    /// </para>
     /// </remarks>
     public void Dispose()
     {
