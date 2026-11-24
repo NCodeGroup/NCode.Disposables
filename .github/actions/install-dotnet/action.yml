@@ -1,0 +1,26 @@
+# Installs the .NET SDK global.json selects and then the runtime of each older .NET a test project targets, which
+# build/Get-TestRuntimes.ps1 names, with actions/setup-dotnet, as build/Install-Dotnet.ps1 does on GitLab. A workflow
+# that builds or tests calls it right after actions/checkout, which puts it in the workspace:
+#   - uses: ./.github/actions/install-dotnet
+# A workflow whose push or pull_request trigger lists paths also lists .github/actions/install-dotnet/** and
+# build/Get-TestRuntimes.ps1, which this action runs, so a change to either runs it.
+# The project's Dependabot moves the actions/setup-dotnet pins, and template updates merge with the project's edits.
+name: Install .NET
+description: Installs the .NET SDK global.json selects and the runtimes the test projects target.
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+      with:
+        global-json-file: global.json
+    # A test project that targets an older .NET runs on that version's runtime, which build/Get-TestRuntimes.ps1 names.
+    - name: Find the .NET runtimes the tests target
+      id: runtimes
+      shell: pwsh
+      run: |
+        $channels = @(./build/Get-TestRuntimes.ps1)
+        if ($channels) { "channels<<EOF`n$($channels -join "`n")`nEOF" >> $env:GITHUB_OUTPUT }
+    - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+      if: steps.runtimes.outputs.channels != ''
+      with:
+        dotnet-version: ${{ steps.runtimes.outputs.channels }}

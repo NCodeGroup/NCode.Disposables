@@ -5,9 +5,11 @@ Thumbs.db
 .vs/
 .idea/
 
-# Claude Code: personal settings and worktrees
-.claude/settings.local.json
+# Plan worktrees, for every tool
 .claude/worktrees/
+
+# Claude Code: personal settings
+.claude/settings.local.json
 CLAUDE.local.md
 
 # Leftovers from `copier update --conflict rej`
@@ -15,6 +17,12 @@ CLAUDE.local.md
 
 # The plan in progress: a local working file, never committed
 PLAN.md
+
+# The analysis in progress: a local working file, never committed
+ANALYSIS.md
+
+# The OpenSSF Best Practices prompt /best-practices writes: a local working file, never committed
+best-practices-prompt.txt
 
 # Secrets
 .env

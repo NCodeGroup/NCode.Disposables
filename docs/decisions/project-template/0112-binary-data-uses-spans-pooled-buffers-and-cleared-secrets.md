@@ -3,10 +3,10 @@
 - **Status:** Accepted
 - **Date:** 2026-10-31
 
+## Context
+
 This decision applies to code that processes binary data: encoding, hashing, cryptography, serialization, parsing.
 Code that never handles bytes is unaffected.
-
-## Context
 
 The default .NET idiom for binary work is `byte[]`: allocate an array, return it, let the garbage collector take it.
 On paths that run per request that is the wrong default on three axes:

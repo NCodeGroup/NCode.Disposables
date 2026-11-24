@@ -7,18 +7,63 @@
   },
   "permissions": {
     "allow": [
-      "EnterWorktree"
+      "EnterWorktree",
+      "Bash",
+      "PowerShell"
     ],
     "ask": [
-      "Bash(git push)",
-      "Bash(git push *)",
-      "PowerShell(git push)",
-      "PowerShell(git push *)"
+      "Bash(*.env*)",
+      "PowerShell(*.env*)",
+      "Bash(secrets/*)",
+      "Bash(* secrets/*)",
+      "Bash(* ./secrets*)",
+      "Bash(* secrets)",
+      "Bash(* secrets *)",
+      "Bash(*\"secrets/*)",
+      "Bash(*'secrets/*)",
+      "Bash(*(secrets/*)",
+      "Bash(*;secrets/*)",
+      "Bash(*&secrets/*)",
+      "Bash(*|secrets/*)",
+      "Bash(*../secrets*)",
+      "PowerShell(secrets/*)",
+      "PowerShell(* secrets/*)",
+      "PowerShell(* ./secrets*)",
+      "PowerShell(* secrets)",
+      "PowerShell(* secrets *)",
+      "PowerShell(*\"secrets/*)",
+      "PowerShell(*'secrets/*)",
+      "PowerShell(*(secrets/*)",
+      "PowerShell(*;secrets/*)",
+      "PowerShell(*&secrets/*)",
+      "PowerShell(*|secrets/*)",
+      "PowerShell(*../secrets*)",
+      "PowerShell(secrets\\*)",
+      "PowerShell(* secrets\\*)",
+      "PowerShell(* .\\secrets*)",
+      "PowerShell(*\"secrets\\*)",
+      "PowerShell(*'secrets\\*)",
+      "PowerShell(*(secrets\\*)",
+      "PowerShell(*;secrets\\*)",
+      "PowerShell(*..\\secrets*)"
     ],
     "deny": [
       "Read(./.env)",
       "Read(./.env.*)",
       "Read(/secrets/**)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh\"",
+            "timeout": 600
+          }
+        ]
+      }
     ]
   }
 }

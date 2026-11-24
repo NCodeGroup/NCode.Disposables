@@ -1,6 +1,6 @@
 # 0005. The default branch accepts changes only through pull requests that pass CI
 
-- **Status:** Accepted
+- **Status:** Accepted (amended by 0018, 0022, 0030 and 0034)
 - **Date:** 2026-10-31
 
 ## Context
@@ -12,7 +12,8 @@ issue, and dependency bots and cloud agents open pull requests of their own.
 
 A rule that requires an approving review cannot be met in a repository with one maintainer, because a host does not
 let the author approve their own pull request. A pull request rule with zero required approvals, combined with
-required status checks, can be met by one person and still enforces the gate.
+required status checks, can be met by one person and still enforces the gate. Where NCode Review approves a clean review, its approval meets
+one required approval ([ADR-0022](0022-ncode-reviews-approval-gates-the-merge.md)).
 
 ## Decision
 
@@ -22,9 +23,12 @@ it, or, in a project that merges through a merge queue, on the merged result the
 1. On GitHub, one repository ruleset protects the default branch, with no bypass actors, as the template's repository
    baseline writes it:
    - the branch cannot be deleted or force-pushed;
-   - a pull request is required, with zero required approvals and every review conversation resolved before the merge,
-     each one remediated and replied to first
-     ([ADR-0014](0014-every-pull-request-discussion-is-remediated-and-replied-to-before-it-merges.md));
+   - a pull request is required, with every review conversation resolved before the merge, each one remediated and
+     replied to first
+     ([ADR-0014](0014-every-pull-request-discussion-is-remediated-and-replied-to-before-it-merges.md)), and zero
+     required approvals, or, where `.github/workflows/code-review.yml` passes NCode Review's `approve: true`, one
+     approval, stale approvals dismissed and approval of the last push ([ADR-0022](0022-ncode-reviews-approval-gates-the-merge.md)), never the last alone, which would
+     block every merge;
    - merges use the methods [ADR-0013](0013-pull-requests-merge-with-a-merge-commit-or-by-rebasing.md) sets: a merge
      commit or a rebase;
    - the CI jobs, `build-and-test` and `Commit attribution` by default, are required status checks on a branch that is
@@ -42,13 +46,15 @@ it, or, in a project that merges through a merge queue, on the merged result the
    template's hooks. On GitLab, the default branch's protection with "Allowed to push and merge" set to "No one",
    and the project's "Pipelines must succeed" merge check, play the ruleset's part; `tools/Set-GitLabBaseline.ps1` in
    the project template's repository sets both.
-5. An approval requirement is added when a second maintainer exists.
+5. An approval requirement is added where NCode Review approves ([ADR-0022](0022-ncode-reviews-approval-gates-the-merge.md)), and a second one when a second maintainer
+   exists.
 
 ## Options considered
 
 - No protection, relying on people and agents to run the checks before pushing. Rejected: a direct push skips the gate
   that CI already runs.
-- Require one approving review. Rejected while there is one maintainer: it cannot be met.
+- Require one approving review. Rejected while there is one maintainer: it cannot be met, unless NCode Review's
+  approval meets it ([ADR-0022](0022-ncode-reviews-approval-gates-the-merge.md)).
 - The merge method. Decided in [ADR-0013](0013-pull-requests-merge-with-a-merge-commit-or-by-rebasing.md), so a project
   that squash-merges supersedes that record alone.
 - `integrate: direct`, pushing reviewed plans straight to the default branch. A Landing option for a project that

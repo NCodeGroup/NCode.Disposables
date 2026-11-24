@@ -42,7 +42,7 @@ $label = 'template-update'
 $bodyLimit = 60000
 
 function ConvertTo-TemplateVersion([string]$Text) {
-    if ($Text -notmatch '^v?(\d+(?:\.\d+){0,3})$') { return $null }
+    if ($Text -notmatch '^v?([0-9]+(?:\.[0-9]+){0,3})\z') { return $null }
     $parts = @($Matches[1] -split '\.')
     while ($parts.Count -lt 3) { $parts += '0' }
     [version]($parts -join '.')
@@ -104,9 +104,9 @@ $src = Get-Answer $answersFile '_src_path'
 if (-not $src) { throw '.copier-answers.yml has no _src_path, the address of the template.' }
 # Copier's shorthands, and the template's old address, which GitHub only redirects. Update-Project.ps1 moves a project
 # off the same old address; change both together.
-if ($src -match '^gh:(.+)$') { $src = "https://github.com/$($Matches[1])" }
-elseif ($src -match '^gl:(.+)$') { $src = "https://gitlab.com/$($Matches[1])" }
-if ($src -match '^https://github\.com/polewskm/project-template(?:\.git)?/?$') { $src = 'https://github.com/NCodeGroup/project-template.git' }
+if ($src -match '^gh:(.+)\z') { $src = "https://github.com/$($Matches[1])" }
+elseif ($src -match '^gl:(.+)\z') { $src = "https://gitlab.com/$($Matches[1])" }
+if ($src -match '^https://github\.com/polewskm/project-template(?:\.git)?/?\z') { $src = 'https://github.com/NCodeGroup/project-template.git' }
 $web = if ($src -match '^https://github\.com/([^/]+/[^/]+?)(?:\.git)?/?$') { "https://github.com/$($Matches[1])" }
 
 $outputEncoding = [Console]::OutputEncoding

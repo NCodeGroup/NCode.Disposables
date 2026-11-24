@@ -73,4 +73,5 @@ request contributes nothing to it.
 - [ADR-0119](0119-production-refuses-development-only-settings.md): Production refuses development-only settings.
 - [ADR-0128](0128-liveness-never-checks-dependencies-readiness-does.md): liveness never checks dependencies; readiness
   does.
-- [ADR-0144](0144-correctness-guards-fail-closed-capacity-guards-fail-open.md): a list that grants trust starts empty.
+- [ADR-0144](0144-correctness-guards-fail-closed-capacity-guards-fail-open.md): correctness guards fail closed,
+  capacity guards fail open, and a list that grants trust starts empty.

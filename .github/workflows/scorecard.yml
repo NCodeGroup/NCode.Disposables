@@ -1,0 +1,46 @@
+name: Scorecard
+
+# OpenSSF Scorecard scores the repository's supply-chain practices, such as pinned dependencies, token permissions and
+# branch protection, on each push to the default branch and every week. It publishes the score to api.scorecard.dev,
+# which the README's badge shows, and uploads its findings to code scanning. Publishing rejects a workflow with
+# workflow-level env, defaults or write permissions, and an analysis job with env, defaults, a container, services, a
+# runner other than Ubuntu or a step outside Scorecard's approved actions:
+# https://github.com/ossf/scorecard-action#workflow-restrictions
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '27 5 * * 2'
+
+permissions:
+  contents: read
+
+jobs:
+  analysis:
+    name: Scorecard analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+      # Uploads the findings to code scanning.
+      security-events: write
+      # The OIDC token that proves to api.scorecard.dev that the published score came from this workflow.
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # v2.6.0 was released on 2026-11-19, under the three days ADR-0009 waits: it runs Scorecard v5.7.0, which counts
+      # immutable releases, so it is pinned by that record's commented exception, and this comment goes once
+      # 2026-11-22 has passed (NCodeGroup/project-template#481).
+      - name: Run Scorecard
+        uses: ossf/scorecard-action@23f22cd43608bae7a1f1fa2603d7314dee9538a5 # v2.6.0
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          publish_results: true
+      - name: Upload the findings to code scanning
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          sarif_file: results.sarif

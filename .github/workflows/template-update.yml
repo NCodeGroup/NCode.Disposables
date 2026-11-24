@@ -12,7 +12,6 @@ on:
 
 permissions:
   contents: read
-  issues: write
 
 concurrency:
   group: template-update
@@ -23,6 +22,10 @@ jobs:
     name: Template update notice
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # Opens, edits and closes the notice issue; the only write the workflow needs.
+    permissions:
+      contents: read
+      issues: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

@@ -1,0 +1,93 @@
+name: Tag and publish release
+
+# Tags and publishes each release as its pull request merges. .template/Publish-Release.ps1 takes the version from the
+# newest section of CHANGELOG.md or, in a pre-release project, from the `Release:` line /ship-plan writes in the pull
+# request's description. It tags the commit this push made main point to, signed with gitsign in a public repository,
+# and publishes the GitHub release with that section as its notes.
+#
+# Named for what it does, so it never shares its name with a release workflow of the project's own. The policy job, with
+# only contents: read and a checkout that keeps no token, reads release: from AGENTS.md's Landing section; the release
+# job, the only one that can write, runs only for release: tag or tag+release. Before it, the test job runs ci.yml on the
+# same commit, and the release job waits for it to pass. It runs on every push to main because the
+# script does nothing when the tag and the release exist. For a .NET library, the script starts publish.yml through
+# workflow_dispatch after it publishes the release, because the workflow's token starts no other workflow.
+#
+# The template owns this file, so a template update replaces it. To retry a run that failed, choose Re-run failed jobs
+# on that run in the Actions tab: it tags the same commit. Run workflow tags the commit main points to at that time, which
+# has a pre-release project's Release: line only when its pull request merged as that commit.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One release at a time, and a run is never cancelled partway, between its tag and its release.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  policy:
+    name: Read the release policy
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      release: ${{ steps.policy.outputs.release }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Read release from AGENTS.md's Landing section
+        id: policy
+        shell: pwsh
+        run: |
+          $release = ./.template/Publish-Release.ps1 -Policy
+          "release=$release" >> $env:GITHUB_OUTPUT
+          "AGENTS.md's Landing section says release: $release."
+
+  # CI's build and tests, run again on the commit about to be tagged, with the coverage gate when the project has it:
+  # a release is tagged only once they pass, the dynamic analysis the OpenSSF Best Practices criteria ask for before
+  # a release (the template's ADR-0026).
+  test:
+    name: Test before the release
+    needs: policy
+    if: needs.policy.outputs.release == 'tag' || needs.policy.outputs.release == 'tag+release'
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+
+  release:
+    name: Tag and publish
+    needs: [policy, test]
+    if: needs.policy.outputs.release == 'tag' || needs.policy.outputs.release == 'tag+release'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      actions: write
+      pull-requests: read
+      # To sign the tag with gitsign through the job's OIDC token (the template's ADR-0028).
+      id-token: write
+    steps:
+      # Keeps checkout's token in the clone's git config: the tag push uses it.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # A public repository's tag is signed through Sigstore's keyless signing; a private one's stays unsigned, since
+      # Sigstore's public transparency log would publish its name (the template's ADR-0028).
+      - uses: chainguard-dev/actions/setup-gitsign@d496b2ab65497cac13d77ccd5038b8aae7e8c43b # v1.8.2
+        if: ${{ !github.event.repository.private }}
+
+      - name: Tag and publish the newest release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+          SIGN: ${{ !github.event.repository.private }}
+        run: ./.template/Publish-Release.ps1 -Commit $env:GITHUB_SHA -Sign:($env:SIGN -eq 'true')

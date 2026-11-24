@@ -1,6 +1,6 @@
 # 0002. Commits are attributed to people, not agents
 
-- **Status:** Accepted
+- **Status:** Superseded by 0018
 - **Date:** 2026-10-31
 
 ## Context
@@ -57,8 +57,8 @@ The rule is enforced in layers that fail differently:
   A GitHub review-thread reply is the exception: nothing such a session can call edits one without the footer, so
   the reply is posted anyway, because every discussion still gets its answer
   ([ADR-0014](0014-every-pull-request-discussion-is-remediated-and-replied-to-before-it-merges.md)), and the run
-  lists it. A `/review` comment that comes back with anything appended starts no review, so the run deletes it and
-  asks a person to post one.
+  lists it. A `/review` comment is left as posted too: NCode Review reads the command from its first line and sets
+  aside everything from a `---` line on, so the footer on it doesn't stop the review.
 - A CI check enforces it on the server. The `Commit attribution` job runs `.template/Test-CommitAttribution.ps1` on
   every pull request and push to the default branch, and fails on a commit authored, committed or co-authored by an AI
   agent. On a pull request it also checks the title and description for the same lines, because a squash merge can make

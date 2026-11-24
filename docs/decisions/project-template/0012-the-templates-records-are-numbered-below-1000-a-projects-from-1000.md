@@ -7,7 +7,7 @@
 
 A project keeps two sets of decision records: its own in `docs/decisions/`, and the template's in
 `docs/decisions/project-template/`, which every template update replaces. Both are numbered with four digits, and
-records, issues, commit messages, changelog entries and instruction files cite them by number, as "ADR-0102". When
+records, issues, commit messages, changelog entries and instruction files cite them by number, as "ADR-0004". When
 both sets count from 0001, one number names two records: a project's ADR-0007 and the template's ADR-0007 are different
 decisions, and a template update that adds a record can bring a number the project already uses. Neither a reader nor
 an agent can tell from a bare number which record is meant, and the template's own files cite its records that way.
