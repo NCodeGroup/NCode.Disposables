@@ -19,17 +19,7 @@
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
-    <DiagnosticId>CP0002</DiagnosticId>
-    <Target>M:NCode.Disposables.AsyncDisposableExtensions.&lt;G&gt;$733379385360DB4F1DB17835A429DF32`1.AsSharedReference</Target>
-    <Left>lib/net8.0/NCode.Disposables.dll</Left>
-    <Right>lib/net8.0/NCode.Disposables.dll</Right>
-    <IsBaselineSuppression>true</IsBaselineSuppression>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP0002</DiagnosticId>
-    <Target>M:NCode.Disposables.AsyncDisposableExtensions.AsSharedReference``1(``0)</Target>
-    <Left>lib/net8.0/NCode.Disposables.dll</Left>
-    <Right>lib/net8.0/NCode.Disposables.dll</Right>
-    <IsBaselineSuppression>true</IsBaselineSuppression>
+    <DiagnosticId>PKV006</DiagnosticId>
+    <Target>net8.0</Target>
   </Suppression>
 </Suppressions>

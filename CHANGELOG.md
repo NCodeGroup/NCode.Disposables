@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.0.0] - 2026-11-24
+
 ### Added
 
-- Public API tracking: the public surface of v5.3.0, unchanged, is recorded in `PublicAPI.Shipped.txt`, and `PublicAPI.Unshipped.txt` is empty.
+- Public API tracking: each release's public surface is recorded in `PublicAPI.Shipped.txt`, and the changes since the last release in `PublicAPI.Unshipped.txt`, so the build fails on a public API change neither file records.
 - Each pack is validated against NCode.Disposables 5.3.0, the last version on nuget.org, through `PackageValidationBaselineVersion`, so a change that would break 5.3.0's public API fails the pack. ([#37](https://github.com/NCodeGroup/NCode.Disposables/issues/37), [ADR-0147](docs/decisions/project-template/0147-packages-are-validated-against-the-last-published-package.md))
 - The changelog has a section for every release from 1.0.0 to 5.3.0, from their release notes. ([#27](https://github.com/NCodeGroup/NCode.Disposables/issues/27))
 - `src/NCode.Disposables/README.md` is the package readme nuget.org shows: installation, the main samples, and absolute links to the full guide, the API overview, the changelog and the security policy.
@@ -36,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - **Breaking:** `AsyncDisposableExtensions.AsSharedReference()` is deleted: call `AsAsyncSharedReference()` for an `AsyncSharedReferenceLease<T>` that disposes with `DisposeAsync`. `AsSharedReference()` is `DisposableExtensions.AsSharedReference()` alone, so on a type that implements both `IDisposable` and `IAsyncDisposable`, such as a `MemoryStream`, it compiles and returns a `SharedReferenceLease<T>` that disposes with `Dispose`. No release marks it obsolete first: 5.3.0, the last release, ships it without `[Obsolete]`, so code built against 5.3.0 gets no `NCDISP001` warning before the deletion. ([#59](https://github.com/NCodeGroup/NCode.Disposables/issues/59), [#55](https://github.com/NCodeGroup/NCode.Disposables/issues/55), [ADR-1002](docs/decisions/1002-the-async-shared-reference-extension-is-asasyncsharedreference.md))
+- **Breaking:** The `net8.0` target framework: the package targets `net10.0` alone, since .NET 8 left Microsoft support on 2026-11-10. Apps on .NET 8 or 9 stay on 5.3.0. ([ADR-1003](docs/decisions/1003-the-package-targets-the-oldest-supported-lts-release.md))
 - `.github/workflows/main.yml`: its build and test jobs repeated `ci.yml`'s `build-and-test` on every push and pull request, and `publish.yml` replaces its publish job. ([#43](https://github.com/NCodeGroup/NCode.Disposables/issues/43), [#44](https://github.com/NCodeGroup/NCode.Disposables/issues/44))
 
 ### Fixed
@@ -159,7 +162,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release for .NET Framework 4.5.1: `IDisposable` implementations for common resource management patterns, such as actions, aggregates, collections and shared references.
 
-[Unreleased]: https://github.com/NCodeGroup/NCode.Disposables/compare/v5.3.0...HEAD
+[Unreleased]: https://github.com/NCodeGroup/NCode.Disposables/compare/v6.0.0...HEAD
+[6.0.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v5.3.0...v6.0.0
 [5.3.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v5.2.1...v5.3.0
 [5.2.1]: https://github.com/NCodeGroup/NCode.Disposables/compare/v5.1.1...v5.2.1
 [5.1.1]: https://github.com/NCodeGroup/NCode.Disposables/compare/v5.1.0...v5.1.1

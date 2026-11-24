@@ -31,7 +31,7 @@ NCode.Disposables.AsyncDisposableExtensions
 NCode.Disposables.AsyncDisposableExtensions.extension(System.Collections.Generic.IEnumerable<object?>!)
 NCode.Disposables.AsyncDisposableExtensions.extension(System.Collections.Generic.IEnumerable<object?>!).DisposeAllAsync(bool ignoreExceptions = false) -> System.Threading.Tasks.ValueTask
 NCode.Disposables.AsyncDisposableExtensions.extension<T>(T)
-NCode.Disposables.AsyncDisposableExtensions.extension<T>(T).AsSharedReference() -> NCode.Disposables.AsyncSharedReferenceLease<T>
+NCode.Disposables.AsyncDisposableExtensions.extension<T>(T).AsAsyncSharedReference() -> NCode.Disposables.AsyncSharedReferenceLease<T>
 NCode.Disposables.AsyncSharedReference
 NCode.Disposables.AsyncSharedReferenceLease<T>
 NCode.Disposables.AsyncSharedReferenceLease<T>.AddReference() -> NCode.Disposables.AsyncSharedReferenceLease<T>
@@ -130,7 +130,7 @@ static NCode.Disposables.AsyncDisposable.Empty.get -> System.IAsyncDisposable!
 static NCode.Disposables.AsyncDisposable.Shared<T>(T value, System.Func<T, System.Threading.Tasks.ValueTask>! onRelease) -> NCode.Disposables.AsyncSharedReferenceLease<T>
 static NCode.Disposables.AsyncDisposable.Shared<T>(T value) -> NCode.Disposables.AsyncSharedReferenceLease<T>
 static NCode.Disposables.AsyncDisposableEmpty.Singleton.get -> NCode.Disposables.AsyncDisposableEmpty!
-static NCode.Disposables.AsyncDisposableExtensions.AsSharedReference<T>(this T value) -> NCode.Disposables.AsyncSharedReferenceLease<T>
+static NCode.Disposables.AsyncDisposableExtensions.AsAsyncSharedReference<T>(this T value) -> NCode.Disposables.AsyncSharedReferenceLease<T>
 static NCode.Disposables.AsyncDisposableExtensions.DisposeAllAsync(this System.Collections.Generic.IEnumerable<object?>! collection, bool ignoreExceptions = false) -> System.Threading.Tasks.ValueTask
 static NCode.Disposables.AsyncSharedReference.Create<T>(T value, System.Func<T, System.Threading.Tasks.ValueTask>! onRelease) -> NCode.Disposables.AsyncSharedReferenceLease<T>
 static NCode.Disposables.AsyncSharedReference.Create<T>(T value) -> NCode.Disposables.AsyncSharedReferenceLease<T>
