@@ -29,6 +29,7 @@ The silver criteria that need a document point to these:
 | `documentation_roadmap` | [ROADMAP.md](../ROADMAP.md) |
 | `documentation_architecture` | [architecture.md](architecture.md) |
 | `documentation_security`, `assurance_case`, `implement_secure_design` | [assurance-case.md](assurance-case.md) |
+| `signed_releases` | [SECURITY.md](../SECURITY.md#verify-a-package) and each GitHub release's `<tag>.intoto.jsonl` |
 | Vulnerability response and credit | [SECURITY.md](../SECURITY.md) |
 | Coding standards and their enforcement | [CONTRIBUTING.md](../CONTRIBUTING.md), `.editorconfig` and the analyzers in `./build/dod.ps1` |
 | Test policy (`test_policy_mandated`) | [CONTRIBUTING.md](../CONTRIBUTING.md), which says that a change that adds or changes behavior adds or updates the automated tests that cover it |
@@ -55,4 +56,7 @@ Not registered yet. With one maintainer, silver stops below 100%: `access_contin
 
 ## Also Supported
 
-OpenSSF Scorecard runs on every push to `main` and once a week (`.github/workflows/scorecard.yml`).
+OpenSSF Scorecard runs on every push to `main` and once a week (`.github/workflows/scorecard.yml`), and
+each release carries provenance attestations and an SBOM (`.github/workflows/release-provenance.yml`, which
+`publish.yml` calls,
+[ADR-0151](decisions/project-template/0151-release-follow-ups-are-jobs-publish-calls.md)).
