@@ -18,7 +18,8 @@ Run from the repository root in PowerShell 7.
 
 - Build: `dotnet build`
 - Test: `dotnet test`
-- Definition of Done: `./build/dod.ps1` (the full gate CI runs) or `./build/dod.ps1 -Fast` (Debug, no pack); it ends with `Definition of Done: PASSED`. Record a public API change with `./build/Update-PublicApi.ps1`
+- Gate: `./build/gate.ps1` (the full gate CI runs) or `./build/gate.ps1 -Fast` (Debug, no pack): `dotnet tool restore`, the README samples check, then the Definition of Done, `./build/dod.ps1`; it ends with `Definition of Done: PASSED`. Record a public API change with `./build/Update-PublicApi.ps1`
+- Samples: `dotnet mdsnippets` copies the README samples from the tests
 
 ## Landing
 
@@ -31,7 +32,7 @@ How `/ship-plan` lands a reviewed plan. `integrate`: `pull-request` pushes the p
 - draft: yes
 - follow-ups: issues
 - follow-up-label: follow-up
-- gate: ./build/dod.ps1 -Fast
+- gate: ./build/gate.ps1 -Fast
 - protect: none
 - pr-format: none
 - review-bots: ncode-review
@@ -45,3 +46,5 @@ How `/ship-plan` lands a reviewed plan. `integrate`: `pull-request` pushes the p
 - Package versions come from `version.json` through Nerdbank.GitVersioning (ADR-0138 in `docs/decisions/project-template/`): `version` is the version the next release ships, and the change that releases a version sets it to that version, so the release tag `v<version>` matches. `assemblyVersion` stays `5.3` with precision `minor`, the AssemblyVersion the 5.x releases carry, until the change that starts the next major version sets it to `{ "precision": "major" }`. `.github/workflows/publish.yml` checks out the tagged commit with the full history and packs a release with `-p:PublicRelease=true`.
 - Package validation compares each pack with `PackageValidationBaselineVersion` in `Directory.Build.props`, the last version on nuget.org (ADR-0147 in `docs/decisions/project-template/`). After each stable release, `.github/workflows/raise-baseline.yml`, which `publish.yml` calls, pushes the branch that raises it and opens an issue whose link opens its pull request (ADR-0150 in `docs/decisions/project-template/`), so no plan raises it itself.
 - This repository keeps `.github/workflows/code-review-auto-merge.yml` and accepts the template's ADR-0006 exception: it auto-merges only a Dependabot pull request whose one change is the NCode Review pin.
+- `src/NCode.Disposables/README.md` is the package readme nuget.org shows, so its links are absolute; `README.md` is the repository's full guide.
+- The C# samples in `README.md` and `src/NCode.Disposables/README.md` are copied by MarkdownSnippets from `tests/NCode.Disposables.Tests/ReadmeSamplesTests.cs` ([ADR-1000](docs/decisions/1000-readme-samples-are-compiled-tests-that-markdownsnippets-copies-into-the-readmes.md)): change a sample in its test, between `// begin-snippet: <name>` and `// end-snippet`, then run `dotnet mdsnippets`; never edit a README's `<!-- snippet: -->` block, which `./build/gate.ps1` checks against the tests. A `#region` name in a test needs a space.

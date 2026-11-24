@@ -33,11 +33,13 @@ Not written yet.
 
 [//]: # "Maintainers: add the tests and the coverage the project keeps."
 
-- **Gate:** `./build/dod.ps1` builds in Release with warnings as errors
+- **Gate:** `./build/gate.ps1` checks that the README samples match their compiled tests
+  ([ADR-1000](decisions/1000-readme-samples-are-compiled-tests-that-markdownsnippets-copies-into-the-readmes.md)), then
+  runs `./build/dod.ps1`, which builds in Release with warnings as errors
   ([ADR-0100](decisions/project-template/0100-warnings-are-errors-in-every-project.md)), runs the analyzers and the
   banned-API list in `build/BannedSymbols.txt`
   ([ADR-0102](decisions/project-template/0102-disallowed-apis-are-banned-at-build-time.md)), and runs the tests; CI runs
-  the commands on every pull request.
+  `./build/gate.ps1` on every pull request.
 - **Static analysis:** with CodeQL's default setup configured and analyzing at least one language, the repository
   ruleset blocks a pull request that adds a CodeQL alert at warning level or above, or a security alert of any severity
   ([ADR-0005](decisions/project-template/0005-the-default-branch-accepts-changes-only-through-pull-requests.md),

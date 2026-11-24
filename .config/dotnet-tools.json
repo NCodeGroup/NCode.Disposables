@@ -6,6 +6,11 @@
       "version": "1.4.0",
       "commands": ["csharpier"],
       "rollForward": false
+    },
+    "markdownsnippets.tool": {
+      "version": "30.0.1",
+      "commands": ["mdsnippets"],
+      "rollForward": false
     }
   }
 }

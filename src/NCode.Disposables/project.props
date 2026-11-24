@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
   <PropertyGroup>
-    <Description>A comprehensive .NET library providing useful `IDisposable` and `IAsyncDisposable` implementations for common resource management patterns.</Description>
+    <Description>Building blocks for IDisposable and IAsyncDisposable in .NET: run an action on dispose, dispose many resources in reverse order, swap the resource an aggregate holds, share a resource through reference-counted leases, and dispose on a synchronization context.</Description>
     <PackageTags>disposable;idisposable;iasyncdisposable;dispose;async;resource-management;reference-counting;shared-reference;dispose-pattern;cleanup;using;memory-management;lifecycle;dotnet</PackageTags>
   </PropertyGroup>
 </Project>

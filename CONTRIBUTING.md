@@ -18,11 +18,11 @@ Once in each clone, run `git config core.hooksPath .githooks`. It turns on `.git
 | --- | --- |
 | Build | `dotnet build` |
 | Test | `dotnet test` |
-| Definition of Done, the full gate | `./build/dod.ps1` |
-| The local gate before a push | `./build/dod.ps1 -Fast` |
-| Only the tests a filter matches | `./build/dod.ps1 -Fast -Filter 'FullyQualifiedName~OrderStore'` |
+| The full gate, which CI runs | `./build/gate.ps1` |
+| The local gate before a push | `./build/gate.ps1 -Fast` |
+| Only the tests a filter matches | `./build/gate.ps1 -Fast -Filter 'FullyQualifiedName~OrderStore'` |
 
-The Definition of Done checks the decision index, builds in Release with warnings as errors, runs the tests, packs and ends with `Definition of Done: PASSED`. CI runs `./build/dod.ps1` on every pull request.
+The gate restores the tools, checks that the READMEs' samples match their tests, then runs the Definition of Done, which checks the decision index, builds in Release with warnings as errors, runs the tests, packs and ends with `Definition of Done: PASSED`. CI runs `./build/gate.ps1` on every pull request. A README sample is a test in `tests/NCode.Disposables.Tests/ReadmeSamplesTests.cs`: change it there and run `dotnet mdsnippets` to copy it into the READMEs ([ADR-1000](docs/decisions/1000-readme-samples-are-compiled-tests-that-markdownsnippets-copies-into-the-readmes.md)).
 
 ## Make a Change
 
@@ -30,7 +30,7 @@ The Definition of Done checks the decision index, builds in Release with warning
 2. A change consumers can observe, such as to the public API, behavior, validation or security posture, stored data or a wire format, has its decision recorded in [docs/decisions/](docs/decisions/README.md) before or with the pull request that builds it; that folder's README says how. Bug fixes and internal changes need no record.
 3. Work on a short-lived branch from the default branch. A change that adds or changes behavior adds or updates the automated tests that cover it.
 4. Keep `CHANGELOG.md` in the [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/) format; the first change consumers can see creates it. While `AGENTS.md`'s Landing section says `pre-release: untracked` and no version tag of 1.0.0 or later exists, its `## [Unreleased]` section describes the product as it is, under `### Added` and `### Security` only: edit the entry a change adds, reshapes or removes, so it matches the code (ADR-0015 in `docs/decisions/project-template/`). Otherwise add an entry for each change consumers can see under `## [Unreleased]`, grouped under `### Added`, `### Changed`, `### Deprecated`, `### Removed`, `### Fixed` or `### Security`, and a release moves the entries into its version's section.
-5. Before you push, pass the gate: `./build/dod.ps1 -Fast`.
+5. Before you push, pass the gate: `./build/gate.ps1 -Fast`.
 6. Open a pull request into the default branch whose description ends with a `Closes #<issue>` line. The default branch takes changes only through pull requests: a maintainer merges yours once CI passes.
 
 ## Review Requirements
