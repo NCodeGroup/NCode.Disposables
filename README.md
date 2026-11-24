@@ -246,7 +246,21 @@ await using (var lease = AsyncSharedReference.Create(stream))
 ```
 <!-- endSnippet -->
 
-For a type that implements both `IDisposable` and `IAsyncDisposable`, such as a `Stream`, `AsSharedReference()` is ambiguous and doesn't compile: call `SharedReference.Create` or `AsyncSharedReference.Create` instead.
+The `AsAsyncSharedReference()` extension does the same, also for a type that implements both `IDisposable` and `IAsyncDisposable`, such as a `Stream`:
+
+<!-- snippet: AsAsyncSharedReference -->
+```cs
+// stream is an open Stream, which implements both IDisposable and IAsyncDisposable.
+await using (var lease = stream.AsAsyncSharedReference())
+{
+    lease.Value.WriteByte(42);
+}
+
+// stream.DisposeAsync ran when the last lease was released
+```
+<!-- endSnippet -->
+
+`AsSharedReference()` on an `IAsyncDisposable` is obsolete and reports warning `NCDISP001`; on a type that implements both interfaces it is ambiguous until the next major version deletes it. Call `AsAsyncSharedReference()` for a lease that disposes with `DisposeAsync`, or `SharedReference.Create` for one that disposes with `Dispose`.
 
 ### Disposing on a synchronization context
 
@@ -354,7 +368,7 @@ await items.DisposeAllAsync(); // DisposeAsync for the stream, then Dispose for 
 | Type | Members |
 | --- | --- |
 | `DisposableExtensions` | `DisposeAsyncIfAvailable()`, `AsSharedReference()` and `DisposeAll()` |
-| `AsyncDisposableExtensions` | `AsSharedReference()` and `DisposeAllAsync()` |
+| `AsyncDisposableExtensions` | `AsAsyncSharedReference()`, `DisposeAllAsync()` and the obsolete `AsSharedReference()` |
 
 ## Thread safety
 

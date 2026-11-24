@@ -265,6 +265,24 @@ public class ReadmeSamplesTests
         Assert.True(stream.DisposeAsyncCalled);
     }
 
+    [Fact]
+    public async Task AsAsyncSharedReferenceSample_Runs()
+    {
+        var stream = new RecordingStream();
+
+        // begin-snippet: AsAsyncSharedReference
+        // stream is an open Stream, which implements both IDisposable and IAsyncDisposable.
+        await using (var lease = stream.AsAsyncSharedReference())
+        {
+            lease.Value.WriteByte(42);
+        }
+
+        // stream.DisposeAsync ran when the last lease was released
+        // end-snippet
+
+        Assert.True(stream.DisposeAsyncCalled);
+    }
+
     #endregion
 
     #region Context Tests
