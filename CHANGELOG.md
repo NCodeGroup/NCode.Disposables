@@ -38,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - **Breaking:** `AsyncDisposableExtensions.AsSharedReference()` is deleted: call `AsAsyncSharedReference()` for an `AsyncSharedReferenceLease<T>` that disposes with `DisposeAsync`. `AsSharedReference()` is `DisposableExtensions.AsSharedReference()` alone, so on a type that implements both `IDisposable` and `IAsyncDisposable`, such as a `MemoryStream`, it compiles and returns a `SharedReferenceLease<T>` that disposes with `Dispose`. No release marks it obsolete first: 5.3.0, the last release, ships it without `[Obsolete]`, so code built against 5.3.0 gets no `NCDISP001` warning before the deletion. ([#59](https://github.com/NCodeGroup/NCode.Disposables/issues/59), [#55](https://github.com/NCodeGroup/NCode.Disposables/issues/55), [ADR-1002](docs/decisions/1002-the-async-shared-reference-extension-is-asasyncsharedreference.md))
-- **Breaking:** The `net8.0` target framework: the package targets `net10.0` alone, since .NET 8 left Microsoft support on 2026-11-10. Apps on .NET 8 or 9 stay on 5.3.0. ([ADR-1003](docs/decisions/1003-the-package-targets-net10-only.md))
+- **Breaking:** The `net8.0` target framework: the package targets `net10.0` alone, since .NET 8 left Microsoft support on 2026-11-10. Apps on .NET 8 or 9 stay on 5.3.0. ([ADR-1003](docs/decisions/1003-the-package-targets-the-oldest-supported-lts-release.md))
 - `.github/workflows/main.yml`: its build and test jobs repeated `ci.yml`'s `build-and-test` on every push and pull request, and `publish.yml` replaces its publish job. ([#43](https://github.com/NCodeGroup/NCode.Disposables/issues/43), [#44](https://github.com/NCodeGroup/NCode.Disposables/issues/44))
 
 ### Fixed
