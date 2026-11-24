@@ -401,9 +401,9 @@ public sealed class AsyncDisposableExtensionsTests : IDisposable
     [Fact]
     public void AsSharedReference_IsNotDeclared()
     {
-        Assert.DoesNotContain(typeof(AsyncDisposableExtensions).GetMethods(), method =>
-            method.Name == "AsSharedReference"
-        );
+        var methods = typeof(AsyncDisposableExtensions).GetMethods();
+
+        Assert.DoesNotContain(methods, method => method.Name == "AsSharedReference");
     }
 
     #endregion
