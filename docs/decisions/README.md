@@ -8,9 +8,9 @@ the same pull request as the code it explains.
 Write a record for a non-obvious choice that someone would otherwise question again: a design with real alternatives,
 a trade-off that looks wrong without its reasons, or a departure from the project template. The conventions themselves
 go in `AGENTS.md` or the instruction files it lists; a record explains why a convention is what it is.
-`/analyze-decision` compares the options and writes one. Work bigger than one plan starts as a design document in
-`docs/designs/`, from [its template](../designs/_template.md), and each of its decisions becomes a record here when its
-phase lands.
+`/analyze-decision` compares the options and writes one, in a worktree of its own, where it lands with the plan that
+builds it. Work bigger than one plan starts as a design document in `docs/designs/`, from
+[its template](../designs/_template.md), and each of its decisions becomes a record here when its phase lands.
 
 ## How to Write One
 
