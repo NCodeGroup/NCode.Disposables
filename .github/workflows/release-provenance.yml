@@ -1,0 +1,156 @@
+# Attach release provenance: signs a provenance attestation for the packages a Publish packages run built, and attaches
+# the packages and a signed provenance file (<tag>.intoto.jsonl) to the GitHub release. OpenSSF Scorecard looks for such
+# a file among a release's assets, and a consumer needs one to learn which workflow built a package.
+#
+# publish.yml calls this workflow as a job after the push to nuget.org, beside the baseline job, so it runs in the same
+# run and attests the very packages that run built and published. It is not started by a workflow-run trigger:
+# tag-release.yml starts publish.yml with the workflow's GITHUB_TOKEN, and GitHub creates no workflow-run event for a
+# run started that way, so such a trigger never fired (the template's ADR-0151). publish.yml's own jobs keep only the
+# permissions they need: the write permissions are granted to this job alone.
+#
+# To backfill a release whose Publish packages run succeeded while its packages artifact is still kept (14 days):
+# Actions > Attach release provenance > Run workflow, with the release's tag and the run's id, or gh workflow run
+# release-provenance.yml -f tag=<tag> -f run-id=<run id>. The job checks that the id names a successful run of
+# publish.yml in this repository and that every package carries the tag's version, so it can't attest other files. A
+# backfilled attestation names this workflow's run and the commit it was started on, not the Publish run.
+#
+# The release also gets an SPDX SBOM (<tag>.spdx.json) from GitHub's dependency graph, as of the run; it describes the
+# default branch's dependencies when this workflow runs and is not attested.
+#
+# To verify a package a consumer downloaded: gh attestation verify <package> --repo <owner>/<repo>
+# The template owns this file.
+name: Attach release provenance
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: The release tag, such as v1.2.3
+        required: true
+        type: string
+      # publish.yml passes none: the packages are the calling run's own.
+      run-id:
+        description: Empty, to attest the calling run's packages
+        required: false
+        type: string
+        default: ''
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: The release tag to backfill, such as v1.2.3
+        required: true
+        type: string
+      run-id:
+        description: The id of the successful Publish packages run that published it
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  attest:
+    name: Attest and attach
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # One run per tag at a time; a second waits rather than racing the first to the release's assets.
+    concurrency:
+      group: release-provenance-${{ inputs.tag }}
+      cancel-in-progress: false
+    permissions:
+      # To download the packages the publishing run uploaded.
+      actions: read
+      # To store the attestation with the repository.
+      attestations: write
+      # To upload the packages and the provenance file to the release.
+      contents: write
+      # To sign the attestation with the job's OIDC token.
+      id-token: write
+    steps:
+      # The tag reaches the script through env, and only after it is known to be a version, so it can't inject anything.
+      - name: Read the tag
+        id: tag
+        shell: pwsh
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          if ($env:TAG -notmatch '^v(\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?)$') { throw "The tag '$env:TAG' isn't a version tag such as v1.2.3." }
+          "tag=$env:TAG" >> $env:GITHUB_OUTPUT
+          "version=$($Matches[1])" >> $env:GITHUB_OUTPUT
+
+      # A backfill names the run to take the packages from; a call from publish.yml names none and uses its own run.
+      - name: Check the run to backfill is a successful Publish packages run
+        if: inputs.run-id != ''
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_ID: ${{ inputs.run-id }}
+        run: |
+          if ($env:RUN_ID -notmatch '^\d+$') { throw "The run id '$env:RUN_ID' isn't a number." }
+          $run = gh api "repos/$env:GH_REPO/actions/runs/$env:RUN_ID" | ConvertFrom-Json
+          if ($LASTEXITCODE) { throw "gh api couldn't read run $env:RUN_ID (exit code $LASTEXITCODE)." }
+          if ($run.path -ne '.github/workflows/publish.yml') { throw "Run $env:RUN_ID is a run of $($run.path), not .github/workflows/publish.yml." }
+          if ($run.conclusion -ne 'success') { throw "Run $env:RUN_ID concluded '$($run.conclusion)', not 'success': it published nothing to attest." }
+
+      - name: Download the packages this run built
+        if: inputs.run-id == ''
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: packages
+          path: packages
+
+      - name: Download the packages of the run to backfill
+        if: inputs.run-id != ''
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: packages
+          path: packages
+          run-id: ${{ inputs.run-id }}
+          github-token: ${{ github.token }}
+
+      # The packages must be the tag's release: a backfill with a mismatched tag and run attests nothing.
+      - name: Check every package has the tag's version
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.tag.outputs.version }}
+        run: |
+          $packages = @(Get-ChildItem packages -Filter '*.nupkg')
+          if (-not $packages) { throw 'The packages artifact holds no package.' }
+          $wrong = @($packages | Where-Object { -not $_.Name.EndsWith(".$env:VERSION.nupkg", [StringComparison]::OrdinalIgnoreCase) })
+          if ($wrong) { throw "These packages don't have version $env:VERSION, the tag's: $($wrong.Name -join ', ')" }
+
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        id: attest
+        with:
+          subject-path: |
+            packages/*.nupkg
+            packages/*.snupkg
+
+      - name: Attach the packages, the provenance and the SBOM to the release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ steps.tag.outputs.tag }}
+          BUNDLE: ${{ steps.attest.outputs.bundle-path }}
+        run: |
+          $sbom = "$env:TAG.spdx.json"
+          Copy-Item -LiteralPath $env:BUNDLE -Destination "$env:TAG.intoto.jsonl"
+          $export = gh api "repos/$env:GH_REPO/dependency-graph/sbom" | ConvertFrom-Json
+          if ($LASTEXITCODE) { throw "gh api dependency-graph/sbom failed with exit code $LASTEXITCODE." }
+          $export.sbom | ConvertTo-Json -Depth 100 | Set-Content -LiteralPath $sbom
+          gh release upload $env:TAG (Get-ChildItem packages -Include *.nupkg,*.snupkg -Recurse).FullName "$env:TAG.intoto.jsonl" $sbom --clobber
+          if ($LASTEXITCODE) { throw "gh release upload failed with exit code $LASTEXITCODE." }
+
+      # Proves the attestation exists and names this repository, so a broken signing step fails here, not for a
+      # consumer.
+      - name: Verify the attestations
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          Get-ChildItem packages -Filter '*.nupkg' | ForEach-Object {
+            gh attestation verify $_.FullName --repo $env:GH_REPO
+            if ($LASTEXITCODE) { throw "gh attestation verify failed for $($_.Name) with exit code $LASTEXITCODE." }
+          }
