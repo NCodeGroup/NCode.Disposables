@@ -5,6 +5,9 @@ namespace NCode.Disposables.Tests;
 
 public class DisposableExtensionsTests
 {
+    private const string AsyncOnlyMessage =
+        "The collection contains an item that implements IAsyncDisposable but not IDisposable; dispose it with DisposeAllAsync.";
+
     #region DisposeAsyncIfAvailable Tests
 
     [Fact]
@@ -294,10 +297,7 @@ public class DisposableExtensionsTests
             collection.DisposeAll(ignoreExceptions: true)
         );
 
-        Assert.Equal(
-            "The collection contains an item that implements IAsyncDisposable but not IDisposable; dispose it with DisposeAllAsync.",
-            exception.Message
-        );
+        Assert.Equal(AsyncOnlyMessage, exception.Message);
         Assert.Equal(["last", "first"], log);
     }
 
@@ -330,10 +330,7 @@ public class DisposableExtensionsTests
             collection.DisposeAll(ignoreExceptions)
         );
 
-        Assert.Equal(
-            "The collection contains an item that implements IAsyncDisposable but not IDisposable; dispose it with DisposeAllAsync.",
-            exception.Message
-        );
+        Assert.Equal(AsyncOnlyMessage, exception.Message);
     }
 
     [Fact]
