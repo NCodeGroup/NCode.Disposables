@@ -6,7 +6,7 @@ build_command: dotnet build
 code_review: true
 conduct_contact: ''
 coverage_gate: false
-csharp_format: false
+csharp_format: true
 git_host: github
 license: Apache-2.0
 nuget_package: true

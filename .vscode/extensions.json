@@ -3,6 +3,7 @@
     "anthropic.claude-code",
     "github.copilot-chat",
     "editorconfig.editorconfig",
-    "ms-dotnettools.csdevkit"
+    "ms-dotnettools.csdevkit",
+    "csharpier.csharpier-vscode"
   ]
 }
