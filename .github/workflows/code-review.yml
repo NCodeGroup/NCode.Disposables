@@ -1,14 +1,32 @@
 name: Code review
 
-# Reviews each pull request with NCode Review (NCodeGroup/code-review), which posts as ncode-review[bot]: a "Code review"
-# check run, a summary comment with a verdict, and inline threads. Nothing requires it; its findings are advice. It
-# reviews a pull request when it opens (drafts included, since that's when its author reviews it) and when it's marked
-# ready, unless that commit was already reviewed; pushes in between start nothing. A top-level `/review` comment from
-# someone with write access reviews the latest commit on demand; `/review explain F3` says whether a finding still holds,
-# and `/review teach <rule>` files a rule as an issue, both on a closed pull request too. A `skip-review` label skips
-# the automatic reviews. When a pull request closes, merged or not, the outcomes job only records each posted finding's
-# outcome, with no model call. It needs no environment: the app's key is an organization secret, and the code-review
-# environment holds none; it only lets Anthropic's federation rule trust the review job.
+# Reviews each pull request with NCode Review (NCodeGroup/code-review), which posts as ncode-review[bot]: a
+# "Code review" check run, a summary comment with a verdict, and inline threads. Its findings are advice, and nothing
+# requires its check run; its approval is another matter, below. It reviews a pull request when it opens (drafts
+# included, since that's when its author reviews it) and when it's marked ready, unless that commit was already
+# reviewed; pushes in between start nothing. A top-level comment from someone with write access whose first line is
+# `/review` reviews the latest commit on demand, also with a footer below it, such as an agent's `---` line and
+# attribution, which NCode Review sets aside; `/review explain F3` says whether a finding still holds, and
+# `/review teach <rule>` files a rule as an issue, both on a closed pull request too. A `skip-review` label skips the
+# automatic reviews. When a pull request closes, merged or not, the outcomes job only records each posted finding's
+# outcome, with no model call. It needs no environment: the NCode Review app's key is an organization secret. The
+# code-review environment, which only the default branch can deploy to, holds the approver's key,
+# NCODE_REVIEW_APPROVER_PRIVATE_KEY, once it is stored, and lets Anthropic's federation rule trust the review job.
+#
+# approve: true approves a pull request whose review leaves no blocker or should-fix finding open, which Scorecard's
+# Code-Review check counts. GitHub counts an approval toward a ruleset's required approval only from a reviewer that can
+# write, so the approval is submitted by the NCode Review Approver (v1.5.0 on), an app with Contents: write whose token,
+# minted after the review, can only write pull requests. tools/Enable-CodeReview.ps1 -ApproverPrivateKeyPath in
+# NCodeGroup/code-review stores its key in the code-review environment. With it, tools/Set-RepositoryBaseline.ps1 in the
+# project template requires one approval, of the last push; without it, NCode Review's own app approves, which meets no
+# required approval, and the baseline requires none where one person can write. A push dismisses the approval, so
+# comment /review after one; a maintainer approves a bot's pull request, which NCode Review skips.
+# docs/decisions/project-template/0022-ncode-reviews-approval-gates-the-merge.md,
+# 0034-with-one-writer-the-baseline-requires-no-approval.md and
+# 0036-a-required-approval-is-met-by-ncode-reviews-approver-app.md say why.
+# v1.5.0 was released on 2026-11-21, under the three days ADR-0009 waits: approver-private-key needs it, so it is
+# pinned by that record's commented exception, and this sentence goes once 2026-11-24 has passed
+# (NCodeGroup/project-template#475).
 #
 # pull_request_target and issue_comment both run this file from the default branch, so a pull request can't change its
 # own review. The engine fetches its code only to read it: nothing from it is built, run or installed.
@@ -20,7 +38,7 @@ name: Code review
 # updates the SHA and the tag.
 # Run tools/Enable-CodeReview.ps1 from a clone of NCodeGroup/code-review once for this repository: it creates the
 # code-review environment, which only the default branch can deploy to, and gives the repository access to the
-# organization's two secrets.
+# organization's two secrets; -ApproverPrivateKeyPath stores the approver's key in that environment.
 
 on:
   pull_request_target:
