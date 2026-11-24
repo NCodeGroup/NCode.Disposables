@@ -302,7 +302,7 @@ public class DisposableExtensionsTests
     }
 
     [Fact]
-    public void DisposeAll_WithAsyncDisposable_SetsIgnoreExceptionsFalseAndCollectsException()
+    public void DisposeAll_WithAsyncDisposable_DisposesRemainingItems()
     {
         var disposed = false;
         var collection = new object[]
@@ -311,8 +311,6 @@ public class DisposableExtensionsTests
             AsyncDisposable.Create(() => { }),
         };
 
-        // When IAsyncDisposable is encountered, ignoreExceptions is set to false
-        // and the exception is collected. The loop continues and disposes remaining items.
         Assert.Throws<InvalidOperationException>(() =>
             collection.DisposeAll(ignoreExceptions: true)
         );

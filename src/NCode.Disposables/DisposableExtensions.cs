@@ -111,27 +111,32 @@ public static class DisposableExtensions
 
             foreach (var item in collection.Reverse())
             {
-                try
+                switch (item)
                 {
-                    switch (item)
-                    {
-                        case IAsyncDisposable:
-                            ignoreExceptions = false;
-                            throw new InvalidOperationException(
+                    case IAsyncDisposable:
+                        exceptions ??= [];
+                        exceptions.Add(
+                            new InvalidOperationException(
                                 "The collection contains an IAsyncDisposable instance."
-                            );
+                            )
+                        );
+                        break;
 
-                        case IDisposable disposable:
+                    case IDisposable disposable:
+                        try
+                        {
                             disposable.Dispose();
-                            break;
-                    }
-                }
-                catch (Exception exception)
-                {
-                    if (ignoreExceptions)
-                        continue;
-                    exceptions ??= [];
-                    exceptions.Add(exception);
+                        }
+                        catch (Exception exception)
+                        {
+                            if (!ignoreExceptions)
+                            {
+                                exceptions ??= [];
+                                exceptions.Add(exception);
+                            }
+                        }
+
+                        break;
                 }
             }
 
