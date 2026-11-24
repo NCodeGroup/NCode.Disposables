@@ -1,3 +1,5 @@
 #nullable enable
+*REMOVED*NCode.Disposables.AsyncDisposableExtensions.extension<T>(T).AsSharedReference() -> NCode.Disposables.AsyncSharedReferenceLease<T>
+*REMOVED*static NCode.Disposables.AsyncDisposableExtensions.AsSharedReference<T>(this T value) -> NCode.Disposables.AsyncSharedReferenceLease<T>
 NCode.Disposables.AsyncDisposableExtensions.extension<T>(T).AsAsyncSharedReference() -> NCode.Disposables.AsyncSharedReferenceLease<T>
 static NCode.Disposables.AsyncDisposableExtensions.AsAsyncSharedReference<T>(this T value) -> NCode.Disposables.AsyncSharedReferenceLease<T>

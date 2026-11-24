@@ -28,34 +28,8 @@ public static class AsyncDisposableExtensions
         /// This is a convenience extension method that wraps <see cref="AsyncSharedReference.Create{T}(T)"/>.
         /// The returned lease holds an initial reference to the resource. Additional references can be obtained
         /// by calling <see cref="AsyncSharedReferenceLease{T}.AddReference"/> on any active lease.
-        /// A type that also implements <see cref="IDisposable"/> matches the synchronous extension of
-        /// the same name, so the call is ambiguous; call <c>AsAsyncSharedReference()</c> instead.
-        /// </remarks>
-        // ADR-1002
-        [Obsolete(
-            "Use AsAsyncSharedReference(), which a type that also implements IDisposable can call without ambiguity. This member is deleted in the next major version.",
-            DiagnosticId = "NCDISP001",
-            UrlFormat = "https://github.com/NCodeGroup/NCode.Disposables/blob/main/docs/decisions/1002-the-async-shared-reference-extension-is-asasyncsharedreference.md"
-        )]
-        public AsyncSharedReferenceLease<T> AsSharedReference()
-        {
-            return AsyncSharedReference.Create(value);
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="AsyncSharedReferenceLease{T}"/> that shares the specified
-        /// <see cref="IAsyncDisposable"/> resource using reference counting. The resource is automatically disposed
-        /// asynchronously when the last lease is released.
-        /// </summary>
-        /// <returns>
-        /// A new <see cref="AsyncSharedReferenceLease{T}"/> representing the initial lease on the shared resource.
-        /// </returns>
-        /// <remarks>
-        /// This is a convenience extension method that wraps <see cref="AsyncSharedReference.Create{T}(T)"/>.
-        /// The returned lease holds an initial reference to the resource. Additional references can be obtained
-        /// by calling <see cref="AsyncSharedReferenceLease{T}.AddReference"/> on any active lease.
-        /// A type that also implements <see cref="IDisposable"/>, such as a <see cref="System.IO.Stream"/>,
-        /// can call it without ambiguity.
+        /// A type that also implements <see cref="IDisposable"/>, such as a <see cref="System.IO.Stream"/>, gets an
+        /// asynchronous lease too; its <c>AsSharedReference()</c> returns a synchronous lease.
         /// </remarks>
         public AsyncSharedReferenceLease<T> AsAsyncSharedReference()
         {
