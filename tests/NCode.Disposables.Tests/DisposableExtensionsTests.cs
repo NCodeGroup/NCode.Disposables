@@ -265,6 +265,26 @@ public class DisposableExtensionsTests
         Assert.Equal("321", order);
     }
 
+    [Fact]
+    public void DisposeAll_WithIgnoreExceptionsAndAsyncDisposable_IgnoresOtherFailures()
+    {
+        var log = new List<string>();
+        var collection = new object[]
+        {
+            Disposable.Create(() => log.Add("first")),
+            Disposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
+            AsyncDisposable.Create(() => { }),
+            Disposable.Create(() => log.Add("last")),
+        };
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            collection.DisposeAll(ignoreExceptions: true)
+        );
+
+        Assert.Equal("The collection contains an IAsyncDisposable instance.", exception.Message);
+        Assert.Equal(["last", "first"], log);
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
