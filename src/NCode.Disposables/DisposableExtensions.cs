@@ -89,7 +89,8 @@ public static class DisposableExtensions
         /// <param name="ignoreExceptions">
         /// <see langword="true"/> to suppress exceptions thrown by individual items during disposal and continue
         /// disposing remaining items; <see langword="false"/> (the default) to collect and throw exceptions.
-        /// Note: The <see cref="InvalidOperationException"/> for an item that implements only <see cref="IAsyncDisposable"/> is never ignored.
+        /// Note: The <see cref="InvalidOperationException"/> for an item that implements only
+        /// <see cref="IAsyncDisposable"/> is never ignored.
         /// </param>
         /// <remarks>
         /// <para>
@@ -110,7 +111,8 @@ public static class DisposableExtensions
         /// </para>
         /// </remarks>
         /// <exception cref="InvalidOperationException">
-        /// The collection contains an item that implements <see cref="IAsyncDisposable"/> but not <see cref="IDisposable"/>.
+        /// The collection contains an item that implements <see cref="IAsyncDisposable"/> but not
+        /// <see cref="IDisposable"/>.
         /// </exception>
         /// <exception cref="AggregateException">
         /// Multiple items threw exceptions during disposal and <paramref name="ignoreExceptions"/> is <see langword="false"/>.

@@ -188,10 +188,9 @@ public static class Disposable
     /// Items are disposed in LIFO (last-in, first-out) order when the collection is disposed.
     /// </para>
     /// <para>
-    /// When <paramref name="ignoreExceptions"/> is <see langword="true"/>, disposal continues for all items
-    /// even if some throw exceptions. When <see langword="false"/>, every item is still disposed; then the one
-    /// exception is rethrown, or an <see cref="AggregateException"/>
-    /// holding every exception is thrown when several items throw.
+    /// When <paramref name="ignoreExceptions"/> is <see langword="true"/>, disposal continues for all items even if
+    /// some throw exceptions. When <see langword="false"/>, every item is still disposed; then the one exception is
+    /// rethrown, or an <see cref="AggregateException"/> holding every exception is thrown when several items throw.
     /// </para>
     /// </remarks>
     public static IDisposableCollection Collection(
@@ -220,10 +219,9 @@ public static class Disposable
     /// Items are disposed in LIFO (last-in, first-out) order when the collection is disposed.
     /// </para>
     /// <para>
-    /// When <paramref name="ignoreExceptions"/> is <see langword="true"/>, disposal continues for all items
-    /// even if some throw exceptions. When <see langword="false"/>, every item is still disposed; then the one
-    /// exception is rethrown, or an <see cref="AggregateException"/>
-    /// holding every exception is thrown when several items throw.
+    /// When <paramref name="ignoreExceptions"/> is <see langword="true"/>, disposal continues for all items even if
+    /// some throw exceptions. When <see langword="false"/>, every item is still disposed; then the one exception is
+    /// rethrown, or an <see cref="AggregateException"/> holding every exception is thrown when several items throw.
     /// </para>
     /// </remarks>
     public static IDisposableCollection Collection(

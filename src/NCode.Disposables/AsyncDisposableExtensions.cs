@@ -17,8 +17,9 @@ public static class AsyncDisposableExtensions
         where T : IAsyncDisposable
     {
         /// <summary>
-        /// Creates a new <see cref="AsyncSharedReferenceLease{T}"/> that shares the specified <see cref="IAsyncDisposable"/>
-        /// resource using reference counting. The resource is automatically disposed asynchronously when the last lease is released.
+        /// Creates a new <see cref="AsyncSharedReferenceLease{T}"/> that shares the specified
+        /// <see cref="IAsyncDisposable"/> resource using reference counting. The resource is automatically disposed
+        /// asynchronously when the last lease is released.
         /// </summary>
         /// <returns>
         /// A new <see cref="AsyncSharedReferenceLease{T}"/> representing the initial lease on the shared resource.
@@ -42,8 +43,9 @@ public static class AsyncDisposableExtensions
         }
 
         /// <summary>
-        /// Creates a new <see cref="AsyncSharedReferenceLease{T}"/> that shares the specified <see cref="IAsyncDisposable"/>
-        /// resource using reference counting. The resource is automatically disposed asynchronously when the last lease is released.
+        /// Creates a new <see cref="AsyncSharedReferenceLease{T}"/> that shares the specified
+        /// <see cref="IAsyncDisposable"/> resource using reference counting. The resource is automatically disposed
+        /// asynchronously when the last lease is released.
         /// </summary>
         /// <returns>
         /// A new <see cref="AsyncSharedReferenceLease{T}"/> representing the initial lease on the shared resource.
