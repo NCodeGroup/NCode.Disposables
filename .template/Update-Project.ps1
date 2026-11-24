@@ -328,8 +328,8 @@ function Get-CodeReviewNote {
     if (-not (Test-Path -LiteralPath $workflow -PathType Leaf)) { return }
     $text = Get-Content -LiteralPath $workflow -Raw
     $versions = @(foreach ($m in [regex]::Matches($text, '(?im)^\s*(?:-\s+)?uses:\s*[''"]?NCodeGroup/code-review(?:/[\w./-]+)?@([^\s''"#]+)[''"]?[ \t]*(?:#[ \t]*(\S+))?')) {
-        if ($m.Groups[2].Success -and $m.Groups[2].Value -match '^v?(\d+\.\d+\.\d+)$') { [version]$Matches[1] }
-        elseif ($m.Groups[1].Value -match '^v?(\d+\.\d+\.\d+)$') { [version]$Matches[1] }
+        if ($m.Groups[2].Success -and $m.Groups[2].Value -match '^v?([0-9]+\.[0-9]+\.[0-9]+)\z') { [version]$Matches[1] }
+        elseif ($m.Groups[1].Value -match '^v?([0-9]+\.[0-9]+\.[0-9]+)\z') { [version]$Matches[1] }
     })
     $findings = [Collections.Generic.List[string]]::new()
     if ($versions.Count) {
@@ -520,7 +520,7 @@ function Get-RenderedFile([string]$Repo, [string]$Version) {
 
 # The newest version tag, as Copier picks it: v1.2.3 or 1.2.3, prereleases ignored.
 function Get-NewestTag([string]$Repo) {
-    git -C $Repo tag --list | Where-Object { $_ -match '^v?\d+(\.\d+){0,3}$' } |
+    git -C $Repo tag --list | Where-Object { $_ -match '^v?[0-9]+(\.[0-9]+){0,3}\z' } |
         Sort-Object { $v = $_ -replace '^v'; if ($v -notmatch '\.') { $v += '.0' }; [version]$v } | Select-Object -Last 1
 }
 
@@ -596,6 +596,36 @@ function Get-RewrittenFile([string[]]$Files, [string]$Folder) {
         $text = [regex]::Split([IO.File]::ReadAllText((Join-Path $project $file)), "(?m)^# Kept from this repository's own \S+ when it adopted the project template\r?$")[0]
         if ((Get-SharedLineFraction $text ([IO.File]::ReadAllText($rendered))) -lt 0.5) { $file }
     }
+}
+
+# True when the update keeps every line the project changed in a template-owned file (#488): each line its copy at
+# $Head adds to the current version's render in $ResetCommit is in the file the update left at least as often as in
+# that copy, and each line it removes is there no more often. Lines are matched by text and count, not position. A
+# binary file, or a change with no changed line, isn't kept.
+function Test-EditKept([string]$File, [string]$ResetCommit, [string]$Head) {
+    $diff = @(git -c core.quotePath=false diff --no-color --no-ext-diff --no-renames -U0 $ResetCommit $Head -- $File)
+    if ($LASTEXITCODE) { return $false }
+    $path = Join-Path $project $File
+    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { return $false }
+    $added = [Collections.Generic.HashSet[string]]::new()
+    $removed = [Collections.Generic.HashSet[string]]::new()
+    $inHunk = $false
+    foreach ($line in $diff) {
+        if ($line.StartsWith('@@')) { $inHunk = $true; continue }
+        if (-not $inHunk) { if ($line.StartsWith('Binary files ')) { return $false }; continue }
+        if ($line.StartsWith('+')) { $null = $added.Add($line.Substring(1).TrimEnd("`r")) }
+        elseif ($line.StartsWith('-')) { $null = $removed.Add($line.Substring(1).TrimEnd("`r")) }
+    }
+    if (-not ($added.Count + $removed.Count)) { return $false }
+    $copy = @(git show "${Head}:$File")
+    if ($LASTEXITCODE) { return $false }
+    $was = [Collections.Generic.Dictionary[string, int]]::new([StringComparer]::Ordinal)
+    foreach ($line in $copy) { $was[$line.TrimEnd("`r")]++ }
+    $now = [Collections.Generic.Dictionary[string, int]]::new([StringComparer]::Ordinal)
+    foreach ($line in @(Get-Content -LiteralPath $path)) { $now[$line]++ }
+    foreach ($text in $added) { if ([int]$now[$text] -lt [int]$was[$text]) { return $false } }
+    foreach ($text in $removed) { if ([int]$now[$text] -gt [int]$was[$text]) { return $false } }
+    $true
 }
 
 # How to run the template's .githooks in this clone: HooksPath when core.hooksPath can point at it, otherwise the
@@ -712,8 +742,8 @@ function Get-ChangelogBackfill {
             if ($inLanding -and $line -match '^- pre-release:\s*`?untracked`?\s*$') { $untracked = $true }
         }
     }
-    $listed = @(if (Test-Path -LiteralPath $file -PathType Leaf) { foreach ($line in Get-Content -LiteralPath $file) { if ($line -match '^## \[?v?(\d+\.\d+\.\d+)\]?(?: - \d{4}-\d{2}-\d{2})?(?: \[YANKED\])?\s*$') { [version]$Matches[1] } } })
-    $missing = @(git tag --list --merged HEAD 2>$null | Where-Object { $_ -match '^v?(\d+\.\d+\.\d+)$' -and [version]$Matches[1] -notin $listed -and -not ($untracked -and ([version]$Matches[1]).Major -lt 1) } | Sort-Object { [version]($_ -replace '^v') })
+    $listed = @(if (Test-Path -LiteralPath $file -PathType Leaf) { foreach ($line in Get-Content -LiteralPath $file) { if ($line -match '^## \[?v?([0-9]+\.[0-9]+\.[0-9]+)\]?(?: - [0-9]{4}-[0-9]{2}-[0-9]{2})?(?: \[YANKED\])?\s*\z') { [version]$Matches[1] } } })
+    $missing = @(git tag --list --merged HEAD 2>$null | Where-Object { $_ -match '^v?([0-9]+\.[0-9]+\.[0-9]+)\z' -and [version]$Matches[1] -notin $listed -and -not ($untracked -and ([version]$Matches[1]).Major -lt 1) } | Sort-Object { [version]($_ -replace '^v') })
     $range = if ($missing.Count -eq 0) { '-' } elseif ($missing.Count -eq 1) { $missing[0] } else { "$($missing[0])..$($missing[-1])" }
     [pscustomobject]@{ File = $file; Range = $range }
 }
@@ -738,7 +768,7 @@ function Get-AssemblyVersionFloor {
     if (-not (Test-Path -LiteralPath build/ProjectTemplate.props -PathType Leaf)) { return }
     if ((Get-Content -LiteralPath build/ProjectTemplate.props -Raw) -notmatch 'Name="ProjectTemplatePinAssemblyVersion"') { return }
     if ((Test-Path -LiteralPath Directory.Build.props -PathType Leaf) -and (Get-Content -LiteralPath Directory.Build.props -Raw) -match '<AssemblyVersion[\s>]') { return }
-    $tags = @(git tag --list --merged HEAD 2>$null | Where-Object { $_ -match '^v?(\d+\.\d+\.\d+)(?:-[0-9A-Za-z.-]+)?$' } |
+    $tags = @(git tag --list --merged HEAD 2>$null | Where-Object { $_ -match '^v?([0-9]+\.[0-9]+\.[0-9]+)(?:-[0-9A-Za-z.-]+)?\z' } |
         Sort-Object { [version]($_ -replace '^v' -replace '-.*$') })
     if ($tags.Count -eq 0) { return }
     $major = ([version]($tags[-1] -replace '^v' -replace '-.*$')).Major
@@ -749,7 +779,7 @@ function Get-AssemblyVersionFloor {
         if ($number.Major -ne $major) { continue }
         $shipped = $null
         $props = git show "${tag}:Directory.Build.props" 2>$null
-        if ($LASTEXITCODE -eq 0 -and ($props -join "`n") -match '<AssemblyVersion>\s*(\d+(?:\.\d+){1,3})\s*</AssemblyVersion>') { $shipped = [version]$Matches[1] }
+        if ($LASTEXITCODE -eq 0 -and ($props -join "`n") -match '<AssemblyVersion>\s*([0-9]+(?:\.[0-9]+){1,3})\s*</AssemblyVersion>') { $shipped = [version]$Matches[1] }
         if (-not $shipped) {
             $template = git show "${tag}:build/ProjectTemplate.props" 2>$null
             $shipped = if ($LASTEXITCODE -eq 0 -and ($template -join "`n") -match 'Name="ProjectTemplatePinAssemblyVersion"') { [version]::new($major, 0, 0, 0) } else { $number }
@@ -918,7 +948,7 @@ function Update-VersionFile {
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { return }
     $text = [IO.File]::ReadAllText($path)
     $result = [pscustomobject]@{ Version = $null; Tag = $null; AssemblyVersion = $null; Precision = $null }
-    $tag = @(git tag --list --merged HEAD 2>$null | Where-Object { $_ -match '^v?\d+\.\d+\.\d+$' } | Sort-Object { [version]($_ -replace '^v') }) | Select-Object -Last 1
+    $tag = @(git tag --list --merged HEAD 2>$null | Where-Object { $_ -match '^v?[0-9]+\.[0-9]+\.[0-9]+\z' } | Sort-Object { [version]($_ -replace '^v') }) | Select-Object -Last 1
     if ($tag) {
         $number = [version]($tag -replace '^v')
         $version = "$($number.Major).$($number.Minor).$($number.Build + 1)"
@@ -926,7 +956,7 @@ function Update-VersionFile {
         if ($updated -ne $text) { $text = $updated; $result.Version = $version; $result.Tag = $tag }
     }
     $shipped = $null
-    if ((Test-Path -LiteralPath Directory.Build.props -PathType Leaf) -and (Get-Content -LiteralPath Directory.Build.props -Raw) -match '<AssemblyVersion>\s*(\d+(?:\.\d+){1,3})\s*</AssemblyVersion>') { $shipped = $Matches[1] }
+    if ((Test-Path -LiteralPath Directory.Build.props -PathType Leaf) -and (Get-Content -LiteralPath Directory.Build.props -Raw) -match '<AssemblyVersion>\s*([0-9]+(?:\.[0-9]+){1,3})\s*</AssemblyVersion>') { $shipped = $Matches[1] }
     if (-not $shipped) { $shipped = (Get-AssemblyVersionFloor).AssemblyVersion }
     if ($shipped) {
         $number = [version]$shipped
@@ -1098,6 +1128,7 @@ try {
         [IO.File]::WriteAllText($infoExclude, "$excludeBefore`n$beginCopy`n$([IO.File]::ReadAllText($projectIgnore))`n$endCopy`n")
     }
     $versionFileNew = $false
+    $resetCommit = $null
     try {
         # Reset the template-owned files to the project's current version; what changes was edited or deleted here. A file the project owns is left out, so its copy is never overwritten.
         $exclude = foreach ($file in $projectOwned + $merged + $ownedFiles) { '--exclude', "/$file" }
@@ -1143,7 +1174,7 @@ try {
         }
         Add-UpdateChange $scratch
         $resetCommitted = [bool](git diff --cached --name-only)
-        if ($resetCommitted) { git commit -q --no-verify -m 'Reset template-owned files'; if ($LASTEXITCODE) { throw 'Committing the reset failed.' } }
+        if ($resetCommitted) { git commit -q --no-verify -m 'Reset template-owned files'; if ($LASTEXITCODE) { throw 'Committing the reset failed.' }; $resetCommit = git rev-parse HEAD }
 
         $copierArgs = @('update', '--defaults', '--quiet', '--vcs-ref', $to)
         foreach ($k in $Data.Keys) { $copierArgs += '--data', "$k=$(ConvertTo-CopierValue $Data[$k])" }
@@ -1219,8 +1250,9 @@ try {
     "Template $from -> ${to}:"
     $changes | Sort-Object Kind, File | ForEach-Object { '  {0,-9} {1}' -f $_.Kind, $_.File }
     # A file the update leaves as the project had it lost nothing, such as a local edit the new version also makes or a deleted file it also deletes: list only the files that differ from the commit the update started from.
+    # An edited file whose every changed line the update keeps lost nothing either (Test-EditKept), such as a pin bump the new version also makes beside changes of its own (#488).
     $differs = @((git -c core.quotePath=false diff --name-only --no-renames -z $head) -split "`0" | Where-Object { $_ })
-    $edited = @($reset | Where-Object { $_.Kind -ne 'added' -and $_.File -in $differs } | ForEach-Object File)
+    $edited = @($reset | Where-Object { $_.Kind -ne 'added' -and $_.File -in $differs -and -not ($_.Kind -eq 'modified' -and $resetCommit -and (Test-EditKept $_.File $resetCommit $head)) } | ForEach-Object File)
     $restored = @($reset | Where-Object { $_.Kind -eq 'added' -and $_.File -in $differs } | ForEach-Object File)
     $refreshed = @($refreshed | Where-Object { $_ -in $differs })
     if ($edited) { ''; 'Local edits discarded — these files are the template''s; make the change in a project file instead:'; $edited | ForEach-Object { "  $_" } }

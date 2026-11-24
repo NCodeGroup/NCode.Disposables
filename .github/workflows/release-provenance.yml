@@ -73,7 +73,7 @@ jobs:
         env:
           TAG: ${{ inputs.tag }}
         run: |
-          if ($env:TAG -notmatch '^v(\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?)$') { throw "The tag '$env:TAG' isn't a version tag such as v1.2.3." }
+          if ($env:TAG -cnotmatch '^v([0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?)\z') { throw "The tag '$env:TAG' isn't a version tag such as v1.2.3." }
           "tag=$env:TAG" >> $env:GITHUB_OUTPUT
           "version=$($Matches[1])" >> $env:GITHUB_OUTPUT
 
@@ -86,7 +86,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
           RUN_ID: ${{ inputs.run-id }}
         run: |
-          if ($env:RUN_ID -notmatch '^\d+$') { throw "The run id '$env:RUN_ID' isn't a number." }
+          if ($env:RUN_ID -cnotmatch '^[0-9]+\z') { throw "The run id '$env:RUN_ID' isn't a number." }
           $run = gh api "repos/$env:GH_REPO/actions/runs/$env:RUN_ID" | ConvertFrom-Json
           if ($LASTEXITCODE) { throw "gh api couldn't read run $env:RUN_ID (exit code $LASTEXITCODE)." }
           if ($run.path -ne '.github/workflows/publish.yml') { throw "Run $env:RUN_ID is a run of $($run.path), not .github/workflows/publish.yml." }

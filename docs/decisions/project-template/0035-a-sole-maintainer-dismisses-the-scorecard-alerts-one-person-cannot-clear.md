@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-11-20
-- **Amends:** 0020, 0153
+- **Amends:** 0020, 0037
 
 ## Context
 
@@ -65,5 +65,5 @@ comment, each under GitHub's 280-character limit:
 - [ADR-0020](0020-github-projects-are-scored-by-openssf-scorecard.md),
   [ADR-0021](0021-tooling-is-written-in-nodejs-then-go-then-powershell.md),
   [ADR-0034](0034-with-one-writer-the-baseline-requires-no-approval.md) and
-  [ADR-0153](0153-best-practices-reports-scorecard-and-answers-for-the-default-branch.md)
+  [ADR-0037](0037-best-practices-reports-scorecard-and-answers-for-the-default-branch.md)
 - NCodeGroup/project-template#456 and #386

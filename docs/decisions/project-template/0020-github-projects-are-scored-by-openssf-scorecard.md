@@ -1,6 +1,6 @@
 # 0020. A GitHub project is scored by OpenSSF Scorecard
 
-- **Status:** Accepted (amended by 0022, 0025, 0034, 0035 and 0153)
+- **Status:** Accepted (amended by 0022, 0025, 0034, 0035 and 0037)
 - **Date:** 2026-11-14
 
 ## Context

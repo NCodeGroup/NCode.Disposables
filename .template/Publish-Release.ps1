@@ -121,7 +121,7 @@ function Get-PlannedRelease([string]$Sha) {
     if ($LASTEXITCODE) { throw "Can't read the pull request that merged as ${Sha}: $output" }
     $pull = @(@(ConvertFrom-Json $output) | Where-Object { $_.PSObject.Properties['merge_commit_sha'] -and $_.merge_commit_sha -eq $Sha }) | Select-Object -First 1
     if (-not $pull -or -not $pull.PSObject.Properties['body'] -or -not $pull.body) { return $null }
-    if ($pull.body -notmatch '(?m)^Release:[ \t]*(?<version>v?\d+\.\d+\.\d+)[ \t]*\r?$') { return $null }
+    if ($pull.body -notmatch '(?m)^Release:[ \t]*(?<version>v?[0-9]+\.[0-9]+\.[0-9]+)[ \t]*\r?$') { return $null }
     [pscustomobject]@{ Number = $pull.number; Version = $Matches.version }
 }
 
@@ -153,7 +153,7 @@ $untracked = $landing.ContainsKey('pre-release') -and $landing['pre-release'] -e
 
 $newest = Get-NewestRelease $lines
 if ($newest) {
-    if ($newest.Number -notmatch '^\d+\.\d+\.\d+$') { "$changelogName's newest release, $($newest.Number), isn't shaped like 1.2.3: tag it with /ship-plan."; exit 0 }
+    if ($newest.Number -notmatch '^[0-9]+\.[0-9]+\.[0-9]+\z') { "$changelogName's newest release, $($newest.Number), isn't shaped like 1.2.3: tag it with /ship-plan."; exit 0 }
     if ($planned -and ($planned.Version -replace '^v') -ne $newest.Number) {
         throw "Pull request #$($planned.Number) says Release: $($planned.Version), but $changelogName's newest release is $($newest.Number): make them agree, then run the workflow again."
     }
@@ -173,7 +173,7 @@ if ($newest) {
 }
 
 $tags = Get-RemoteTag $Remote
-$versionTags = @($tags | Where-Object { $_ -match '^v?\d+\.\d+\.\d+$' })
+$versionTags = @($tags | Where-Object { $_ -match '^v?[0-9]+\.[0-9]+\.[0-9]+\z' })
 $prefix = if ($versionTags.Count -and -not @($versionTags | Where-Object { $_ -like 'v*' }).Count) { '' } else { 'v' }
 $version = "$prefix$number"
 
