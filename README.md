@@ -47,6 +47,128 @@ using (var resources = Disposable.Collection())
 ```
 <!-- endSnippet -->
 
+## Usage
+
+### Running an action on dispose
+
+`Disposable.Create` wraps an `Action`. By default the action runs on the first `Dispose` only, even when several threads dispose at once; pass `idempotent: false` to run it on every call:
+
+<!-- snippet: ActionDisposable -->
+```cs
+var count = 0;
+
+var once = Disposable.Create(() => count++);
+once.Dispose();
+once.Dispose(); // count == 1: the action runs on the first call only
+
+var everyTime = Disposable.Create(() => count++, idempotent: false);
+everyTime.Dispose();
+everyTime.Dispose(); // count == 3: the action runs on every call
+```
+<!-- endSnippet -->
+
+Overloads take up to eight state arguments, which the action receives when it runs, and the `Func` overloads discard the delegate's result:
+
+<!-- snippet: ActionWithState -->
+```cs
+var stopwatch = Stopwatch.StartNew();
+
+using (Disposable.Create(watch => watch.Stop(), stopwatch))
+{
+    // timed work
+}
+
+// stopwatch.IsRunning == false
+```
+<!-- endSnippet -->
+
+`AsyncDisposable.Create` takes a `Func<ValueTask>`, or an `Action` that it runs synchronously, and works with `await using`:
+
+<!-- snippet: AsyncActionDisposable -->
+```cs
+var stream = new MemoryStream();
+var writer = new StreamWriter(stream);
+
+await using (AsyncDisposable.Create(async () => await writer.FlushAsync()))
+{
+    await writer.WriteAsync("hello");
+}
+
+// stream.Length == 5: the writer flushed when the scope ended
+```
+<!-- endSnippet -->
+
+### The empty disposable
+
+`Disposable.Empty` and `AsyncDisposable.Empty` are singletons whose dispose does nothing, for a method that must return a disposable when there is nothing to clean up:
+
+<!-- snippet: EmptyDisposable -->
+```cs
+static IDisposable Subscribe(bool enabled) =>
+    enabled ? Disposable.Create(() => Console.WriteLine("Unsubscribed")) : Disposable.Empty;
+
+using var subscription = Subscribe(enabled: false); // Disposable.Empty: disposing it does nothing
+```
+<!-- endSnippet -->
+
+### Swapping the resource an aggregate holds
+
+`Disposable.Aggregate` holds one resource, or `null`, in its `Disposable` property, and disposes the resource it holds when it is disposed. Setting the property replaces the resource without disposing the old one. Once the aggregate is disposed, reading or setting the property throws `ObjectDisposedException`. `AsyncDisposable.Aggregate` does the same for an `IAsyncDisposable`:
+
+<!-- snippet: AggregateDisposable -->
+```cs
+var log = new List<string>();
+var primary = Disposable.Create(() => log.Add("primary closed"));
+var replica = Disposable.Create(() => log.Add("replica closed"));
+
+using (var current = Disposable.Aggregate(primary))
+{
+    current.Disposable = replica; // swapping doesn't dispose primary
+    primary.Dispose();
+}
+
+// log: "primary closed", "replica closed"
+```
+<!-- endSnippet -->
+
+### Disposing many resources together
+
+`Disposable.Collection` is an `ICollection<IDisposable>` that disposes its items in reverse order, the last one added first, on its first `Dispose`; later calls do nothing, and an item added after that is never disposed. `Remove` and `Clear` take items out without disposing them:
+
+<!-- snippet: CollectionDisposable -->
+```cs
+var log = new List<string>();
+var first = Disposable.Create(() => log.Add("first"));
+var second = Disposable.Create(() => log.Add("second"));
+var third = Disposable.Create(() => log.Add("third"));
+
+using (var resources = Disposable.Collection(first, second, third))
+{
+    resources.Remove(second); // removing an item doesn't dispose it
+}
+
+// log: "third", "first"
+```
+<!-- endSnippet -->
+
+Every item is disposed even when one throws. A single failure is rethrown as it is, several are thrown together as one `AggregateException`, and `ignoreExceptions: true` ignores them:
+
+<!-- snippet: CollectionErrors -->
+```cs
+var log = new List<string>();
+var resources = Disposable.Collection(
+    ignoreExceptions: true,
+    Disposable.Create(() => log.Add("first")),
+    Disposable.Create(() => throw new InvalidOperationException("Failed to close.")),
+    Disposable.Create(() => log.Add("third"))
+);
+
+resources.Dispose(); // log: "third", "first": the failure is ignored
+```
+<!-- endSnippet -->
+
+An item that implements `IAsyncDisposable`, even one that also implements `IDisposable`, such as a `Stream`, makes the collection's `Dispose` throw `InvalidOperationException`, whatever `ignoreExceptions` says. Put such items in `AsyncDisposable.Collection`, which disposes its items with `DisposeAsync` when they support it.
+
 ## Project
 
 - [CONTRIBUTING.md](CONTRIBUTING.md): how to set up, build, test and propose a change.
