@@ -19,4 +19,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated the project from project-template v0.61.2 to v0.112.2: package versions now come from `version.json` through Nerdbank.GitVersioning, the CI workflow checks out the full history and builds a release with `-p:PublicRelease=true`, the Commit attribution check and `commit-msg` hook are gone, and the project gains a code of conduct, governance, roadmap, architecture and assurance documents, a coverage and reproducible-build toolkit, and the Scorecard workflow.
 - The solution file is `NCode.Disposables.slnx`, the XML solution format current .NET SDKs create, in place of `NCode.Disposables.sln`, and the ReSharper and Rider settings layer moves with it to `NCode.Disposables.slnx.DotSettings`. `dotnet build` and `dotnet test` at the repository root work as before.
 
+## [5.3.0] - 2026-01-17
+
+### Changed
+
+- Upgraded to .NET 10: the package ships `net10.0` and `net8.0` builds.
+
+## [5.2.1] - 2024-11-29
+
+### Changed
+
+- Collections can hold any object instead of only `IDisposable` or `IAsyncDisposable` instances; items that aren't disposable are skipped.
+
+## [5.1.1] - 2024-11-27
+
+### Changed
+
+- Minor ReSharper code cleanup, with no change in behavior.
+
+## [5.1.0] - 2024-05-16
+
+### Added
+
+- Async shared references can be created without an async call site.
+
+## [5.0.2] - 2024-05-16
+
+### Removed
+
+- More dead code.
+
+## [5.0.1] - 2024-05-15
+
+### Removed
+
+- Dead code.
+
+## [5.0.0] - 2024-05-15
+
+### Changed
+
+- **Breaking:** Shared references and their leases are structs instead of classes; recompile code that uses them.
+
 [Unreleased]: https://github.com/NCodeGroup/NCode.Disposables/compare/v5.3.0...HEAD
+[5.3.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v5.2.1...v5.3.0
+[5.2.1]: https://github.com/NCodeGroup/NCode.Disposables/compare/v5.1.1...v5.2.1
+[5.1.1]: https://github.com/NCodeGroup/NCode.Disposables/compare/v5.1.0...v5.1.1
+[5.1.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v5.0.2...v5.1.0
+[5.0.2]: https://github.com/NCodeGroup/NCode.Disposables/compare/v5.0.1...v5.0.2
+[5.0.1]: https://github.com/NCodeGroup/NCode.Disposables/compare/v5.0.0...v5.0.1
+[5.0.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v4.4.0...v5.0.0
