@@ -231,18 +231,19 @@ public class ReadmeSamplesTests
     [Fact]
     public async Task AsyncSharedReferenceSample_Runs()
     {
-        // begin-snippet: AsyncSharedReference
-        var stream = new MemoryStream();
+        var stream = new RecordingStream();
 
+        // begin-snippet: AsyncSharedReference
+        // stream is an open Stream, such as a FileStream.
         await using (var lease = AsyncSharedReference.Create(stream))
         {
             lease.Value.WriteByte(42);
         }
 
-        // stream.CanWrite == false: DisposeAsync ran when the last lease was released
+        // stream.DisposeAsync ran when the last lease was released
         // end-snippet
 
-        Assert.False(stream.CanWrite);
+        Assert.True(stream.DisposeAsyncCalled);
     }
 
     #endregion
@@ -292,9 +293,10 @@ public class ReadmeSamplesTests
     [Fact]
     public async Task DisposeAsyncIfAvailableSample_Runs()
     {
-        // begin-snippet: DisposeAsyncIfAvailable
-        var stream = new MemoryStream();
+        var stream = new RecordingStream();
 
+        // begin-snippet: DisposeAsyncIfAvailable
+        // stream is an open Stream, such as a FileStream.
         IDisposable? resource = stream;
         await resource.DisposeAsyncIfAvailable(); // a Stream is IAsyncDisposable: DisposeAsync runs
 
@@ -302,7 +304,7 @@ public class ReadmeSamplesTests
         await resource.DisposeAsyncIfAvailable(); // null: nothing happens
         // end-snippet
 
-        Assert.False(stream.CanWrite);
+        Assert.True(stream.DisposeAsyncCalled);
     }
 
     #endregion
@@ -331,16 +333,18 @@ public class ReadmeSamplesTests
     [Fact]
     public async Task DisposeAllAsyncSample_Runs()
     {
+        var stream = new RecordingStream();
+
         // begin-snippet: DisposeAllAsync
         var log = new List<string>();
-        var stream = new MemoryStream();
+        // stream is an open Stream, such as a FileStream.
         object[] items = [Disposable.Create(() => log.Add("disposed")), stream];
 
         await items.DisposeAllAsync(); // DisposeAsync for the stream, then Dispose for the rest
         // end-snippet
 
         Assert.Equal(["disposed"], log);
-        Assert.False(stream.CanWrite);
+        Assert.True(stream.DisposeAsyncCalled);
     }
 
     #endregion
@@ -353,6 +357,17 @@ public class ReadmeSamplesTests
         {
             SendCount++;
             d(state);
+        }
+    }
+
+    private sealed class RecordingStream : MemoryStream
+    {
+        public bool DisposeAsyncCalled { get; private set; }
+
+        public override ValueTask DisposeAsync()
+        {
+            DisposeAsyncCalled = true;
+            return base.DisposeAsync();
         }
     }
 }

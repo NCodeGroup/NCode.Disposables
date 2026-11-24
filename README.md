@@ -222,14 +222,13 @@ using (var lease = SharedReference.Create(buffer, array => pool.Return(array)))
 
 <!-- snippet: AsyncSharedReference -->
 ```cs
-var stream = new MemoryStream();
-
+// stream is an open Stream, such as a FileStream.
 await using (var lease = AsyncSharedReference.Create(stream))
 {
     lease.Value.WriteByte(42);
 }
 
-// stream.CanWrite == false: DisposeAsync ran when the last lease was released
+// stream.DisposeAsync ran when the last lease was released
 ```
 <!-- endSnippet -->
 
@@ -272,8 +271,7 @@ await using (AsyncDisposable.Adapt(legacy))
 
 <!-- snippet: DisposeAsyncIfAvailable -->
 ```cs
-var stream = new MemoryStream();
-
+// stream is an open Stream, such as a FileStream.
 IDisposable? resource = stream;
 await resource.DisposeAsyncIfAvailable(); // a Stream is IAsyncDisposable: DisposeAsync runs
 
@@ -306,7 +304,7 @@ items.DisposeAll(); // log: "second", "first": items that aren't IDisposable are
 <!-- snippet: DisposeAllAsync -->
 ```cs
 var log = new List<string>();
-var stream = new MemoryStream();
+// stream is an open Stream, such as a FileStream.
 object[] items = [Disposable.Create(() => log.Add("disposed")), stream];
 
 await items.DisposeAllAsync(); // DisposeAsync for the stream, then Dispose for the rest
