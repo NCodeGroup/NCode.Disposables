@@ -28,7 +28,7 @@ How `/ship-plan` lands a reviewed plan. `integrate`: `pull-request` pushes the p
 - release: none
 - changelog: CHANGELOG.md
 - pre-release: tracked
-- draft: no
+- draft: yes
 - follow-ups: issues
 - follow-up-label: follow-up
 - gate: ./build/dod.ps1 -Fast
