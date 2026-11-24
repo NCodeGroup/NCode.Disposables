@@ -60,7 +60,6 @@ override in `AGENTS.md`.
 
 ## Index
 
-NCode.Disposables has no decision records of its own yet; its records will be numbered from 1000.
-
 | ADR | Decision | Status |
 | --- | --- | --- |
+| [1000](1000-readme-samples-are-compiled-tests-that-markdownsnippets-copies-into-the-readmes.md) | README samples are compiled tests that MarkdownSnippets copies into the READMEs | Accepted |
