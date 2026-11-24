@@ -5,8 +5,15 @@ using System.Reflection;
 
 namespace NCode.Disposables.Tests;
 
-public class AsyncDisposableExtensionsTests
+public sealed class AsyncDisposableExtensionsTests : IDisposable
 {
+    private readonly MockRepository _mocks = new(MockBehavior.Strict);
+
+    public void Dispose()
+    {
+        _mocks.Verify();
+    }
+
     #region DisposeAllAsync Tests
 
     [Fact]
@@ -163,14 +170,15 @@ public class AsyncDisposableExtensionsTests
     [Fact]
     public async Task DisposeAllAsync_WithItemImplementingBothInterfaces_CallsDisposeAsyncOnly()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var mockDisposable = _mocks.Create<IAsyncDisposable>();
         _ = mockDisposable.As<IDisposable>();
-        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        mockDisposable
+            .Setup(x => x.DisposeAsync())
+            .Returns(ValueTask.CompletedTask)
+            .Verifiable(Times.Once());
         var collection = new object[] { mockDisposable.Object };
 
         await collection.DisposeAllAsync();
-
-        mockDisposable.Verify(x => x.DisposeAsync(), Times.Once);
     }
 
     #endregion

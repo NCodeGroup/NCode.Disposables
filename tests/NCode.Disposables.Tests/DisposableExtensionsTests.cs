@@ -3,10 +3,17 @@
 
 namespace NCode.Disposables.Tests;
 
-public class DisposableExtensionsTests
+public sealed class DisposableExtensionsTests : IDisposable
 {
     private const string AsyncOnlyMessage =
         "The collection contains an item that implements IAsyncDisposable but not IDisposable; dispose it with DisposeAllAsync.";
+
+    private readonly MockRepository _mocks = new(MockBehavior.Strict);
+
+    public void Dispose()
+    {
+        _mocks.Verify();
+    }
 
     #region DisposeAsyncIfAvailable Tests
 
@@ -137,14 +144,12 @@ public class DisposableExtensionsTests
     [Fact]
     public void DisposeAll_WithItemImplementingBothInterfaces_CallsDispose()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = _mocks.Create<IDisposable>();
         _ = mockDisposable.As<IAsyncDisposable>();
-        mockDisposable.Setup(x => x.Dispose());
+        mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
         var collection = new object[] { mockDisposable.Object };
 
         collection.DisposeAll();
-
-        mockDisposable.Verify(x => x.Dispose(), Times.Once);
     }
 
     [Fact]
