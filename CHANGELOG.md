@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Package validation compares each package with the published 6.0.0 package.
+- Each release is tagged and published as its pull request merges: `.github/workflows/tag-release.yml` signs the tag with gitsign, publishes the GitHub release from the version's changelog section and starts `publish.yml`, which still waits for a maintainer to approve the `nuget` environment. `SECURITY.md` says how to verify a release tag. ([ADR-0016](docs/decisions/project-template/0016-releases-are-tagged-and-published-when-their-pull-request-merges.md))
 
 ## [6.0.0] - 2026-11-24
 

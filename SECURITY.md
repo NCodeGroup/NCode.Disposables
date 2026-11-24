@@ -39,6 +39,14 @@ The packages are built in CI from a tagged commit of this repository, determinis
 - nuget.org signs every package it accepts: `dotnet nuget verify --all <package>.nupkg` checks that signature.
 - Each release published through `publish.yml` carries build provenance: `gh attestation verify <package>.nupkg --repo NCodeGroup/NCode.Disposables` checks that a package was built by this repository's workflows from the tagged commit.
 
+## Verify a Release
+
+While the repository is public, the Tag and publish release workflow signs each release tag with [gitsign](https://github.com/sigstore/gitsign), through Sigstore's keyless signing, so no signing key exists to leak. Tags after v6.0.0 are signed. With gitsign installed, check a tag in a clone of the repository:
+
+```shell
+gitsign verify-tag --certificate-identity https://github.com/NCodeGroup/NCode.Disposables/.github/workflows/tag-release.yml@refs/heads/main --certificate-oidc-issuer https://token.actions.githubusercontent.com <tag>
+```
+
 ## Scope
 
 In scope: the code, build and CI configuration in this repository and the packages built from it, including a vulnerability that comes from how NCode.Disposables uses a dependency.
