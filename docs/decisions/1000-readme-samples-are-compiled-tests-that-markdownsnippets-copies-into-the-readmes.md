@@ -20,8 +20,10 @@ when a README differs from its test.**
    `// end-snippet`. The file departs from the test naming and region conventions because it tests the READMEs.
 2. MarkdownSnippets.Tool, pinned in `.config/dotnet-tools.json` with `rollForward: false`, copies them with the
    `InPlaceOverwrite` convention and `OmitSnippetLinks` from `mdsnippets.json`.
-3. `build/Assert-Markdown.ps1` runs `dotnet mdsnippets` and fails when it changes a Markdown file. `build/gate.ps1` runs
-   it before the template-owned `build/dod.ps1`, and CI and the Landing section's `gate` run `build/gate.ps1`.
+3. `build/Assert-Markdown.ps1` runs `dotnet mdsnippets` and fails when it changes a Markdown file or fails.
+   `build/Test-AssertMarkdown.ps1` proves both failures and a pass on a temporary Git repository with a fake
+   `dotnet mdsnippets`. `build/gate.ps1` runs the self-test, then the check, before the template-owned `build/dod.ps1`,
+   and CI and the Landing section's `gate` run `build/gate.ps1`.
 4. A sample is edited in its test, never in a README.
 
 ## Options considered
@@ -42,6 +44,6 @@ when a README differs from its test.**
 ## References
 
 - `tests/NCode.Disposables.Tests/ReadmeSamplesTests.cs`, `mdsnippets.json`, `build/Assert-Markdown.ps1`,
-  `build/gate.ps1`
+  `build/Test-AssertMarkdown.ps1`, `build/gate.ps1`
 - [MarkdownSnippets](https://github.com/SimonCropp/MarkdownSnippets)
 - [NCode.PropertyBag ADR-1003](https://github.com/NCodeGroup/PropertyBag/blob/main/docs/decisions/1003-readme-samples-are-compiled-tests-that-markdownsnippets-copies-into-the-readmes.md)
