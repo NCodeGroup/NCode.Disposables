@@ -32,6 +32,25 @@ public static class AsyncDisposableExtensions
         {
             return AsyncSharedReference.Create(value);
         }
+
+        /// <summary>
+        /// Creates a new <see cref="AsyncSharedReferenceLease{T}"/> that shares the specified <see cref="IAsyncDisposable"/>
+        /// resource using reference counting. The resource is automatically disposed asynchronously when the last lease is released.
+        /// </summary>
+        /// <returns>
+        /// A new <see cref="AsyncSharedReferenceLease{T}"/> representing the initial lease on the shared resource.
+        /// </returns>
+        /// <remarks>
+        /// This is a convenience extension method that wraps <see cref="AsyncSharedReference.Create{T}(T)"/>.
+        /// The returned lease holds an initial reference to the resource. Additional references can be obtained
+        /// by calling <see cref="AsyncSharedReferenceLease{T}.AddReference"/> on any active lease.
+        /// A type that also implements <see cref="IDisposable"/>, such as a <see cref="System.IO.Stream"/>,
+        /// can call it without ambiguity.
+        /// </remarks>
+        public AsyncSharedReferenceLease<T> AsAsyncSharedReference()
+        {
+            return AsyncSharedReference.Create(value);
+        }
     }
 
     /// <param name="collection">The collection of items to dispose. Items that are <see langword="null"/> or do not

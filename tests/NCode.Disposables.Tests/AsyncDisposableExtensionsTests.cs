@@ -320,37 +320,37 @@ public class AsyncDisposableExtensionsTests
 
     #endregion
 
-    #region AsSharedReference Tests
+    #region AsAsyncSharedReference Tests
 
     [Fact]
-    public void AsSharedReference_ReturnsLease()
+    public void AsAsyncSharedReference_ReturnsLease()
     {
         var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
 
-        var lease = disposable.Object.AsSharedReference();
+        var lease = disposable.Object.AsAsyncSharedReference();
 
         Assert.Same(disposable.Object, lease.Value);
     }
 
     [Fact]
-    public async Task AsSharedReference_DisposingLease_DisposesUnderlying()
+    public async Task AsAsyncSharedReference_DisposingLease_DisposesUnderlying()
     {
         var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
         mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
 
-        var lease = mockDisposable.Object.AsSharedReference();
+        var lease = mockDisposable.Object.AsAsyncSharedReference();
         await lease.DisposeAsync();
 
         mockDisposable.Verify(x => x.DisposeAsync(), Times.Once);
     }
 
     [Fact]
-    public async Task AsSharedReference_MultipleLeases_DisposesOnLastRelease()
+    public async Task AsAsyncSharedReference_MultipleLeases_DisposesOnLastRelease()
     {
         var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
         mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
 
-        var lease1 = mockDisposable.Object.AsSharedReference();
+        var lease1 = mockDisposable.Object.AsAsyncSharedReference();
         var lease2 = lease1.AddReference();
 
         await lease1.DisposeAsync();
@@ -360,5 +360,35 @@ public class AsyncDisposableExtensionsTests
         mockDisposable.Verify(x => x.DisposeAsync(), Times.Once);
     }
 
+    [Fact]
+    public async Task AsAsyncSharedReference_WithTypeImplementingBothInterfaces_DisposesAsynchronously()
+    {
+        var resource = new DualDisposable();
+
+        var lease = resource.AsAsyncSharedReference();
+        await lease.DisposeAsync();
+
+        Assert.True(resource.DisposeAsyncCalled);
+        Assert.False(resource.DisposeCalled);
+    }
+
     #endregion
+
+    private sealed class DualDisposable : IDisposable, IAsyncDisposable
+    {
+        public bool DisposeCalled { get; private set; }
+
+        public bool DisposeAsyncCalled { get; private set; }
+
+        public void Dispose()
+        {
+            DisposeCalled = true;
+        }
+
+        public ValueTask DisposeAsync()
+        {
+            DisposeAsyncCalled = true;
+            return ValueTask.CompletedTask;
+        }
+    }
 }
