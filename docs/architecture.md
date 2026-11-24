@@ -27,4 +27,7 @@ CI runs the project's commands on every pull request
 (`.github/workflows/ci.yml`). Releases are tagged when `AGENTS.md`'s Landing section sets `release: tag`, and published too with
 `tag+release`, as
 [ADR-0016](decisions/project-template/0016-releases-are-tagged-and-published-when-their-pull-request-merges.md)
-records. The project's own workflow, `.github/workflows/main.yml`, publishes the packages to nuget.org.
+records. `publish.yml` tests and packs the tagged commit, pushes to nuget.org through trusted publishing once a
+maintainer approves the `nuget` environment, and calls `release-provenance.yml` and `raise-baseline.yml`
+([ADR-0137](decisions/project-template/0137-the-release-workflow-starts-package-publishing.md),
+[ADR-0151](decisions/project-template/0151-release-follow-ups-are-jobs-publish-calls.md)).
