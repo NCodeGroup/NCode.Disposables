@@ -1,6 +1,6 @@
 # 0025. Every Best Practices criterion is mapped in a template-owned page
 
-- **Status:** Accepted (amends 0023; amended by 0153)
+- **Status:** Accepted (amends 0023; amended by 0037)
 - **Date:** 2026-11-16
 
 ## Context

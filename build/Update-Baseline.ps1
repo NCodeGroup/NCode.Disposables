@@ -50,7 +50,7 @@ function Test-Bom([string]$Path) {
     $bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF
 }
 
-if ($Version -notmatch '^v?(\d+\.\d+\.\d+)$') {
+if ($Version -notmatch '^v?([0-9]+\.[0-9]+\.[0-9]+)\z') {
     throw "'$Version' isn't a stable version such as 1.4.0 or v1.4.0: a prerelease is never a baseline."
 }
 $target = $Matches[1]
@@ -203,7 +203,7 @@ if (Test-Path -LiteralPath $changelogPath -PathType Leaf) {
     $original = [IO.File]::ReadAllText($changelogPath)
     $crlf = $original.Contains("`r`n")
     $text = $original.Replace("`r`n", "`n")
-    if ($text -match '(?m)^## \[Unreleased\][ \t]*$' -and $text -match '(?m)^## \[\d+\.\d+\.\d+[^\]]*\] - ') {
+    if ($text -match '(?m)^## \[Unreleased\][ \t]*$' -and $text -match '(?m)^## \[[0-9]+\.[0-9]+\.[0-9]+[^\]]*\] - ') {
         $entry = "- Package validation compares each package with the published $target package."
         $unreleased = [regex]::Match($text, '(?s)## \[Unreleased\]\n(.*?)(?=\n## \[|\n\[unreleased\]:)')
         if ($unreleased.Success) {

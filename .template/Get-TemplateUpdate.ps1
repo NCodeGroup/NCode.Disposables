@@ -79,7 +79,7 @@ function Get-ChangelogSection([string]$Changelog) {
     foreach ($line in $Changelog.Replace("`r`n", "`n") -split "`n") {
         if ($line -match '^## ') {
             $current = $null
-            if ($line -match '^## \[?v?(\d+\.\d+\.\d+)\]?(?:\s.*)?$') {
+            if ($line -match '^## \[?v?([0-9]+\.[0-9]+\.[0-9]+)\]?(?:\s.*)?\z') {
                 $current = [pscustomobject]@{ Version = [version]$Matches[1]; Lines = [Collections.Generic.List[string]]::new() }
                 $sections.Add($current)
             }

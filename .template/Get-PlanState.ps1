@@ -83,14 +83,14 @@ function Test-Prelude([string]$Command, [string]$Root) {
 }
 
 function ConvertTo-PlanVersion([string]$Text) {
-    if ($Text -match '^v?(\d+)\.(\d+)\.(\d+)$') { return [version]::new([int]$Matches[1], [int]$Matches[2], [int]$Matches[3]) }
+    if ($Text -match '^v?([0-9]+)\.([0-9]+)\.([0-9]+)\z') { return [version]::new([int]$Matches[1], [int]$Matches[2], [int]$Matches[3]) }
     $null
 }
 
 # The version of the first release heading in a changelog, as ## [1.2.3] - 2026-01-31 or ## 1.2.3, or $null.
 function Get-ChangelogVersion([string[]]$Lines) {
     foreach ($line in $Lines) {
-        if ("$line" -match '^## \[?(v?\d+\.\d+\.\d+)\]?(?: - \d{4}-\d{2}-\d{2})?(?: \[YANKED\])?\s*$') { return ConvertTo-PlanVersion $Matches[1] }
+        if ("$line" -match '^## \[?(v?[0-9]+\.[0-9]+\.[0-9]+)\]?(?: - [0-9]{4}-[0-9]{2}-[0-9]{2})?(?: \[YANKED\])?\s*\z') { return ConvertTo-PlanVersion $Matches[1] }
     }
     $null
 }
@@ -98,14 +98,14 @@ function Get-ChangelogVersion([string[]]$Lines) {
 # keep-a-changelog when a changelog has a ## [Unreleased] or ## [<version>] heading, else other.
 function Get-ChangelogFormat([string[]]$Lines) {
     foreach ($line in $Lines) {
-        if ("$line" -match '^## \[(Unreleased|v?\d+\.\d+\.\d+)\]') { return 'keep-a-changelog' }
+        if ("$line" -match '^## \[(Unreleased|v?[0-9]+\.[0-9]+\.[0-9]+)\]') { return 'keep-a-changelog' }
     }
     'other'
 }
 
 # The tags in -Tags, each a Tag and its Version, that have no release heading in a changelog: <oldest>..<newest>, the tag alone, or -. With -Untracked, a tag below 1.0.0 needs no section.
 function Get-ChangelogBackfill([string[]]$Lines, [object[]]$Tags, [switch]$Untracked) {
-    $listed = @(foreach ($line in $Lines) { if ("$line" -match '^## \[?(v?\d+\.\d+\.\d+)\]?(?: - \d{4}-\d{2}-\d{2})?(?: \[YANKED\])?\s*$') { ConvertTo-PlanVersion $Matches[1] } })
+    $listed = @(foreach ($line in $Lines) { if ("$line" -match '^## \[?(v?[0-9]+\.[0-9]+\.[0-9]+)\]?(?: - [0-9]{4}-[0-9]{2}-[0-9]{2})?(?: \[YANKED\])?\s*\z') { ConvertTo-PlanVersion $Matches[1] } })
     $missing = @($Tags | Where-Object { $_.Version -notin $listed -and -not ($Untracked -and $_.Version.Major -lt 1) } | Sort-Object Version)
     if ($missing.Count -eq 0) { '-' } elseif ($missing.Count -eq 1) { $missing[0].Tag } else { "$($missing[0].Tag)..$($missing[-1].Tag)" }
 }

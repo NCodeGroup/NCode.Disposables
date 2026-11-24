@@ -51,8 +51,8 @@ jobs:
         env:
           TAG: ${{ inputs.tag }}
         run: |
-          if ($env:TAG -match '^v(\d+\.\d+\.\d+)$') { "version=$($Matches[1])" >> $env:GITHUB_OUTPUT; exit 0 }
-          if ($env:TAG -match '^v\d+\.\d+\.\d+-[0-9A-Za-z.-]+$') { "$env:TAG is a prerelease, which is never a baseline." >> $env:GITHUB_STEP_SUMMARY; exit 0 }
+          if ($env:TAG -cmatch '^v([0-9]+\.[0-9]+\.[0-9]+)\z') { "version=$($Matches[1])" >> $env:GITHUB_OUTPUT; exit 0 }
+          if ($env:TAG -cmatch '^v[0-9]+\.[0-9]+\.[0-9]+-[0-9A-Za-z.-]+\z') { "$env:TAG is a prerelease, which is never a baseline." >> $env:GITHUB_STEP_SUMMARY; exit 0 }
           throw "The tag '$env:TAG' isn't a version such as v1.2.3."
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: steps.tag.outputs.version
