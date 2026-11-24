@@ -50,11 +50,11 @@ permissions: {}
 
 jobs:
   review:
-    # The engine checks a comment again (`/review`, `/review explain` or `/review teach`, from a writer, on a pull request
-    # that isn't from a fork) and stops before any model call when it isn't one. A closed pull request goes to the
-    # outcomes job below instead, and a plain `/review` on one doesn't run, so it can't cancel or displace the outcomes
-    # job, which shares its concurrency group. The concurrency group below names no command: it keys on a comment whose
-    # first line is exactly `/review`.
+    # The engine checks a comment again (`/review`, `/review explain` or `/review teach`, from a writer, on a pull
+    # request that isn't from a fork) and stops before any model call when it isn't one. A closed pull request goes to
+    # the outcomes job below instead, and a plain `/review` on one doesn't run, so it can't cancel or displace the
+    # outcomes job, which shares its concurrency group. The concurrency group below decides which comments can cancel a
+    # review.
     if: >-
       (github.event_name == 'pull_request_target' && github.event.action != 'closed' &&
         github.event.pull_request.head.repo.full_name == github.repository &&
@@ -69,9 +69,9 @@ jobs:
     environment: code-review
     timeout-minutes: 30
     # Only a comment whose first line is exactly `/review` joins the pull request's group, where a newer review cancels
-    # the one in progress. Any other comment, `/review explain` and `/review teach` included, runs in a group of its own
-    # and never cancels a review. Lines after `/review`, such as an agent's `---` footer, are allowed, so the expression
-    # accepts `/review` followed by `\n` or `\r\n`. It is the v1.1.2 caller's (ADR-1001 in NCodeGroup/code-review).
+    # the one in progress; lines after it, such as an agent's `---` footer, don't change that. Every other comment the
+    # `if:` admits, `/review explain`, `/review teach` or any other text that starts with `/review`, gets a group of its
+    # own, so a comment the engine won't act on can't cancel one it would.
     concurrency:
       group: code-review-${{ github.event_name == 'issue_comment' && !(github.event.comment.body == '/review' || startsWith(github.event.comment.body, format('/review{0}', fromJSON('"\n"'))) || startsWith(github.event.comment.body, format('/review{0}', fromJSON('"\r\n"')))) && format('command-{0}', github.event.comment.id) || github.event.pull_request.number || github.event.issue.number }}
       cancel-in-progress: true
@@ -90,11 +90,15 @@ jobs:
           persist-credentials: false
 
       - name: Review
-        # v1.1.2 was published on 2026-11-02, inside the 3-day dependency cooldown: adopted at the maintainer's request.
-        uses: NCodeGroup/code-review@da82720a1fb582551e8d460ddd277f3cdc8b43f1 # v1.4.2
+        uses: NCodeGroup/code-review@a4cdf65d2450e4e1b2b92ed53430ceb8026d4f97 # v1.5.0
         with:
           app-private-key: ${{ secrets.NCODE_REVIEW_APP_PRIVATE_KEY }}
           bedrock-api-key: ${{ secrets.AWS_BEARER_TOKEN_BEDROCK }}
+          # A review that leaves no blocker or should-fix finding open approves the pull request.
+          approve: true
+          # The NCode Review Approver submits the approval, so it meets the ruleset's required approval; the key is a
+          # secret of the code-review environment, which only the default branch can deploy to.
+          approver-private-key: ${{ secrets.NCODE_REVIEW_APPROVER_PRIVATE_KEY }}
 
   outcomes:
     # A closed pull request, merged or not, whoever closed it (a merge queue merges as a bot) and whatever its labels:
@@ -115,7 +119,6 @@ jobs:
       pull-requests: read
     steps:
       - name: Record the outcomes
-        # v1.1.2 was published on 2026-11-02, inside the 3-day dependency cooldown: adopted at the maintainer's request.
-        uses: NCodeGroup/code-review@da82720a1fb582551e8d460ddd277f3cdc8b43f1 # v1.4.2
+        uses: NCodeGroup/code-review@a4cdf65d2450e4e1b2b92ed53430ceb8026d4f97 # v1.5.0
         with:
           app-private-key: ${{ secrets.NCODE_REVIEW_APP_PRIVATE_KEY }}
