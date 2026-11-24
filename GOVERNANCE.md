@@ -9,7 +9,7 @@ what and how decisions are made.
 
 | Role | Who | Responsibilities |
 | --- | --- | --- |
-| Maintainer | The repository's owners | Sets direction, triages issues, reviews and merges pull requests, answers vulnerability reports, owns the repository's settings and the nuget.org packages |
+| Maintainer | The repository's owners | Sets direction, triages issues, reviews and merges pull requests, approves each publication in the `nuget` environment, answers vulnerability reports, owns the repository's settings and the nuget.org packages |
 | Contributor | Anyone | Opens issues and pull requests, under [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md) |
 | Automation | `ncode-review[bot]`, `ncode-review-approver[bot]`, Dependabot, GitHub Actions | Reviews and approves a clean pull request, as `ncode-review-approver[bot]` where NCode Review's approver is set up, whose approval meets the ruleset's required approval ([ADR-0036](docs/decisions/project-template/0036-a-required-approval-is-met-by-ncode-reviews-approver-app.md)), proposes dependency updates, runs CI, tags and publishes releases where `AGENTS.md`'s Landing section sets `release: tag+release`; never merges a pull request except the pin bump `code-review-auto-merge.yml` merges once the required checks pass and, where the ruleset requires an approval, a maintainer approves it |
 
@@ -29,13 +29,13 @@ a maintainer; the existing maintainers decide, and the change is recorded in thi
 Versions follow Semantic Versioning. Releases are tagged when `AGENTS.md`'s Landing section sets `release: tag`, and published too with
 `tag+release`, as
 [ADR-0016](docs/decisions/project-template/0016-releases-are-tagged-and-published-when-their-pull-request-merges.md)
-records. The project's own workflow, `.github/workflows/main.yml`, publishes the packages to nuget.org. [SECURITY.md](SECURITY.md) says how to verify a package.
+records. `.github/workflows/publish.yml` publishes the packages to nuget.org through trusted publishing, only after a maintainer approves the `nuget` environment. [SECURITY.md](SECURITY.md) says how to verify a package.
 
 ## Continuity
 
 The repository, its issues, decision records, build, release automation and documentation are all in the
 GitHub organization that owns it, so anyone given access can carry
-on with no knowledge held elsewhere. nuget.org publishing runs in `.github/workflows/main.yml`: hand over whatever credential it uses with the repository.
+on with no knowledge held elsewhere. nuget.org publishing uses trusted publishing, with no stored API key to hand over.
 
 [//]: # "Maintainers: name the owners, and keep the list current."
 
