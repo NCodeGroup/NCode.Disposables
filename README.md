@@ -148,6 +148,8 @@ Please provide any feedback, comments, or issues to this GitHub project [here][i
 
 - [CONTRIBUTING.md](CONTRIBUTING.md): how to set up, build, test and propose a change.
 - [SECURITY.md](SECURITY.md): how to report a vulnerability privately.
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), [GOVERNANCE.md](GOVERNANCE.md) and [ROADMAP.md](ROADMAP.md): how we work together, who decides, and where the project is going.
+- [docs/architecture.md](docs/architecture.md) and [docs/assurance-case.md](docs/assurance-case.md): how the project is built, and why it meets its security requirements.
 - [docs/decisions/](docs/decisions/README.md): the decisions behind the design, the project's and the template's.
 - [CHANGELOG.md](CHANGELOG.md): what changed in each release, in the Keep a Changelog format.
 - [LICENSE.txt](LICENSE.txt): the license.
