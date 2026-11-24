@@ -11,6 +11,6 @@
 
   <!-- Package validation compares each pack with this version, the last one on nuget.org (the template's ADR-0147). Raise it with ./build/Update-Baseline.ps1 -Version <version> once nuget.org lists a new release (docs/api-compatibility.md). -->
   <PropertyGroup>
-    <PackageValidationBaselineVersion>5.3.0</PackageValidationBaselineVersion>
+    <PackageValidationBaselineVersion>6.0.0</PackageValidationBaselineVersion>
   </PropertyGroup>
 </Project>
