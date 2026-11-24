@@ -160,6 +160,19 @@ public class AsyncDisposableExtensionsTests
         Assert.Equal("654321", order);
     }
 
+    [Fact]
+    public async Task DisposeAllAsync_WithItemImplementingBothInterfaces_CallsDisposeAsyncOnly()
+    {
+        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        _ = mockDisposable.As<IDisposable>();
+        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var collection = new object[] { mockDisposable.Object };
+
+        await collection.DisposeAllAsync();
+
+        mockDisposable.Verify(x => x.DisposeAsync(), Times.Once);
+    }
+
     #endregion
 
     #region DisposeAllAsync Exception Handling Tests

@@ -301,6 +301,22 @@ public class DisposableExtensionsTests
         Assert.Equal(["last", "first"], log);
     }
 
+    [Fact]
+    public void DisposeAll_WithAsyncDisposableAndFailingItem_ThrowsAggregateExceptionInDisposalOrder()
+    {
+        var collection = new object[]
+        {
+            Disposable.Create(() => throw new ArgumentException("Dispose failed.")),
+            AsyncDisposable.Create(() => { }),
+        };
+
+        var exception = Assert.Throws<AggregateException>(() => collection.DisposeAll());
+
+        Assert.Equal(2, exception.InnerExceptions.Count);
+        Assert.IsType<InvalidOperationException>(exception.InnerExceptions[0]);
+        Assert.IsType<ArgumentException>(exception.InnerExceptions[1]);
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
