@@ -3,8 +3,18 @@
 
 namespace NCode.Disposables.Tests;
 
-public class DisposableExtensionsTests
+public sealed class DisposableExtensionsTests : IDisposable
 {
+    private const string AsyncOnlyMessage =
+        "The collection contains an item that implements IAsyncDisposable but not IDisposable; dispose it with DisposeAllAsync.";
+
+    private readonly MockRepository _mocks = new(MockBehavior.Strict);
+
+    public void Dispose()
+    {
+        _mocks.Verify();
+    }
+
     #region DisposeAsyncIfAvailable Tests
 
     [Fact]
@@ -130,6 +140,17 @@ public class DisposableExtensionsTests
     #endregion
 
     #region DisposeAll Tests
+
+    [Fact]
+    public void DisposeAll_WithItemImplementingBothInterfaces_CallsDispose()
+    {
+        var mockDisposable = _mocks.Create<IDisposable>();
+        _ = mockDisposable.As<IAsyncDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
+        var collection = new object[] { mockDisposable.Object };
+
+        collection.DisposeAll();
+    }
 
     [Fact]
     public void DisposeAll_WithDisposableItems_DisposesAll()
@@ -265,6 +286,42 @@ public class DisposableExtensionsTests
         Assert.Equal("321", order);
     }
 
+    [Fact]
+    public void DisposeAll_WithIgnoreExceptionsAndAsyncDisposable_IgnoresOtherFailures()
+    {
+        var log = new List<string>();
+        var collection = new object[]
+        {
+            Disposable.Create(() => log.Add("first")),
+            Disposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
+            AsyncDisposable.Create(() => { }),
+            Disposable.Create(() => log.Add("last")),
+        };
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            collection.DisposeAll(ignoreExceptions: true)
+        );
+
+        Assert.Equal(AsyncOnlyMessage, exception.Message);
+        Assert.Equal(["last", "first"], log);
+    }
+
+    [Fact]
+    public void DisposeAll_WithAsyncDisposableAndFailingItem_ThrowsAggregateExceptionInDisposalOrder()
+    {
+        var collection = new object[]
+        {
+            Disposable.Create(() => throw new ArgumentException("Dispose failed.")),
+            AsyncDisposable.Create(() => { }),
+        };
+
+        var exception = Assert.Throws<AggregateException>(() => collection.DisposeAll());
+
+        Assert.Equal(2, exception.InnerExceptions.Count);
+        Assert.IsType<InvalidOperationException>(exception.InnerExceptions[0]);
+        Assert.IsType<ArgumentException>(exception.InnerExceptions[1]);
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
@@ -278,11 +335,11 @@ public class DisposableExtensionsTests
             collection.DisposeAll(ignoreExceptions)
         );
 
-        Assert.Equal("The collection contains an IAsyncDisposable instance.", exception.Message);
+        Assert.Equal(AsyncOnlyMessage, exception.Message);
     }
 
     [Fact]
-    public void DisposeAll_WithAsyncDisposable_SetsIgnoreExceptionsFalseAndCollectsException()
+    public void DisposeAll_WithAsyncDisposable_DisposesRemainingItems()
     {
         var disposed = false;
         var collection = new object[]
@@ -291,8 +348,6 @@ public class DisposableExtensionsTests
             AsyncDisposable.Create(() => { }),
         };
 
-        // When IAsyncDisposable is encountered, ignoreExceptions is set to false
-        // and the exception is collected. The loop continues and disposes remaining items.
         Assert.Throws<InvalidOperationException>(() =>
             collection.DisposeAll(ignoreExceptions: true)
         );

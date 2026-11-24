@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/dotnet/Nerdbank.GitVersioning/main/src/NerdBank.GitVersioning/version.schema.json",
-  "version": "5.3.1",
+  "version": "5.4.0",
   "assemblyVersion": { "version": "5.3", "precision": "minor" },
   "nuGetPackageVersion": { "semVer": 2 },
   "publicReleaseRefSpec": ["^refs/tags/v\\d+\\.\\d+\\.\\d+"],

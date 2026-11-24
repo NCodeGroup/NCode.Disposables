@@ -171,6 +171,25 @@ public class ReadmeSamplesTests
         Assert.Equal(["third", "first"], log);
     }
 
+    [Fact]
+    public void CollectionStreamSample_Runs()
+    {
+        var stream = new RecordingStream();
+
+        // begin-snippet: CollectionStream
+        // stream is an open Stream, such as a FileStream.
+        using (var resources = Disposable.Collection(stream))
+        {
+            stream.WriteByte(42);
+        }
+
+        // stream.Dispose ran: the collection disposes every item through IDisposable
+        // end-snippet
+
+        Assert.False(stream.CanWrite);
+        Assert.False(stream.DisposeAsyncCalled);
+    }
+
     #endregion
 
     #region Shared Reference Tests
@@ -236,6 +255,24 @@ public class ReadmeSamplesTests
         // begin-snippet: AsyncSharedReference
         // stream is an open Stream, such as a FileStream.
         await using (var lease = AsyncSharedReference.Create(stream))
+        {
+            lease.Value.WriteByte(42);
+        }
+
+        // stream.DisposeAsync ran when the last lease was released
+        // end-snippet
+
+        Assert.True(stream.DisposeAsyncCalled);
+    }
+
+    [Fact]
+    public async Task AsAsyncSharedReferenceSample_Runs()
+    {
+        var stream = new RecordingStream();
+
+        // begin-snippet: AsAsyncSharedReference
+        // stream is an open Stream, which implements both IDisposable and IAsyncDisposable.
+        await using (var lease = stream.AsAsyncSharedReference())
         {
             lease.Value.WriteByte(42);
         }

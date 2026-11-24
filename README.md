@@ -169,7 +169,21 @@ resources.Dispose(); // log: "third", "first": the failure is ignored
 ```
 <!-- endSnippet -->
 
-An item that implements `IAsyncDisposable`, even one that also implements `IDisposable`, such as a `Stream`, makes the collection's `Dispose` throw `InvalidOperationException`, whatever `ignoreExceptions` says. Put such items in `AsyncDisposable.Collection`, which disposes its items with `DisposeAsync` when they support it.
+An item that also implements `IAsyncDisposable`, such as a `Stream`, is disposed through `IDisposable.Dispose`, like every other item:
+
+<!-- snippet: CollectionStream -->
+```cs
+// stream is an open Stream, such as a FileStream.
+using (var resources = Disposable.Collection(stream))
+{
+    stream.WriteByte(42);
+}
+
+// stream.Dispose ran: the collection disposes every item through IDisposable
+```
+<!-- endSnippet -->
+
+To dispose such items with `DisposeAsync`, put them in `AsyncDisposable.Collection`.
 
 ### Sharing a resource through leases
 
@@ -232,7 +246,21 @@ await using (var lease = AsyncSharedReference.Create(stream))
 ```
 <!-- endSnippet -->
 
-For a type that implements both `IDisposable` and `IAsyncDisposable`, such as a `Stream`, `AsSharedReference()` is ambiguous and doesn't compile: call `SharedReference.Create` or `AsyncSharedReference.Create` instead.
+The `AsAsyncSharedReference()` extension does the same, also for a type that implements both `IDisposable` and `IAsyncDisposable`, such as a `Stream`:
+
+<!-- snippet: AsAsyncSharedReference -->
+```cs
+// stream is an open Stream, which implements both IDisposable and IAsyncDisposable.
+await using (var lease = stream.AsAsyncSharedReference())
+{
+    lease.Value.WriteByte(42);
+}
+
+// stream.DisposeAsync ran when the last lease was released
+```
+<!-- endSnippet -->
+
+`AsSharedReference()` on an `IAsyncDisposable` is obsolete and reports warning `NCDISP001`; on a type that implements both interfaces it is ambiguous until the next major version deletes it. Call `AsAsyncSharedReference()` for a lease that disposes with `DisposeAsync`, or `SharedReference.Create` for one that disposes with `Dispose`.
 
 ### Disposing on a synchronization context
 
@@ -282,7 +310,7 @@ await resource.DisposeAsyncIfAvailable(); // null: nothing happens
 
 ### Disposing every item in a list
 
-`DisposeAll()` disposes each `IDisposable` in an `IEnumerable<object?>` in reverse order, and skips `null` and every other item. Its errors and `ignoreExceptions` work as a collection's do, and it throws `InvalidOperationException` for an item that implements `IAsyncDisposable`:
+`DisposeAll()` disposes each `IDisposable` in an `IEnumerable<object?>` in reverse order, also one that implements `IAsyncDisposable`, such as a `Stream`, and skips `null` and every other item. Its errors and `ignoreExceptions` work as a collection's do. An item that implements only `IAsyncDisposable` isn't disposed: once the other items are disposed, `DisposeAll()` throws `InvalidOperationException` for it, which `ignoreExceptions: true` doesn't ignore:
 
 <!-- snippet: DisposeAll -->
 ```cs
@@ -340,7 +368,7 @@ await items.DisposeAllAsync(); // DisposeAsync for the stream, then Dispose for 
 | Type | Members |
 | --- | --- |
 | `DisposableExtensions` | `DisposeAsyncIfAvailable()`, `AsSharedReference()` and `DisposeAll()` |
-| `AsyncDisposableExtensions` | `AsSharedReference()` and `DisposeAllAsync()` |
+| `AsyncDisposableExtensions` | `AsAsyncSharedReference()`, `DisposeAllAsync()` and the obsolete `AsSharedReference()` |
 
 ## Thread safety
 

@@ -3,8 +3,15 @@
 
 namespace NCode.Disposables.Tests;
 
-public class DisposableCollectionTests
+public sealed class DisposableCollectionTests : IDisposable
 {
+    private readonly MockRepository _mocks = new(MockBehavior.Strict);
+
+    public void Dispose()
+    {
+        _mocks.Verify();
+    }
+
     #region Constructor Tests
 
     [Fact]
@@ -390,6 +397,17 @@ public class DisposableCollectionTests
     #endregion
 
     #region Dispose Tests
+
+    [Fact]
+    public void Dispose_WithItemImplementingBothInterfaces_CallsDispose()
+    {
+        var mockDisposable = _mocks.Create<IDisposable>();
+        _ = mockDisposable.As<IAsyncDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
+        var collection = new DisposableCollection([mockDisposable.Object]);
+
+        collection.Dispose();
+    }
 
     [Fact]
     public void Dispose_EmptyCollection_Succeeds()
