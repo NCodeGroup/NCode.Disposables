@@ -310,6 +310,41 @@ await items.DisposeAllAsync(); // DisposeAsync for the stream, then Dispose for 
 ```
 <!-- endSnippet -->
 
+## API overview
+
+### Factories
+
+| Type | Members |
+| --- | --- |
+| `Disposable` | `Empty`, `Create`, `Aggregate`, `Collection`, `Context` and `Shared` |
+| `AsyncDisposable` | `Empty`, `Create`, `Adapt`, `Aggregate`, `Collection` and `Shared` |
+| `SharedReference` | `Create(value)` for an `IDisposable`, and `Create(value, onRelease)` for any value |
+| `AsyncSharedReference` | `Create(value)` for an `IAsyncDisposable`, and `Create(value, onRelease)` for any value |
+
+### Types
+
+| Type | Role |
+| --- | --- |
+| `DisposableEmpty`, `AsyncDisposableEmpty` | Do nothing; `Singleton` is the instance `Empty` returns |
+| `DisposableAction`, `AsyncDisposableAction` | Run a delegate on dispose, once unless `idempotent` is `false` |
+| `DisposableAggregate`, `AsyncDisposableAggregate` | Hold one replaceable resource; `IDisposableAggregate` and `IAsyncDisposableAggregate` |
+| `DisposableCollection`, `AsyncDisposableCollection` | Dispose their items in reverse order; `IDisposableCollection` and `IAsyncDisposableCollection` |
+| `DisposableContext` | Disposes a resource on a `SynchronizationContext` |
+| `AsyncDisposableAdapter` | An `IAsyncDisposable` over an `IDisposable` |
+| `SharedReferenceLease<T>`, `AsyncSharedReferenceLease<T>` | A lease on a shared resource: `Value`, `IsActive`, `AddReference` and `TryAddReference` |
+| `SharedReferenceOwner<T>`, `AsyncSharedReferenceOwner<T>` | The reference count behind the leases; `ISharedReferenceOwner<T>` and `IAsyncSharedReferenceOwner<T>` |
+
+### Extensions
+
+| Type | Members |
+| --- | --- |
+| `DisposableExtensions` | `DisposeAsyncIfAvailable()`, `AsSharedReference()` and `DisposeAll()` |
+| `AsyncDisposableExtensions` | `AsSharedReference()` and `DisposeAllAsync()` |
+
+## Thread safety
+
+The actions, aggregates, collections, context disposables and adapters run their cleanup at most once, even when several threads dispose them at once, unless an action or adapter is created with `idempotent: false`. An aggregate's `Disposable` property is safe to read and set from several threads. A lease's `AddReference`, `TryAddReference` and `Dispose` are safe from any thread, and the release action runs once, on the thread that releases the last lease. A collection's `Add`, `Remove`, `Clear` and enumeration hold no lock: synchronize them, and don't change a collection while it is being disposed.
+
 ## Project
 
 - [CONTRIBUTING.md](CONTRIBUTING.md): how to set up, build, test and propose a change.
