@@ -189,8 +189,9 @@ public static class Disposable
     /// </para>
     /// <para>
     /// When <paramref name="ignoreExceptions"/> is <see langword="true"/>, disposal continues for all items
-    /// even if some throw exceptions. When <see langword="false"/>, the first exception encountered is thrown
-    /// after attempting to dispose all items.
+    /// even if some throw exceptions. When <see langword="false"/>, every item is still disposed; then the one
+    /// exception is rethrown, or an <see cref="AggregateException"/>
+    /// holding every exception is thrown when several items throw.
     /// </para>
     /// </remarks>
     public static IDisposableCollection Collection(
@@ -220,8 +221,9 @@ public static class Disposable
     /// </para>
     /// <para>
     /// When <paramref name="ignoreExceptions"/> is <see langword="true"/>, disposal continues for all items
-    /// even if some throw exceptions. When <see langword="false"/>, the first exception encountered is thrown
-    /// after attempting to dispose all items.
+    /// even if some throw exceptions. When <see langword="false"/>, every item is still disposed; then the one
+    /// exception is rethrown, or an <see cref="AggregateException"/>
+    /// holding every exception is thrown when several items throw.
     /// </para>
     /// </remarks>
     public static IDisposableCollection Collection(

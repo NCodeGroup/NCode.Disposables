@@ -25,7 +25,7 @@ public interface IDisposableCollection : IDisposable, ICollection<IDisposable>
 }
 
 /// <summary>
-/// Provides a thread-safe implementation of <see cref="IDisposableCollection"/> that manages
+/// Provides an implementation of <see cref="IDisposableCollection"/> that manages
 /// a collection of <see cref="IDisposable"/> items with automatic disposal support.
 /// </summary>
 /// <remarks>
@@ -36,6 +36,11 @@ public interface IDisposableCollection : IDisposable, ICollection<IDisposable>
 /// <para>
 /// The collection can optionally be configured to ignore exceptions thrown during individual item disposal,
 /// allowing all items to be disposed even if some throw exceptions.
+/// </para>
+/// <para>
+/// Disposal runs at most once, even when several threads dispose the collection at once.
+/// <c>Add</c>, <c>Remove</c>, <c>Clear</c> and enumeration take no lock: synchronize them, and don't change the
+/// collection while it is being disposed.
 /// </para>
 /// </remarks>
 public sealed class DisposableCollection : IDisposableCollection
