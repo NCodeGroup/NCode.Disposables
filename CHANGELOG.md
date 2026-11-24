@@ -110,6 +110,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Breaking:** Ported to .NET 8.0 (`net8.0`) and refactored the shared reference implementation.
 
+## [2.0.3] - 2017-01-21
+
+### Changed
+
+- Republished 2.0.2 from the same commit, with no code changes.
+
+## [2.0.2] - 2017-01-21
+
+### Changed
+
+- **Breaking:** Ported to .NET Core and .NET Standard: the package targets `netstandard1.1` and `net45`, links the project's URL, and has fewer dependencies.
+
+## [1.0.1] - 2016-02-10
+
+### Added
+
+- `Action` and `Func` overloads of the `Disposable` factory methods.
+
+## [1.0.0] - 2016-01-30
+
+### Added
+
+- Initial release for .NET Framework 4.5.1: `IDisposable` implementations for common resource management patterns, such as actions, aggregates, collections and shared references.
+
 [Unreleased]: https://github.com/NCodeGroup/NCode.Disposables/compare/v5.3.0...HEAD
 [5.3.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v5.2.1...v5.3.0
 [5.2.1]: https://github.com/NCodeGroup/NCode.Disposables/compare/v5.1.1...v5.2.1
@@ -126,3 +150,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [3.1.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v3.0.1...v3.1.0
 [3.0.1]: https://github.com/NCodeGroup/NCode.Disposables/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v2.0.3...v3.0.0
+[2.0.3]: https://github.com/NCodeGroup/NCode.Disposables/compare/v2.0.2...v2.0.3
+[2.0.2]: https://github.com/NCodeGroup/NCode.Disposables/compare/v1.0.1...v2.0.2
+[1.0.1]: https://github.com/NCodeGroup/NCode.Disposables/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/NCodeGroup/NCode.Disposables/releases/tag/v1.0.0
