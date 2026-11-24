@@ -14,11 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The changelog has a section for every release from 1.0.0 to 5.3.0, from their release notes. ([#27](https://github.com/NCodeGroup/NCode.Disposables/issues/27))
 - `src/NCode.Disposables/README.md` is the package readme nuget.org shows: installation, the main samples, and absolute links to the full guide, the API overview, the changelog and the security policy.
 - Every C# sample in the READMEs is a compiled test in `tests/NCode.Disposables.Tests/ReadmeSamplesTests.cs` that MarkdownSnippets copies into the READMEs, and `./build/gate.ps1`, which CI and the Landing section's `gate` run, fails when a README differs from its test, then runs `./build/dod.ps1`. ([ADR-1000](docs/decisions/1000-readme-samples-are-compiled-tests-that-markdownsnippets-copies-into-the-readmes.md))
-- The `AsAsyncSharedReference()` extension puts an `IAsyncDisposable` behind a reference count and returns its first `AsyncSharedReferenceLease<T>`, also for a type that implements `IDisposable` too, such as a `Stream`, where `AsSharedReference()` is ambiguous. ([#55](https://github.com/NCodeGroup/NCode.Disposables/issues/55), [ADR-1002](docs/decisions/1002-the-async-shared-reference-extension-is-asasyncsharedreference.md))
+- The `AsAsyncSharedReference()` extension puts an `IAsyncDisposable` behind a reference count and returns its first `AsyncSharedReferenceLease<T>`, also for a type that implements `IDisposable` too, such as a `Stream`. ([#55](https://github.com/NCodeGroup/NCode.Disposables/issues/55), [ADR-1002](docs/decisions/1002-the-async-shared-reference-extension-is-asasyncsharedreference.md))
 
 ### Changed
 
-- `AssemblyVersion` stays `5.3.0.0` for every 5.x release and moves only with the major version from the next major on, set by `assemblyVersion` in `version.json`. An application compiled against 5.3.0.0 loads later 5.x assemblies without a binding redirect.
+- `AssemblyVersion` is `6.0.0.0` for every 6.x release and moves only with the major version, set by `assemblyVersion` in `version.json`, so a later 6.x assembly replaces an earlier one without a binding redirect.
 - `SharedReferenceOwner` throws through `ObjectDisposedException.ThrowIf`; the exception type and object name are unchanged.
 - Updated the project from project-template v0.41.0 to v0.61.2: stricter analyzers, shared build settings, a Definition of Done script and CI updates.
 - Updated the project from project-template v0.61.2 to v0.112.2: package versions now come from `version.json` through Nerdbank.GitVersioning, the CI workflow checks out the full history and builds a release with `-p:PublicRelease=true`, the Commit attribution check and `commit-msg` hook are gone, and the project gains a code of conduct, governance, roadmap, architecture and assurance documents, a coverage and reproducible-build toolkit, and the Scorecard workflow. ([#28](https://github.com/NCodeGroup/NCode.Disposables/issues/28))
@@ -33,12 +33,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated the project from project-template v0.112.2 to v0.113.1: Claude Code's project settings no longer ask before a command that mentions `.env` or `secrets/`, the release workflows and the template's scripts accept a version only in ASCII digits after a lowercase `v`, and the template's Best Practices record is ADR-0037, renumbered from ADR-0153.
 - `docs/architecture.md` describes the components, the factories, the disposables, the shared references and the extensions, as a diagram and a table. ([#56](https://github.com/NCodeGroup/NCode.Disposables/issues/56))
 
-### Deprecated
-
-- `AsyncDisposableExtensions.AsSharedReference()` is obsolete and reports warning `NCDISP001`: call `AsAsyncSharedReference()` instead. It keeps working until the next major version deletes it. ([#55](https://github.com/NCodeGroup/NCode.Disposables/issues/55), [ADR-1002](docs/decisions/1002-the-async-shared-reference-extension-is-asasyncsharedreference.md))
-
 ### Removed
 
+- **Breaking:** `AsyncDisposableExtensions.AsSharedReference()` is deleted: call `AsAsyncSharedReference()` for an `AsyncSharedReferenceLease<T>` that disposes with `DisposeAsync`. `AsSharedReference()` is `DisposableExtensions.AsSharedReference()` alone, so on a type that implements both `IDisposable` and `IAsyncDisposable`, such as a `MemoryStream`, it compiles and returns a `SharedReferenceLease<T>` that disposes with `Dispose`. No release marks it obsolete first: 5.3.0, the last release, ships it without `[Obsolete]`, so code built against 5.3.0 gets no `NCDISP001` warning before the deletion. ([#59](https://github.com/NCodeGroup/NCode.Disposables/issues/59), [#55](https://github.com/NCodeGroup/NCode.Disposables/issues/55), [ADR-1002](docs/decisions/1002-the-async-shared-reference-extension-is-asasyncsharedreference.md))
 - `.github/workflows/main.yml`: its build and test jobs repeated `ci.yml`'s `build-and-test` on every push and pull request, and `publish.yml` replaces its publish job. ([#43](https://github.com/NCodeGroup/NCode.Disposables/issues/43), [#44](https://github.com/NCodeGroup/NCode.Disposables/issues/44))
 
 ### Fixed

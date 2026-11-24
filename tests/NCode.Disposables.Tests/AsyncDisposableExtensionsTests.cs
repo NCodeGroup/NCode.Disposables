@@ -1,8 +1,6 @@
 // Copyright © NCode Group
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Reflection;
-
 namespace NCode.Disposables.Tests;
 
 public sealed class AsyncDisposableExtensionsTests : IDisposable
@@ -399,30 +397,13 @@ public sealed class AsyncDisposableExtensionsTests : IDisposable
 
     #region AsSharedReference Tests
 
+    // ADR-1002: the name AsSharedReference belongs to the synchronous extension alone.
     [Fact]
-    public void AsSharedReference_ReturnsLeaseOnSameValue()
+    public void AsSharedReference_IsNotDeclared()
     {
-        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var methods = typeof(AsyncDisposableExtensions).GetMethods();
 
-#pragma warning disable NCDISP001 // the obsolete member keeps working until the next major version deletes it
-        var lease = disposable.Object.AsSharedReference();
-#pragma warning restore NCDISP001
-
-        Assert.Same(disposable.Object, lease.Value);
-    }
-
-    [Fact]
-    public void AsSharedReference_IsObsoleteWithDiagnosticId()
-    {
-        const string methodName = "AsSharedReference";
-
-        var method = typeof(AsyncDisposableExtensions).GetMethod(methodName);
-        Assert.NotNull(method);
-
-        var attribute = method.GetCustomAttribute<ObsoleteAttribute>();
-        Assert.NotNull(attribute);
-
-        Assert.Equal("NCDISP001", attribute.DiagnosticId);
+        Assert.DoesNotContain(methods, method => method.Name == "AsSharedReference");
     }
 
     #endregion

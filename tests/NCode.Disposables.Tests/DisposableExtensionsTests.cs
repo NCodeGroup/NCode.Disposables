@@ -137,6 +137,18 @@ public sealed class DisposableExtensionsTests : IDisposable
         mockDisposable.Verify(x => x.Dispose(), Times.Once);
     }
 
+    [Fact]
+    public void AsSharedReference_WithTypeImplementingBothInterfaces_DisposesSynchronously()
+    {
+        var resource = new DualDisposable();
+
+        var lease = resource.AsSharedReference();
+        lease.Dispose();
+
+        Assert.True(resource.DisposeCalled);
+        Assert.False(resource.DisposeAsyncCalled);
+    }
+
     #endregion
 
     #region DisposeAll Tests
@@ -371,4 +383,22 @@ public sealed class DisposableExtensionsTests : IDisposable
     }
 
     #endregion
+
+    private sealed class DualDisposable : IDisposable, IAsyncDisposable
+    {
+        public bool DisposeCalled { get; private set; }
+
+        public bool DisposeAsyncCalled { get; private set; }
+
+        public void Dispose()
+        {
+            DisposeCalled = true;
+        }
+
+        public ValueTask DisposeAsync()
+        {
+            DisposeAsyncCalled = true;
+            return ValueTask.CompletedTask;
+        }
+    }
 }
