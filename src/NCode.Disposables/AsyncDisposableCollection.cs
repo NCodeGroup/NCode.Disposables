@@ -67,7 +67,10 @@ public sealed class AsyncDisposableCollection : IAsyncDisposableCollection
     /// disposing remaining items; <see langword="false"/> (the default) to propagate exceptions.
     /// </param>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
-    public AsyncDisposableCollection(IEnumerable<IAsyncDisposable> collection, bool ignoreExceptions = false)
+    public AsyncDisposableCollection(
+        IEnumerable<IAsyncDisposable> collection,
+        bool ignoreExceptions = false
+    )
     {
         _list = [.. collection];
         _ignoreExceptions = ignoreExceptions;

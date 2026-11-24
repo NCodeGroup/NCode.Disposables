@@ -429,7 +429,10 @@ public class AsyncDisposableCollectionTests
         {
             var local = i;
             var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-            disposable.Setup(x => x.DisposeAsync()).Callback(() => order += local).Returns(ValueTask.CompletedTask);
+            disposable
+                .Setup(x => x.DisposeAsync())
+                .Callback(() => order += local)
+                .Returns(ValueTask.CompletedTask);
             collection.Add(disposable.Object);
         }
 
@@ -471,10 +474,14 @@ public class AsyncDisposableCollectionTests
     {
         var collection = new AsyncDisposableCollection(ignoreExceptions: false);
         var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        disposable.Setup(x => x.DisposeAsync()).ThrowsAsync(new InvalidOperationException("Test exception"));
+        disposable
+            .Setup(x => x.DisposeAsync())
+            .ThrowsAsync(new InvalidOperationException("Test exception"));
         collection.Add(disposable.Object);
 
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () => await collection.DisposeAsync());
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await collection.DisposeAsync()
+        );
 
         Assert.Equal("Test exception", exception.Message);
     }

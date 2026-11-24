@@ -10,7 +10,9 @@ public class AsyncDisposableActionTests
     [Fact]
     public void Constructor_WithNullAction_ThrowsArgumentNullException()
     {
-        var exception = Assert.Throws<ArgumentNullException>(() => new AsyncDisposableAction(null!));
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            new AsyncDisposableAction(null!)
+        );
 
         Assert.Equal("action", exception.ParamName);
     }
@@ -114,8 +116,9 @@ public class AsyncDisposableActionTests
         };
         var disposable = new AsyncDisposableAction(action);
 
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await disposable.DisposeAsync());
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await disposable.DisposeAsync()
+        );
 
         Assert.Equal(expectedMessage, exception.Message);
     }
@@ -134,8 +137,9 @@ public class AsyncDisposableActionTests
         };
         var disposable = new AsyncDisposableAction(action, idempotent: true);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await disposable.DisposeAsync());
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await disposable.DisposeAsync()
+        );
 
         await disposable.DisposeAsync();
 
@@ -153,7 +157,8 @@ public class AsyncDisposableActionTests
         };
         var disposable = new AsyncDisposableAction(action, idempotent: true);
 
-        var tasks = Enumerable.Range(0, 100)
+        var tasks = Enumerable
+            .Range(0, 100)
             .Select(_ => disposable.DisposeAsync().AsTask())
             .ToArray();
 
@@ -174,7 +179,8 @@ public class AsyncDisposableActionTests
         var disposable = new AsyncDisposableAction(action, idempotent: false);
         const int taskCount = 100;
 
-        var tasks = Enumerable.Range(0, taskCount)
+        var tasks = Enumerable
+            .Range(0, taskCount)
             .Select(_ => disposable.DisposeAsync().AsTask())
             .ToArray();
 

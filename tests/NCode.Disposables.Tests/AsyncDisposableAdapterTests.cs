@@ -102,11 +102,15 @@ public class AsyncDisposableAdapterTests
     public async Task DisposeAsync_WhenUnderlyingDisposeThrows_PropagatesException()
     {
         var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose()).Throws(new InvalidOperationException("Test exception"));
+        mockDisposable
+            .Setup(x => x.Dispose())
+            .Throws(new InvalidOperationException("Test exception"));
 
         var adapter = new AsyncDisposableAdapter(mockDisposable.Object);
 
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () => await adapter.DisposeAsync());
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await adapter.DisposeAsync()
+        );
 
         Assert.Equal("Test exception", exception.Message);
     }
@@ -126,7 +130,9 @@ public class AsyncDisposableAdapterTests
 
         var adapter = new AsyncDisposableAdapter(disposable, idempotent: true);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(async () => await adapter.DisposeAsync());
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await adapter.DisposeAsync()
+        );
         await adapter.DisposeAsync();
         await adapter.DisposeAsync();
 
@@ -137,12 +143,18 @@ public class AsyncDisposableAdapterTests
     public async Task DisposeAsync_WhenNotIdempotentAndDisposeThrows_SubsequentCallsAlsoThrow()
     {
         var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose()).Throws(new InvalidOperationException("Test exception"));
+        mockDisposable
+            .Setup(x => x.Dispose())
+            .Throws(new InvalidOperationException("Test exception"));
 
         var adapter = new AsyncDisposableAdapter(mockDisposable.Object, idempotent: false);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(async () => await adapter.DisposeAsync());
-        await Assert.ThrowsAsync<InvalidOperationException>(async () => await adapter.DisposeAsync());
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await adapter.DisposeAsync()
+        );
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await adapter.DisposeAsync()
+        );
 
         mockDisposable.Verify(x => x.Dispose(), Times.Exactly(2));
     }

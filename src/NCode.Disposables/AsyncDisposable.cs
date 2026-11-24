@@ -119,7 +119,10 @@ public static class AsyncDisposable
     /// <param name="collection">The <see cref="IAsyncDisposable"/> items to add to the collection.</param>
     /// <returns>A new <see cref="IAsyncDisposableCollection"/> containing the specified items.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
-    public static IAsyncDisposableCollection Collection(bool ignoreExceptions, params IAsyncDisposable[] collection)
+    public static IAsyncDisposableCollection Collection(
+        bool ignoreExceptions,
+        params IAsyncDisposable[] collection
+    )
     {
         ArgumentNullException.ThrowIfNull(collection);
 
@@ -138,8 +141,10 @@ public static class AsyncDisposable
     /// </param>
     /// <returns>A new <see cref="IAsyncDisposableCollection"/> containing the specified items.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
-    public static IAsyncDisposableCollection Collection(IEnumerable<IAsyncDisposable> collection,
-        bool ignoreExceptions = false)
+    public static IAsyncDisposableCollection Collection(
+        IEnumerable<IAsyncDisposable> collection,
+        bool ignoreExceptions = false
+    )
     {
         ArgumentNullException.ThrowIfNull(collection);
 
@@ -217,10 +222,13 @@ public static class AsyncDisposable
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return new AsyncDisposableAction(() =>
-        {
-            action();
-            return ValueTask.CompletedTask;
-        }, idempotent);
+        return new AsyncDisposableAction(
+            () =>
+            {
+                action();
+                return ValueTask.CompletedTask;
+            },
+            idempotent
+        );
     }
 }

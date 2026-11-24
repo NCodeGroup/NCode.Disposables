@@ -13,7 +13,8 @@ namespace NCode.Disposables;
 [SuppressMessage(
     "Naming",
     "CA1708:Identifiers should differ by more than case",
-    Justification = "False positive: the analyzer compares the compiler-generated names of the C# 14 extension blocks.")]
+    Justification = "False positive: the analyzer compares the compiler-generated names of the C# 14 extension blocks."
+)]
 public static class DisposableExtensions
 {
     /// <param name="disposable">The <see cref="IDisposable"/> instance to dispose, or <see langword="null"/>.</param>
@@ -49,7 +50,8 @@ public static class DisposableExtensions
 
     /// <param name="value">The underlying resource to be shared.</param>
     /// <typeparam name="T">The type of the shared resource, which must implement <see cref="IDisposable"/>.</typeparam>
-    extension<T>(T value) where T : IDisposable
+    extension<T>(T value)
+        where T : IDisposable
     {
         /// <summary>
         /// Creates a new <see cref="SharedReferenceLease{T}"/> that shares the specified <see cref="IDisposable"/>
@@ -115,7 +117,9 @@ public static class DisposableExtensions
                     {
                         case IAsyncDisposable:
                             ignoreExceptions = false;
-                            throw new InvalidOperationException("The collection contains an IAsyncDisposable instance.");
+                            throw new InvalidOperationException(
+                                "The collection contains an IAsyncDisposable instance."
+                            );
 
                         case IDisposable disposable:
                             disposable.Dispose();
@@ -124,13 +128,15 @@ public static class DisposableExtensions
                 }
                 catch (Exception exception)
                 {
-                    if (ignoreExceptions) continue;
+                    if (ignoreExceptions)
+                        continue;
                     exceptions ??= [];
                     exceptions.Add(exception);
                 }
             }
 
-            if (exceptions == null) return;
+            if (exceptions == null)
+                return;
 
             if (exceptions.Count > 1)
             {

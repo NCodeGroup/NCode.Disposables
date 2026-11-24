@@ -13,7 +13,8 @@ public static class AsyncDisposableExtensions
 {
     /// <param name="value">The underlying resource to be shared.</param>
     /// <typeparam name="T">The type of the shared resource, which must implement <see cref="IAsyncDisposable"/>.</typeparam>
-    extension<T>(T value) where T : IAsyncDisposable
+    extension<T>(T value)
+        where T : IAsyncDisposable
     {
         /// <summary>
         /// Creates a new <see cref="AsyncSharedReferenceLease{T}"/> that shares the specified <see cref="IAsyncDisposable"/>
@@ -86,13 +87,15 @@ public static class AsyncDisposableExtensions
                 }
                 catch (Exception exception)
                 {
-                    if (ignoreExceptions) continue;
+                    if (ignoreExceptions)
+                        continue;
                     exceptions ??= [];
                     exceptions.Add(exception);
                 }
             }
 
-            if (exceptions == null) return;
+            if (exceptions == null)
+                return;
 
             if (exceptions.Count > 1)
             {

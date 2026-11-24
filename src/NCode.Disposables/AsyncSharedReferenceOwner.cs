@@ -93,7 +93,8 @@ public interface IAsyncSharedReferenceOwner<T>
 /// All reference counting operations use lock-free spin-wait patterns for thread-safety and performance.
 /// </para>
 /// </remarks>
-public sealed class AsyncSharedReferenceOwner<T>(T value, Func<T, ValueTask> onRelease) : IAsyncSharedReferenceOwner<T>
+public sealed class AsyncSharedReferenceOwner<T>(T value, Func<T, ValueTask> onRelease)
+    : IAsyncSharedReferenceOwner<T>
 {
     private int _count = 1;
 

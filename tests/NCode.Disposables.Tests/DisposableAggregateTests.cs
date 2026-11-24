@@ -161,7 +161,9 @@ public class DisposableAggregateTests
     public void Dispose_WhenUnderlyingDisposeThrows_PropagatesException()
     {
         var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose()).Throws(new InvalidOperationException("Test exception"));
+        mockDisposable
+            .Setup(x => x.Dispose())
+            .Throws(new InvalidOperationException("Test exception"));
         var aggregate = new DisposableAggregate(mockDisposable.Object);
 
         var exception = Assert.Throws<InvalidOperationException>(() => aggregate.Dispose());
@@ -173,7 +175,9 @@ public class DisposableAggregateTests
     public void Dispose_AfterExceptionFromUnderlying_MarksAsDisposed()
     {
         var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose()).Throws(new InvalidOperationException("Test exception"));
+        mockDisposable
+            .Setup(x => x.Dispose())
+            .Throws(new InvalidOperationException("Test exception"));
         var aggregate = new DisposableAggregate(mockDisposable.Object);
 
         Assert.Throws<InvalidOperationException>(() => aggregate.Dispose());

@@ -104,7 +104,9 @@ public class AsyncDisposableAggregateTests
 
         await aggregate.DisposeAsync();
 
-        Assert.Throws<ObjectDisposedException>(() => aggregate.Disposable = new AsyncDisposableEmpty());
+        Assert.Throws<ObjectDisposedException>(() =>
+            aggregate.Disposable = new AsyncDisposableEmpty()
+        );
     }
 
     #endregion
@@ -161,10 +163,14 @@ public class AsyncDisposableAggregateTests
     public async Task DisposeAsync_WhenUnderlyingDisposeThrows_PropagatesException()
     {
         var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.DisposeAsync()).ThrowsAsync(new InvalidOperationException("Test exception"));
+        mockDisposable
+            .Setup(x => x.DisposeAsync())
+            .ThrowsAsync(new InvalidOperationException("Test exception"));
         var aggregate = new AsyncDisposableAggregate(mockDisposable.Object);
 
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () => await aggregate.DisposeAsync());
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await aggregate.DisposeAsync()
+        );
 
         Assert.Equal("Test exception", exception.Message);
     }
@@ -173,10 +179,14 @@ public class AsyncDisposableAggregateTests
     public async Task DisposeAsync_AfterExceptionFromUnderlying_MarksAsDisposed()
     {
         var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.DisposeAsync()).ThrowsAsync(new InvalidOperationException("Test exception"));
+        mockDisposable
+            .Setup(x => x.DisposeAsync())
+            .ThrowsAsync(new InvalidOperationException("Test exception"));
         var aggregate = new AsyncDisposableAggregate(mockDisposable.Object);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(async () => await aggregate.DisposeAsync());
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await aggregate.DisposeAsync()
+        );
 
         Assert.Throws<ObjectDisposedException>(() => aggregate.Disposable);
     }

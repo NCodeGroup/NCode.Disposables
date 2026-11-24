@@ -1,5 +1,4 @@
 <Project>
-
   <!-- Central package management: versions live here, PackageReference items carry no Version. -->
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
@@ -25,5 +24,4 @@
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.1" />
   </ItemGroup>
-
 </Project>

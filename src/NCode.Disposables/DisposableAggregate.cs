@@ -125,7 +125,6 @@ public sealed class DisposableAggregate : IDisposableAggregate
             var current = Volatile.Read(ref _disposable);
             return ThrowIfDisposed(current);
         }
-
         set
         {
             var spinWait = new SpinWait();
@@ -133,7 +132,8 @@ public sealed class DisposableAggregate : IDisposableAggregate
             {
                 var current = ThrowIfDisposed(Volatile.Read(ref _disposable));
                 var snapshot = Interlocked.CompareExchange(ref _disposable, value, current);
-                if (ReferenceEquals(current, snapshot)) return;
+                if (ReferenceEquals(current, snapshot))
+                    return;
                 spinWait.SpinOnce();
             }
         }

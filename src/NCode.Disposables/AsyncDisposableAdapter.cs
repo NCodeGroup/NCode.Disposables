@@ -26,7 +26,8 @@ namespace NCode.Disposables;
 /// <see langword="true"/> (the default) to ensure multiple calls to <see cref="DisposeAsync"/>
 /// will only dispose the underlying instance once; <see langword="false"/> to allow multiple disposals.
 /// </param>
-public sealed class AsyncDisposableAdapter(IDisposable disposable, bool idempotent = true) : IAsyncDisposable
+public sealed class AsyncDisposableAdapter(IDisposable disposable, bool idempotent = true)
+    : IAsyncDisposable
 {
     private IDisposable? _disposable = disposable;
     private readonly bool _idempotent = idempotent;

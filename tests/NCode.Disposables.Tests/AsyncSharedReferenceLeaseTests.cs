@@ -204,9 +204,7 @@ public class AsyncSharedReferenceLeaseTests
     {
         var mockOwner = new Mock<IAsyncSharedReferenceOwner<object>>(MockBehavior.Strict);
         var newReference = new AsyncSharedReferenceLease<object>(mockOwner.Object);
-        mockOwner
-            .Setup(x => x.TryAddReference(out newReference))
-            .Returns(true);
+        mockOwner.Setup(x => x.TryAddReference(out newReference)).Returns(true);
         var lease = new AsyncSharedReferenceLease<object>(mockOwner.Object);
 
         var result = lease.TryAddReference(out var reference);
@@ -220,9 +218,7 @@ public class AsyncSharedReferenceLeaseTests
     {
         var mockOwner = new Mock<IAsyncSharedReferenceOwner<object>>(MockBehavior.Strict);
         var defaultReference = default(AsyncSharedReferenceLease<object>);
-        mockOwner
-            .Setup(x => x.TryAddReference(out defaultReference))
-            .Returns(false);
+        mockOwner.Setup(x => x.TryAddReference(out defaultReference)).Returns(false);
         var lease = new AsyncSharedReferenceLease<object>(mockOwner.Object);
 
         var result = lease.TryAddReference(out var reference);

@@ -300,10 +300,12 @@ public class AsyncSharedReferenceOwnerTests
     {
         var value = new object();
         var owner = new AsyncSharedReferenceOwner<object>(value, _ =>
-            throw new InvalidOperationException("Release failed"));
+            throw new InvalidOperationException("Release failed")
+        );
 
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await owner.ReleaseReferenceAsync());
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await owner.ReleaseReferenceAsync()
+        );
 
         Assert.Equal("Release failed", exception.Message);
     }
@@ -471,7 +473,8 @@ public class AsyncSharedReferenceOwnerTests
 
         var owner = new AsyncSharedReferenceOwner<IAsyncDisposable>(
             mockDisposable.Object,
-            async v => await v.DisposeAsync());
+            async v => await v.DisposeAsync()
+        );
 
         await owner.ReleaseReferenceAsync();
 

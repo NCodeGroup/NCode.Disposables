@@ -39,7 +39,9 @@ public readonly struct SharedReferenceLease<T>(ISharedReferenceOwner<T> owner) :
 
     private ISharedReferenceOwner<T> Owner =>
         !IsActive
-            ? throw new InvalidOperationException("The lease for the shared reference is not active.")
+            ? throw new InvalidOperationException(
+                "The lease for the shared reference is not active."
+            )
             : OwnerOrNull;
 
     /// <summary>

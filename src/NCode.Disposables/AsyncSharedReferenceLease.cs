@@ -16,13 +16,16 @@ namespace NCode.Disposables;
 /// Initializes a new instance of the <see cref="AsyncSharedReferenceLease{T}"/> struct.
 /// </remarks>
 /// <param name="owner">The <see cref="AsyncSharedReferenceOwner{T}"/> instance that owns the shared reference.</param>
-public readonly struct AsyncSharedReferenceLease<T>(IAsyncSharedReferenceOwner<T> owner) : IAsyncDisposable
+public readonly struct AsyncSharedReferenceLease<T>(IAsyncSharedReferenceOwner<T> owner)
+    : IAsyncDisposable
 {
     internal readonly IAsyncSharedReferenceOwner<T>? OwnerOrNull = owner;
 
     private IAsyncSharedReferenceOwner<T> Owner =>
         !IsActive
-            ? throw new InvalidOperationException("The lease for the shared reference is not active.")
+            ? throw new InvalidOperationException(
+                "The lease for the shared reference is not active."
+            )
             : OwnerOrNull;
 
     /// <summary>

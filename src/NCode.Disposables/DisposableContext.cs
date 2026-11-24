@@ -44,7 +44,11 @@ public sealed class DisposableContext : IDisposable
     /// <see cref="SynchronizationContext.OperationStarted"/> and <see cref="SynchronizationContext.OperationCompleted"/>
     /// to properly track the asynchronous operation.
     /// </remarks>
-    public DisposableContext(IDisposable disposable, SynchronizationContext context, bool async = false)
+    public DisposableContext(
+        IDisposable disposable,
+        SynchronizationContext context,
+        bool async = false
+    )
     {
         ArgumentNullException.ThrowIfNull(disposable);
         ArgumentNullException.ThrowIfNull(context);
@@ -69,7 +73,8 @@ public sealed class DisposableContext : IDisposable
     public void Dispose()
     {
         var disposable = Interlocked.Exchange(ref _disposable, null);
-        if (disposable == null) return;
+        if (disposable == null)
+            return;
 
         if (_async)
         {
