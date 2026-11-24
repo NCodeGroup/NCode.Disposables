@@ -8,10 +8,15 @@
     The README samples check: runs dotnet mdsnippets, which copies the C# samples from the tests into the READMEs (ADR-1000), and fails when it changed a Markdown file or failed.
 #>
 [CmdletBinding()]
-param()
+param(
+    # The repository whose Markdown files the check hashes; build/Test-AssertMarkdown.ps1 passes a temporary one.
+    [string]$Root = (Split-Path -Parent $PSScriptRoot),
+    # The command that copies the samples into the Markdown files; build/Test-AssertMarkdown.ps1 passes a fake.
+    [scriptblock]$Snippets = { dotnet mdsnippets }
+)
 
 $ErrorActionPreference = 'Stop'
-Push-Location -LiteralPath (Split-Path -Parent $PSScriptRoot)
+Push-Location -LiteralPath $Root
 try {
     # -z prints each path as it is, because git quotes a name with a byte above 0x7F and the quoted name matches no file.
     function Get-MarkdownState {
@@ -23,7 +28,8 @@ try {
     }
 
     $before = @(Get-MarkdownState)
-    dotnet mdsnippets
+    $global:LASTEXITCODE = 0
+    & $Snippets
     if ($LASTEXITCODE) {
         Write-Host 'README samples: FAILED. dotnet mdsnippets could not merge the samples.'
         exit 1
