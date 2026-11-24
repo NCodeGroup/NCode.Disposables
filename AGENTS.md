@@ -28,7 +28,7 @@ How `/ship-plan` lands a reviewed plan. `integrate`: `pull-request` pushes the p
 - release: none
 - changelog: CHANGELOG.md
 - pre-release: tracked
-- draft: no
+- draft: yes
 - follow-ups: issues
 - follow-up-label: follow-up
 - gate: ./build/dod.ps1 -Fast
@@ -43,4 +43,5 @@ How `/ship-plan` lands a reviewed plan. `integrate`: `pull-request` pushes the p
 - A public API change is recorded with `./build/Update-PublicApi.ps1`; the release that ships it runs it with `-Release`.
 - Packages are published from a GitHub release by the `publish` job of `.github/workflows/main.yml`; the template's `publish.yml` is deleted because the project publishes from its own workflow.
 - Package versions come from `version.json` through Nerdbank.GitVersioning (ADR-0138 in `docs/decisions/project-template/`): `version` is the version the next release ships, and the change that releases a version sets it to that version, so the release tag `v<version>` matches. `assemblyVersion` stays `5.3` with precision `minor`, the AssemblyVersion the 5.x releases carry, until the change that starts the next major version sets it to `{ "precision": "major" }`. `.github/workflows/main.yml` checks out the full history and builds a release with `-p:PublicRelease=true`.
+- Package validation compares each pack with `PackageValidationBaselineVersion` in `Directory.Build.props`, the last version on nuget.org (ADR-0147 in `docs/decisions/project-template/`). No workflow raises it here, because `.github/workflows/main.yml` publishes instead of the template's `publish.yml`: once nuget.org lists a new release, raise it with `./build/Update-Baseline.ps1 -Version <version>` in a change of its own.
 - This repository keeps `.github/workflows/code-review-auto-merge.yml` and accepts the template's ADR-0006 exception: it auto-merges only a Dependabot pull request whose one change is the NCode Review pin.

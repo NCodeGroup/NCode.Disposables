@@ -1,22 +1,5 @@
-﻿#region Copyright Preamble
-
-//
-//    Copyright © 2017 NCode Group
-//
-//    Licensed under the Apache License, Version 2.0 (the "License");
-//    you may not use this file except in compliance with the License.
-//    You may obtain a copy of the License at
-//
-//        http://www.apache.org/licenses/LICENSE-2.0
-//
-//    Unless required by applicable law or agreed to in writing, software
-//    distributed under the License is distributed on an "AS IS" BASIS,
-//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//    See the License for the specific language governing permissions and
-//    limitations under the License.
-//
-
-#endregion
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
 
 namespace NCode.Disposables;
 
@@ -94,7 +77,11 @@ public static class Disposable
     /// the <see cref="SynchronizationContext.Post"/> method is used, which returns immediately.
     /// </para>
     /// </remarks>
-    public static IDisposable Context(IDisposable disposable, SynchronizationContext context, bool async = false)
+    public static IDisposable Context(
+        IDisposable disposable,
+        SynchronizationContext context,
+        bool async = false
+    )
     {
         ArgumentNullException.ThrowIfNull(disposable);
         ArgumentNullException.ThrowIfNull(context);
@@ -206,7 +193,10 @@ public static class Disposable
     /// after attempting to dispose all items.
     /// </para>
     /// </remarks>
-    public static IDisposableCollection Collection(bool ignoreExceptions, params IDisposable[] collection)
+    public static IDisposableCollection Collection(
+        bool ignoreExceptions,
+        params IDisposable[] collection
+    )
     {
         ArgumentNullException.ThrowIfNull(collection);
 
@@ -234,7 +224,10 @@ public static class Disposable
     /// after attempting to dispose all items.
     /// </para>
     /// </remarks>
-    public static IDisposableCollection Collection(IEnumerable<IDisposable> collection, bool ignoreExceptions = false)
+    public static IDisposableCollection Collection(
+        IEnumerable<IDisposable> collection,
+        bool ignoreExceptions = false
+    )
     {
         ArgumentNullException.ThrowIfNull(collection);
 
@@ -384,9 +377,11 @@ public static class Disposable
     /// This overload is useful when you have an existing method that returns a value but you only care
     /// about its side effects during disposal. The returned instance is idempotent by default.
     /// </remarks>
-    public static IDisposable Create<T1, T2, TResult>(Func<T1, T2, TResult> action,
+    public static IDisposable Create<T1, T2, TResult>(
+        Func<T1, T2, TResult> action,
         T1 arg1,
-        T2 arg2)
+        T2 arg2
+    )
     {
         ArgumentNullException.ThrowIfNull(action);
 
@@ -411,10 +406,12 @@ public static class Disposable
     /// The arguments are captured at creation time, allowing type-safe disposal patterns.
     /// The returned instance is idempotent by default.
     /// </remarks>
-    public static IDisposable Create<T1, T2, T3>(Action<T1, T2, T3> action,
+    public static IDisposable Create<T1, T2, T3>(
+        Action<T1, T2, T3> action,
         T1 arg1,
         T2 arg2,
-        T3 arg3)
+        T3 arg3
+    )
     {
         ArgumentNullException.ThrowIfNull(action);
 
@@ -444,7 +441,8 @@ public static class Disposable
         Func<T1, T2, T3, TResult> action,
         T1 arg1,
         T2 arg2,
-        T3 arg3)
+        T3 arg3
+    )
     {
         ArgumentNullException.ThrowIfNull(action);
 
@@ -476,7 +474,8 @@ public static class Disposable
         T1 arg1,
         T2 arg2,
         T3 arg3,
-        T4 arg4)
+        T4 arg4
+    )
     {
         ArgumentNullException.ThrowIfNull(action);
 
@@ -509,7 +508,8 @@ public static class Disposable
         T1 arg1,
         T2 arg2,
         T3 arg3,
-        T4 arg4)
+        T4 arg4
+    )
     {
         ArgumentNullException.ThrowIfNull(action);
 
@@ -544,7 +544,8 @@ public static class Disposable
         T2 arg2,
         T3 arg3,
         T4 arg4,
-        T5 arg5)
+        T5 arg5
+    )
     {
         ArgumentNullException.ThrowIfNull(action);
 
@@ -580,7 +581,8 @@ public static class Disposable
         T2 arg2,
         T3 arg3,
         T4 arg4,
-        T5 arg5)
+        T5 arg5
+    )
     {
         ArgumentNullException.ThrowIfNull(action);
 
@@ -618,7 +620,8 @@ public static class Disposable
         T3 arg3,
         T4 arg4,
         T5 arg5,
-        T6 arg6)
+        T6 arg6
+    )
     {
         ArgumentNullException.ThrowIfNull(action);
 
@@ -657,7 +660,8 @@ public static class Disposable
         T3 arg3,
         T4 arg4,
         T5 arg5,
-        T6 arg6)
+        T6 arg6
+    )
     {
         ArgumentNullException.ThrowIfNull(action);
 
@@ -698,7 +702,8 @@ public static class Disposable
         T4 arg4,
         T5 arg5,
         T6 arg6,
-        T7 arg7)
+        T7 arg7
+    )
     {
         ArgumentNullException.ThrowIfNull(action);
 
@@ -740,7 +745,8 @@ public static class Disposable
         T4 arg4,
         T5 arg5,
         T6 arg6,
-        T7 arg7)
+        T7 arg7
+    )
     {
         ArgumentNullException.ThrowIfNull(action);
 
@@ -784,7 +790,8 @@ public static class Disposable
         T5 arg5,
         T6 arg6,
         T7 arg7,
-        T8 arg8)
+        T8 arg8
+    )
     {
         ArgumentNullException.ThrowIfNull(action);
 
@@ -829,7 +836,8 @@ public static class Disposable
         T5 arg5,
         T6 arg6,
         T7 arg7,
-        T8 arg8)
+        T8 arg8
+    )
     {
         ArgumentNullException.ThrowIfNull(action);
 

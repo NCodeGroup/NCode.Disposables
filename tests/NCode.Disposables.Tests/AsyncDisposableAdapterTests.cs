@@ -1,20 +1,5 @@
-﻿#region Copyright Preamble
-
-// Copyright @ 2024 NCode Group
-//
-//    Licensed under the Apache License, Version 2.0 (the "License");
-//    you may not use this file except in compliance with the License.
-//    You may obtain a copy of the License at
-//
-//        http://www.apache.org/licenses/LICENSE-2.0
-//
-//    Unless required by applicable law or agreed to in writing, software
-//    distributed under the License is distributed on an "AS IS" BASIS,
-//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//    See the License for the specific language governing permissions and
-//    limitations under the License.
-
-#endregion
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
 
 namespace NCode.Disposables.Tests;
 
@@ -117,11 +102,15 @@ public class AsyncDisposableAdapterTests
     public async Task DisposeAsync_WhenUnderlyingDisposeThrows_PropagatesException()
     {
         var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose()).Throws(new InvalidOperationException("Test exception"));
+        mockDisposable
+            .Setup(x => x.Dispose())
+            .Throws(new InvalidOperationException("Test exception"));
 
         var adapter = new AsyncDisposableAdapter(mockDisposable.Object);
 
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () => await adapter.DisposeAsync());
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await adapter.DisposeAsync()
+        );
 
         Assert.Equal("Test exception", exception.Message);
     }
@@ -141,7 +130,9 @@ public class AsyncDisposableAdapterTests
 
         var adapter = new AsyncDisposableAdapter(disposable, idempotent: true);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(async () => await adapter.DisposeAsync());
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await adapter.DisposeAsync()
+        );
         await adapter.DisposeAsync();
         await adapter.DisposeAsync();
 
@@ -152,12 +143,18 @@ public class AsyncDisposableAdapterTests
     public async Task DisposeAsync_WhenNotIdempotentAndDisposeThrows_SubsequentCallsAlsoThrow()
     {
         var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose()).Throws(new InvalidOperationException("Test exception"));
+        mockDisposable
+            .Setup(x => x.Dispose())
+            .Throws(new InvalidOperationException("Test exception"));
 
         var adapter = new AsyncDisposableAdapter(mockDisposable.Object, idempotent: false);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(async () => await adapter.DisposeAsync());
-        await Assert.ThrowsAsync<InvalidOperationException>(async () => await adapter.DisposeAsync());
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await adapter.DisposeAsync()
+        );
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await adapter.DisposeAsync()
+        );
 
         mockDisposable.Verify(x => x.Dispose(), Times.Exactly(2));
     }

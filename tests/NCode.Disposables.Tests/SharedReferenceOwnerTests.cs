@@ -1,20 +1,5 @@
-﻿#region Copyright Preamble
-
-// Copyright @ 2024 NCode Group
-//
-//    Licensed under the Apache License, Version 2.0 (the "License");
-//    you may not use this file except in compliance with the License.
-//    You may obtain a copy of the License at
-//
-//        http://www.apache.org/licenses/LICENSE-2.0
-//
-//    Unless required by applicable law or agreed to in writing, software
-//    distributed under the License is distributed on an "AS IS" BASIS,
-//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//    See the License for the specific language governing permissions and
-//    limitations under the License.
-
-#endregion
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
 
 namespace NCode.Disposables.Tests;
 
@@ -56,7 +41,10 @@ public class SharedReferenceOwnerTests
     {
         var releaseCount = 0;
         var value = new object();
-        var onRelease = (object _) => { releaseCount++; };
+        var onRelease = (object _) =>
+        {
+            releaseCount++;
+        };
         var owner = new SharedReferenceOwner<object>(value, onRelease);
 
         // First release should decrement to zero
@@ -75,7 +63,10 @@ public class SharedReferenceOwnerTests
     {
         var value = new object();
         var releaseCount = 0;
-        var onRelease = (object _) => { ++releaseCount; };
+        var onRelease = (object _) =>
+        {
+            ++releaseCount;
+        };
         var owner = new SharedReferenceOwner<object>(value, onRelease);
 
         var result = owner.Value;
@@ -89,7 +80,10 @@ public class SharedReferenceOwnerTests
     {
         var value = new object();
         var releaseCount = 0;
-        var onRelease = (object _) => { ++releaseCount; };
+        var onRelease = (object _) =>
+        {
+            ++releaseCount;
+        };
         var owner = new SharedReferenceOwner<object>(value, onRelease);
 
         var finalReleaseCount = FinalRelease(owner);
@@ -104,7 +98,10 @@ public class SharedReferenceOwnerTests
     {
         const int value = 42;
         var releaseCount = 0;
-        var onRelease = (int _) => { ++releaseCount; };
+        var onRelease = (int _) =>
+        {
+            ++releaseCount;
+        };
         var owner = new SharedReferenceOwner<int>(value, onRelease);
 
         var result = owner.Value;
@@ -137,7 +134,10 @@ public class SharedReferenceOwnerTests
     {
         var value = new object();
         var releaseCount = 0;
-        var onRelease = (object _) => { ++releaseCount; };
+        var onRelease = (object _) =>
+        {
+            ++releaseCount;
+        };
         var owner = new SharedReferenceOwner<object>(value, onRelease);
 
         _ = owner.AddReference();
@@ -167,7 +167,10 @@ public class SharedReferenceOwnerTests
     {
         var value = new object();
         var releaseCount = 0;
-        var onRelease = (object _) => { ++releaseCount; };
+        var onRelease = (object _) =>
+        {
+            ++releaseCount;
+        };
         var owner = new SharedReferenceOwner<object>(value, onRelease);
 
         var finalReleaseCount = FinalRelease(owner);
@@ -219,7 +222,10 @@ public class SharedReferenceOwnerTests
     {
         var value = new object();
         var releaseCount = 0;
-        var onRelease = (object _) => { ++releaseCount; };
+        var onRelease = (object _) =>
+        {
+            ++releaseCount;
+        };
         var owner = new SharedReferenceOwner<object>(value, onRelease);
 
         var finalReleaseCount = FinalRelease(owner);
@@ -237,7 +243,10 @@ public class SharedReferenceOwnerTests
     {
         var value = new object();
         var releaseCount = 0;
-        var onRelease = (object _) => { ++releaseCount; };
+        var onRelease = (object _) =>
+        {
+            ++releaseCount;
+        };
         var owner = new SharedReferenceOwner<object>(value, onRelease);
 
         _ = owner.TryAddReference(out _);
@@ -296,7 +305,10 @@ public class SharedReferenceOwnerTests
     {
         var value = new object();
         var releaseCount = 0;
-        var onRelease = (object _) => { releaseCount++; };
+        var onRelease = (object _) =>
+        {
+            releaseCount++;
+        };
         var owner = new SharedReferenceOwner<object>(value, onRelease);
 
         owner.ReleaseReference();
@@ -331,7 +343,10 @@ public class SharedReferenceOwnerTests
     {
         var value = new object();
         var releaseCount = 0;
-        var onRelease = (object _) => { Interlocked.Increment(ref releaseCount); };
+        var onRelease = (object _) =>
+        {
+            Interlocked.Increment(ref releaseCount);
+        };
         var owner = new SharedReferenceOwner<object>(value, onRelease);
 
         const int concurrentCalls = 100;
@@ -358,7 +373,10 @@ public class SharedReferenceOwnerTests
     {
         var value = new object();
         var releaseCount = 0;
-        var onRelease = (object _) => { Interlocked.Increment(ref releaseCount); };
+        var onRelease = (object _) =>
+        {
+            Interlocked.Increment(ref releaseCount);
+        };
         var owner = new SharedReferenceOwner<object>(value, onRelease);
 
         // Add many references first
@@ -387,7 +405,10 @@ public class SharedReferenceOwnerTests
     {
         var value = new object();
         var releaseCount = 0;
-        var onRelease = (object _) => { Interlocked.Increment(ref releaseCount); };
+        var onRelease = (object _) =>
+        {
+            Interlocked.Increment(ref releaseCount);
+        };
         var owner = new SharedReferenceOwner<object>(value, onRelease);
 
         // Add some references
@@ -455,7 +476,10 @@ public class SharedReferenceOwnerTests
     {
         const int value = 42;
         var releaseCount = 0;
-        var onRelease = (int _) => { releaseCount++; };
+        var onRelease = (int _) =>
+        {
+            releaseCount++;
+        };
         var owner = new SharedReferenceOwner<int>(value, onRelease);
 
         Assert.Equal(value, owner.Value);
@@ -485,7 +509,10 @@ public class SharedReferenceOwnerTests
     {
         const string value = "test string";
         string? releasedValue = null;
-        var onRelease = (string s) => { releasedValue = s; };
+        var onRelease = (string s) =>
+        {
+            releasedValue = s;
+        };
         var owner = new SharedReferenceOwner<string>(value, onRelease);
 
         Assert.Equal(value, owner.Value);
@@ -504,7 +531,10 @@ public class SharedReferenceOwnerTests
     {
         var value = new object();
         var releaseCount = 0;
-        var onRelease = (object _) => { releaseCount++; };
+        var onRelease = (object _) =>
+        {
+            releaseCount++;
+        };
         var owner = new SharedReferenceOwner<object>(value, onRelease);
 
         // Create some leases

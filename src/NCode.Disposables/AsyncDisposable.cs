@@ -1,22 +1,5 @@
-﻿#region Copyright Preamble
-
-//
-//    Copyright © 2017 NCode Group
-//
-//    Licensed under the Apache License, Version 2.0 (the "License");
-//    you may not use this file except in compliance with the License.
-//    You may obtain a copy of the License at
-//
-//        http://www.apache.org/licenses/LICENSE-2.0
-//
-//    Unless required by applicable law or agreed to in writing, software
-//    distributed under the License is distributed on an "AS IS" BASIS,
-//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//    See the License for the specific language governing permissions and
-//    limitations under the License.
-//
-
-#endregion
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
 
 namespace NCode.Disposables;
 
@@ -136,7 +119,10 @@ public static class AsyncDisposable
     /// <param name="collection">The <see cref="IAsyncDisposable"/> items to add to the collection.</param>
     /// <returns>A new <see cref="IAsyncDisposableCollection"/> containing the specified items.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
-    public static IAsyncDisposableCollection Collection(bool ignoreExceptions, params IAsyncDisposable[] collection)
+    public static IAsyncDisposableCollection Collection(
+        bool ignoreExceptions,
+        params IAsyncDisposable[] collection
+    )
     {
         ArgumentNullException.ThrowIfNull(collection);
 
@@ -155,8 +141,10 @@ public static class AsyncDisposable
     /// </param>
     /// <returns>A new <see cref="IAsyncDisposableCollection"/> containing the specified items.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
-    public static IAsyncDisposableCollection Collection(IEnumerable<IAsyncDisposable> collection,
-        bool ignoreExceptions = false)
+    public static IAsyncDisposableCollection Collection(
+        IEnumerable<IAsyncDisposable> collection,
+        bool ignoreExceptions = false
+    )
     {
         ArgumentNullException.ThrowIfNull(collection);
 
@@ -234,10 +222,13 @@ public static class AsyncDisposable
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return new AsyncDisposableAction(() =>
-        {
-            action();
-            return ValueTask.CompletedTask;
-        }, idempotent);
+        return new AsyncDisposableAction(
+            () =>
+            {
+                action();
+                return ValueTask.CompletedTask;
+            },
+            idempotent
+        );
     }
 }

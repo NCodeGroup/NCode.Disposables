@@ -171,7 +171,7 @@ The [silver criteria](https://www.bestpractices.dev/en/criteria/1), 55 in all.
 | Criterion | Req | N/A | URL | Answer and evidence |
 | --- | --- | --- | --- | --- |
 | `coding_standards` | MUST | yes | yes | **Met**: [AGENTS.md](../AGENTS.md) and the instruction files it lists, and `.editorconfig`, with the C# conventions in `.github/instructions/csharp.instructions.md`. |
-| `coding_standards_enforced` | MUST | yes | no | **Met**: the build enforces code style through the analyzers. |
+| `coding_standards_enforced` | MUST | yes | no | **Met**: the build enforces code style through the analyzers, and `./build/dod.ps1` checks the formatting with CSharpier. |
 | `build_standard_variables` | MUST | yes | no | **N/A**: it applies only to a build that makes native binaries. |
 | `build_preserve_debug` | SHOULD | yes | no | **Met**: Release builds keep their PDB files, and each package has a symbol package. |
 | `build_non_recursive` | MUST | yes | no | **Met**: one solution build, with MSBuild's project references. |
@@ -226,8 +226,8 @@ The [gold criteria](https://www.bestpractices.dev/en/criteria/2), 23 in all.
 | `achieve_silver` | MUST | no | no | **Check**: the site sets it once the silver level is earned. |
 | `bus_factor` | MUST | no | yes | **Person**: two or more people who could carry the project on; Unmet with one maintainer, which keeps gold from being earned. |
 | `contributors_unassociated` | MUST | no | yes | **Person**: at least two significant contributors from different organizations. |
-| `copyright_per_file` | MUST | no | no | **Check**: Met when `git grep -L "Copyright" -- '*.cs'` prints no source file; Unmet until each source file starts with a copyright line. |
-| `license_per_file` | MUST | no | no | **Check**: Met when `git grep -L "SPDX-License-Identifier" -- '*.cs'` prints no source file; Unmet until each source file has an `SPDX-License-Identifier` line. |
+| `copyright_per_file` | MUST | no | no | **Check**: the C# file header `.editorconfig` sets starts with the copyright line, and the build fails a C# file without it; check every other source file, such as scripts. |
+| `license_per_file` | MUST | no | no | **Check**: the C# file header holds `SPDX-License-Identifier: Apache-2.0`, and the build fails a C# file without it; check every other source file. |
 
 ### Change Control
 

@@ -1,0 +1,5 @@
+# Files from the project template that updates overwrite.
+build/ProjectTemplate.props
+nuget.config
+# EF Core migrations are generated code; .editorconfig marks them so.
+**/Migrations/

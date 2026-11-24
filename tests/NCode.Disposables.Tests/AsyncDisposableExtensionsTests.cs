@@ -1,20 +1,5 @@
-﻿#region Copyright Preamble
-
-// Copyright @ 2024 NCode Group
-//
-//    Licensed under the Apache License, Version 2.0 (the "License");
-//    you may not use this file except in compliance with the License.
-//    You may obtain a copy of the License at
-//
-//        http://www.apache.org/licenses/LICENSE-2.0
-//
-//    Unless required by applicable law or agreed to in writing, software
-//    distributed under the License is distributed on an "AS IS" BASIS,
-//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//    See the License for the specific language governing permissions and
-//    limitations under the License.
-
-#endregion
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
 
 namespace NCode.Disposables.Tests;
 
@@ -36,9 +21,21 @@ public class AsyncDisposableExtensionsTests
         var disposeCount = 0;
         var collection = new IAsyncDisposable[]
         {
-            AsyncDisposable.Create(() => { disposeCount++; return ValueTask.CompletedTask; }),
-            AsyncDisposable.Create(() => { disposeCount++; return ValueTask.CompletedTask; }),
-            AsyncDisposable.Create(() => { disposeCount++; return ValueTask.CompletedTask; })
+            AsyncDisposable.Create(() =>
+            {
+                disposeCount++;
+                return ValueTask.CompletedTask;
+            }),
+            AsyncDisposable.Create(() =>
+            {
+                disposeCount++;
+                return ValueTask.CompletedTask;
+            }),
+            AsyncDisposable.Create(() =>
+            {
+                disposeCount++;
+                return ValueTask.CompletedTask;
+            }),
         };
 
         await collection.DisposeAllAsync();
@@ -54,7 +51,7 @@ public class AsyncDisposableExtensionsTests
         {
             Disposable.Create(() => disposeCount++),
             Disposable.Create(() => disposeCount++),
-            Disposable.Create(() => disposeCount++)
+            Disposable.Create(() => disposeCount++),
         };
 
         await collection.DisposeAllAsync();
@@ -69,8 +66,12 @@ public class AsyncDisposableExtensionsTests
         var collection = new object[]
         {
             Disposable.Create(() => order += "1"),
-            AsyncDisposable.Create(() => { order += "2"; return ValueTask.CompletedTask; }),
-            Disposable.Create(() => order += "3")
+            AsyncDisposable.Create(() =>
+            {
+                order += "2";
+                return ValueTask.CompletedTask;
+            }),
+            Disposable.Create(() => order += "3"),
         };
 
         await collection.DisposeAllAsync();
@@ -85,11 +86,23 @@ public class AsyncDisposableExtensionsTests
         var collection = new object[]
         {
             new(),
-            AsyncDisposable.Create(() => { order += "1"; return ValueTask.CompletedTask; }),
+            AsyncDisposable.Create(() =>
+            {
+                order += "1";
+                return ValueTask.CompletedTask;
+            }),
             new(),
-            AsyncDisposable.Create(() => { order += "2"; return ValueTask.CompletedTask; }),
+            AsyncDisposable.Create(() =>
+            {
+                order += "2";
+                return ValueTask.CompletedTask;
+            }),
             new(),
-            AsyncDisposable.Create(() => { order += "3"; return ValueTask.CompletedTask; })
+            AsyncDisposable.Create(() =>
+            {
+                order += "3";
+                return ValueTask.CompletedTask;
+            }),
         };
 
         await collection.DisposeAllAsync();
@@ -104,10 +117,18 @@ public class AsyncDisposableExtensionsTests
         var collection = new object?[]
         {
             null,
-            AsyncDisposable.Create(() => { order += "1"; return ValueTask.CompletedTask; }),
+            AsyncDisposable.Create(() =>
+            {
+                order += "1";
+                return ValueTask.CompletedTask;
+            }),
             null,
-            AsyncDisposable.Create(() => { order += "2"; return ValueTask.CompletedTask; }),
-            null
+            AsyncDisposable.Create(() =>
+            {
+                order += "2";
+                return ValueTask.CompletedTask;
+            }),
+            null,
         };
 
         await collection.DisposeAllAsync();
@@ -125,7 +146,11 @@ public class AsyncDisposableExtensionsTests
         for (var i = 1; i <= count; i++)
         {
             var local = i;
-            collection[i - 1] = AsyncDisposable.Create(() => { order += local; return ValueTask.CompletedTask; });
+            collection[i - 1] = AsyncDisposable.Create(() =>
+            {
+                order += local;
+                return ValueTask.CompletedTask;
+            });
         }
 
         await collection.DisposeAllAsync();
@@ -144,11 +169,12 @@ public class AsyncDisposableExtensionsTests
         {
             AsyncDisposable.Create(() => ValueTask.CompletedTask),
             AsyncDisposable.Create(() => throw new InvalidOperationException("Test exception")),
-            AsyncDisposable.Create(() => ValueTask.CompletedTask)
+            AsyncDisposable.Create(() => ValueTask.CompletedTask),
         };
 
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await collection.DisposeAllAsync());
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await collection.DisposeAllAsync()
+        );
 
         Assert.Equal("Test exception", exception.Message);
     }
@@ -162,11 +188,12 @@ public class AsyncDisposableExtensionsTests
             AsyncDisposable.Create(() => throw new InvalidOperationException("Exception 1")),
             AsyncDisposable.Create(() => ValueTask.CompletedTask),
             AsyncDisposable.Create(() => throw new ArgumentException("Exception 2")),
-            AsyncDisposable.Create(() => ValueTask.CompletedTask)
+            AsyncDisposable.Create(() => ValueTask.CompletedTask),
         };
 
-        var exception = await Assert.ThrowsAsync<AggregateException>(
-            async () => await collection.DisposeAllAsync());
+        var exception = await Assert.ThrowsAsync<AggregateException>(async () =>
+            await collection.DisposeAllAsync()
+        );
 
         Assert.Equal(2, exception.InnerExceptions.Count);
         Assert.Contains(exception.InnerExceptions, e => e is ArgumentException);
@@ -179,11 +206,23 @@ public class AsyncDisposableExtensionsTests
         var order = string.Empty;
         var collection = new[]
         {
-            AsyncDisposable.Create(() => { order += "1"; return ValueTask.CompletedTask; }),
+            AsyncDisposable.Create(() =>
+            {
+                order += "1";
+                return ValueTask.CompletedTask;
+            }),
             AsyncDisposable.Create(() => throw new InvalidOperationException()),
-            AsyncDisposable.Create(() => { order += "2"; return ValueTask.CompletedTask; }),
+            AsyncDisposable.Create(() =>
+            {
+                order += "2";
+                return ValueTask.CompletedTask;
+            }),
             AsyncDisposable.Create(() => throw new InvalidOperationException()),
-            AsyncDisposable.Create(() => { order += "3"; return ValueTask.CompletedTask; })
+            AsyncDisposable.Create(() =>
+            {
+                order += "3";
+                return ValueTask.CompletedTask;
+            }),
         };
 
         await collection.DisposeAllAsync(ignoreExceptions: true);
@@ -197,15 +236,36 @@ public class AsyncDisposableExtensionsTests
         var disposeCount = 0;
         var collection = new[]
         {
-            AsyncDisposable.Create(() => { disposeCount++; return ValueTask.CompletedTask; }),
-            AsyncDisposable.Create(() => { disposeCount++; throw new InvalidOperationException(); }),
-            AsyncDisposable.Create(() => { disposeCount++; return ValueTask.CompletedTask; }),
-            AsyncDisposable.Create(() => { disposeCount++; throw new InvalidOperationException(); }),
-            AsyncDisposable.Create(() => { disposeCount++; return ValueTask.CompletedTask; })
+            AsyncDisposable.Create(() =>
+            {
+                disposeCount++;
+                return ValueTask.CompletedTask;
+            }),
+            AsyncDisposable.Create(() =>
+            {
+                disposeCount++;
+                throw new InvalidOperationException();
+            }),
+            AsyncDisposable.Create(() =>
+            {
+                disposeCount++;
+                return ValueTask.CompletedTask;
+            }),
+            AsyncDisposable.Create(() =>
+            {
+                disposeCount++;
+                throw new InvalidOperationException();
+            }),
+            AsyncDisposable.Create(() =>
+            {
+                disposeCount++;
+                return ValueTask.CompletedTask;
+            }),
         };
 
-        await Assert.ThrowsAsync<AggregateException>(
-            async () => await collection.DisposeAllAsync(ignoreExceptions: false));
+        await Assert.ThrowsAsync<AggregateException>(async () =>
+            await collection.DisposeAllAsync(ignoreExceptions: false)
+        );
 
         Assert.Equal(5, disposeCount);
     }
@@ -217,11 +277,12 @@ public class AsyncDisposableExtensionsTests
         {
             Disposable.Create(() => { }),
             Disposable.Create(() => throw new InvalidOperationException("Sync exception")),
-            Disposable.Create(() => { })
+            Disposable.Create(() => { }),
         };
 
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await collection.DisposeAllAsync());
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await collection.DisposeAllAsync()
+        );
 
         Assert.Equal("Sync exception", exception.Message);
     }
@@ -232,14 +293,27 @@ public class AsyncDisposableExtensionsTests
         var order = string.Empty;
         var collection = new[]
         {
-            AsyncDisposable.Create(() => { order += "1"; return ValueTask.CompletedTask; }),
+            AsyncDisposable.Create(() =>
+            {
+                order += "1";
+                return ValueTask.CompletedTask;
+            }),
             AsyncDisposable.Create(() => throw new InvalidOperationException()),
-            AsyncDisposable.Create(() => { order += "2"; return ValueTask.CompletedTask; }),
-            AsyncDisposable.Create(() => { order += "3"; return ValueTask.CompletedTask; })
+            AsyncDisposable.Create(() =>
+            {
+                order += "2";
+                return ValueTask.CompletedTask;
+            }),
+            AsyncDisposable.Create(() =>
+            {
+                order += "3";
+                return ValueTask.CompletedTask;
+            }),
         };
 
-        await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await collection.DisposeAllAsync());
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await collection.DisposeAllAsync()
+        );
 
         Assert.Equal("321", order);
     }

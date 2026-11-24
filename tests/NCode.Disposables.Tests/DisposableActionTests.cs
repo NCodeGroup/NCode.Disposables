@@ -1,22 +1,5 @@
-#region Copyright Preamble
-
-//
-//    Copyright © 2017 NCode Group
-//
-//    Licensed under the Apache License, Version 2.0 (the "License");
-//    you may not use this file except in compliance with the License.
-//    You may obtain a copy of the License at
-//
-//        http://www.apache.org/licenses/LICENSE-2.0
-//
-//    Unless required by applicable law or agreed to in writing, software
-//    distributed under the License is distributed on an "AS IS" BASIS,
-//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//    See the License for the specific language governing permissions and
-//    limitations under the License.
-//
-
-#endregion
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
 
 namespace NCode.Disposables.Tests;
 
@@ -116,7 +99,9 @@ public class DisposableActionTests
     [Fact]
     public void Dispose_WhenActionThrows_PropagatesException()
     {
-        var disposable = new DisposableAction(() => throw new InvalidOperationException("Test exception"));
+        var disposable = new DisposableAction(() =>
+            throw new InvalidOperationException("Test exception")
+        );
 
         var exception = Assert.Throws<InvalidOperationException>(() => disposable.Dispose());
 
@@ -127,14 +112,17 @@ public class DisposableActionTests
     public void Dispose_WhenIdempotentAndFirstDisposeThrows_SubsequentCallsDoNotThrow()
     {
         var disposeCount = 0;
-        var disposable = new DisposableAction(() =>
-        {
-            disposeCount++;
-            if (disposeCount == 1)
+        var disposable = new DisposableAction(
+            () =>
             {
-                throw new InvalidOperationException("First dispose");
-            }
-        }, idempotent: true);
+                disposeCount++;
+                if (disposeCount == 1)
+                {
+                    throw new InvalidOperationException("First dispose");
+                }
+            },
+            idempotent: true
+        );
 
         Assert.Throws<InvalidOperationException>(() => disposable.Dispose());
         disposable.Dispose();
@@ -147,11 +135,14 @@ public class DisposableActionTests
     public void Dispose_WhenNotIdempotentAndActionThrows_SubsequentCallsAlsoThrow()
     {
         var disposeCount = 0;
-        var disposable = new DisposableAction(() =>
-        {
-            disposeCount++;
-            throw new InvalidOperationException("Test exception");
-        }, idempotent: false);
+        var disposable = new DisposableAction(
+            () =>
+            {
+                disposeCount++;
+                throw new InvalidOperationException("Test exception");
+            },
+            idempotent: false
+        );
 
         Assert.Throws<InvalidOperationException>(() => disposable.Dispose());
         Assert.Throws<InvalidOperationException>(() => disposable.Dispose());
@@ -176,7 +167,10 @@ public class DisposableActionTests
     public async Task Dispose_WhenIdempotent_ConcurrentCalls_InvokesActionOnce()
     {
         var disposeCount = 0;
-        var disposable = new DisposableAction(() => Interlocked.Increment(ref disposeCount), idempotent: true);
+        var disposable = new DisposableAction(
+            () => Interlocked.Increment(ref disposeCount),
+            idempotent: true
+        );
 
         const int concurrentCalls = 100;
         var tasks = new Task[concurrentCalls];
@@ -195,7 +189,10 @@ public class DisposableActionTests
     public async Task Dispose_WhenNotIdempotent_ConcurrentCalls_InvokesActionEachTime()
     {
         var disposeCount = 0;
-        var disposable = new DisposableAction(() => Interlocked.Increment(ref disposeCount), idempotent: false);
+        var disposable = new DisposableAction(
+            () => Interlocked.Increment(ref disposeCount),
+            idempotent: false
+        );
 
         const int concurrentCalls = 100;
         var tasks = new Task[concurrentCalls];

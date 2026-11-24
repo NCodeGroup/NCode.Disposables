@@ -1,20 +1,5 @@
-﻿#region Copyright Preamble
-
-// Copyright @ 2024 NCode Group
-//
-//    Licensed under the Apache License, Version 2.0 (the "License");
-//    you may not use this file except in compliance with the License.
-//    You may obtain a copy of the License at
-//
-//        http://www.apache.org/licenses/LICENSE-2.0
-//
-//    Unless required by applicable law or agreed to in writing, software
-//    distributed under the License is distributed on an "AS IS" BASIS,
-//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//    See the License for the specific language governing permissions and
-//    limitations under the License.
-
-#endregion
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
 
 namespace NCode.Disposables.Tests;
 
@@ -315,10 +300,12 @@ public class AsyncSharedReferenceOwnerTests
     {
         var value = new object();
         var owner = new AsyncSharedReferenceOwner<object>(value, _ =>
-            throw new InvalidOperationException("Release failed"));
+            throw new InvalidOperationException("Release failed")
+        );
 
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await owner.ReleaseReferenceAsync());
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await owner.ReleaseReferenceAsync()
+        );
 
         Assert.Equal("Release failed", exception.Message);
     }
@@ -486,7 +473,8 @@ public class AsyncSharedReferenceOwnerTests
 
         var owner = new AsyncSharedReferenceOwner<IAsyncDisposable>(
             mockDisposable.Object,
-            async v => await v.DisposeAsync());
+            async v => await v.DisposeAsync()
+        );
 
         await owner.ReleaseReferenceAsync();
 

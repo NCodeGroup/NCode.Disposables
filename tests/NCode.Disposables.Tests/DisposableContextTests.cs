@@ -1,22 +1,5 @@
-#region Copyright Preamble
-
-//
-//    Copyright © 2017 NCode Group
-//
-//    Licensed under the Apache License, Version 2.0 (the "License");
-//    you may not use this file except in compliance with the License.
-//    You may obtain a copy of the License at
-//
-//        http://www.apache.org/licenses/LICENSE-2.0
-//
-//    Unless required by applicable law or agreed to in writing, software
-//    distributed under the License is distributed on an "AS IS" BASIS,
-//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//    See the License for the specific language governing permissions and
-//    limitations under the License.
-//
-
-#endregion
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
 
 namespace NCode.Disposables.Tests;
 
@@ -63,7 +46,8 @@ public class DisposableContextTests
         var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
 
         var exception = Assert.Throws<ArgumentNullException>(() =>
-            new DisposableContext(null!, context.Object));
+            new DisposableContext(null!, context.Object)
+        );
 
         Assert.Equal("disposable", exception.ParamName);
     }
@@ -74,7 +58,8 @@ public class DisposableContextTests
         var disposable = new Mock<IDisposable>(MockBehavior.Strict);
 
         var exception = Assert.Throws<ArgumentNullException>(() =>
-            new DisposableContext(disposable.Object, null!));
+            new DisposableContext(disposable.Object, null!)
+        );
 
         Assert.Equal("context", exception.ParamName);
     }
@@ -131,12 +116,8 @@ public class DisposableContextTests
         context
             .Setup(x => x.Send(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
             .Callback((SendOrPostCallback c, object s) => c(s));
-        context
-            .Setup(x => x.OperationStarted())
-            .Callback(() => operationStartedCalled = true);
-        context
-            .Setup(x => x.OperationCompleted())
-            .Callback(() => operationCompletedCalled = true);
+        context.Setup(x => x.OperationStarted()).Callback(() => operationStartedCalled = true);
+        context.Setup(x => x.OperationCompleted()).Callback(() => operationCompletedCalled = true);
 
         var item = new Mock<IDisposable>(MockBehavior.Strict);
         item.Setup(x => x.Dispose());
@@ -158,7 +139,8 @@ public class DisposableContextTests
     {
         var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
         context.Setup(x => x.OperationStarted());
-        context.Setup(x => x.Post(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
+        context
+            .Setup(x => x.Post(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
             .Callback((SendOrPostCallback c, object s) => c(s));
         context.Setup(x => x.OperationCompleted());
 
@@ -180,13 +162,18 @@ public class DisposableContextTests
 
         var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
         context.Setup(x => x.OperationStarted()).Callback(() => callOrder.Add("OperationStarted"));
-        context.Setup(x => x.Post(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
-            .Callback((SendOrPostCallback c, object s) =>
-            {
-                callOrder.Add("Post");
-                c(s);
-            });
-        context.Setup(x => x.OperationCompleted()).Callback(() => callOrder.Add("OperationCompleted"));
+        context
+            .Setup(x => x.Post(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
+            .Callback(
+                (SendOrPostCallback c, object s) =>
+                {
+                    callOrder.Add("Post");
+                    c(s);
+                }
+            );
+        context
+            .Setup(x => x.OperationCompleted())
+            .Callback(() => callOrder.Add("OperationCompleted"));
 
         var item = new Mock<IDisposable>(MockBehavior.Strict);
         item.Setup(x => x.Dispose()).Callback(() => callOrder.Add("Dispose"));
@@ -203,7 +190,8 @@ public class DisposableContextTests
     {
         var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
         context.Setup(x => x.OperationStarted());
-        context.Setup(x => x.Post(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
+        context
+            .Setup(x => x.Post(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
             .Callback((SendOrPostCallback c, object s) => c(s));
         context.Setup(x => x.OperationCompleted());
 
@@ -223,7 +211,8 @@ public class DisposableContextTests
     {
         var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
         context.Setup(x => x.OperationStarted());
-        context.Setup(x => x.Post(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
+        context
+            .Setup(x => x.Post(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
             .Callback((SendOrPostCallback c, object s) => c(s));
         context.Setup(x => x.OperationCompleted());
 
@@ -296,7 +285,8 @@ public class DisposableContextTests
     {
         var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
         context.Setup(x => x.OperationStarted());
-        context.Setup(x => x.Post(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
+        context
+            .Setup(x => x.Post(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
             .Callback((SendOrPostCallback c, object s) => c(s));
         context.Setup(x => x.OperationCompleted());
 
@@ -342,7 +332,8 @@ public class DisposableContextTests
     {
         var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
         context.Setup(x => x.OperationStarted());
-        context.Setup(x => x.Post(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
+        context
+            .Setup(x => x.Post(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
             .Callback((SendOrPostCallback c, object s) => c(s));
         context.Setup(x => x.OperationCompleted());
 

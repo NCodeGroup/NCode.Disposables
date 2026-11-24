@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
-
   <!-- Shared settings from the project template; this file's own settings, after the import, override them. -->
   <Import Project="$(MSBuildThisFileDirectory)build/ProjectTemplate.props" />
 
+  <!-- A project's own package metadata, such as its Description and PackageTags, is in a project.props beside its project file. -->
+  <Import
+    Project="$(MSBuildProjectDirectory)/project.props"
+    Condition="Exists('$(MSBuildProjectDirectory)/project.props')"
+  />
+
+  <!-- Package validation compares each pack with this version, the last one on nuget.org (the template's ADR-0147). Raise it with ./build/Update-Baseline.ps1 -Version <version> once nuget.org lists a new release (docs/api-compatibility.md). -->
   <PropertyGroup>
-
-    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(MSBuildProjectName).xml</DocumentationFile>
-
+    <PackageValidationBaselineVersion>5.3.0</PackageValidationBaselineVersion>
   </PropertyGroup>
 </Project>

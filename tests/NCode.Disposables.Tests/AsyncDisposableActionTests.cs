@@ -1,22 +1,5 @@
-#region Copyright Preamble
-
-//
-//    Copyright © 2017 NCode Group
-//
-//    Licensed under the Apache License, Version 2.0 (the "License");
-//    you may not use this file except in compliance with the License.
-//    You may obtain a copy of the License at
-//
-//        http://www.apache.org/licenses/LICENSE-2.0
-//
-//    Unless required by applicable law or agreed to in writing, software
-//    distributed under the License is distributed on an "AS IS" BASIS,
-//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//    See the License for the specific language governing permissions and
-//    limitations under the License.
-//
-
-#endregion
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
 
 namespace NCode.Disposables.Tests;
 
@@ -27,7 +10,9 @@ public class AsyncDisposableActionTests
     [Fact]
     public void Constructor_WithNullAction_ThrowsArgumentNullException()
     {
-        var exception = Assert.Throws<ArgumentNullException>(() => new AsyncDisposableAction(null!));
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            new AsyncDisposableAction(null!)
+        );
 
         Assert.Equal("action", exception.ParamName);
     }
@@ -131,8 +116,9 @@ public class AsyncDisposableActionTests
         };
         var disposable = new AsyncDisposableAction(action);
 
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await disposable.DisposeAsync());
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await disposable.DisposeAsync()
+        );
 
         Assert.Equal(expectedMessage, exception.Message);
     }
@@ -151,8 +137,9 @@ public class AsyncDisposableActionTests
         };
         var disposable = new AsyncDisposableAction(action, idempotent: true);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await disposable.DisposeAsync());
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await disposable.DisposeAsync()
+        );
 
         await disposable.DisposeAsync();
 
@@ -170,7 +157,8 @@ public class AsyncDisposableActionTests
         };
         var disposable = new AsyncDisposableAction(action, idempotent: true);
 
-        var tasks = Enumerable.Range(0, 100)
+        var tasks = Enumerable
+            .Range(0, 100)
             .Select(_ => disposable.DisposeAsync().AsTask())
             .ToArray();
 
@@ -191,7 +179,8 @@ public class AsyncDisposableActionTests
         var disposable = new AsyncDisposableAction(action, idempotent: false);
         const int taskCount = 100;
 
-        var tasks = Enumerable.Range(0, taskCount)
+        var tasks = Enumerable
+            .Range(0, taskCount)
             .Select(_ => disposable.DisposeAsync().AsTask())
             .ToArray();
 
