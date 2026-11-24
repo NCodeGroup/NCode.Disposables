@@ -44,8 +44,8 @@ jobs:
         with:
           name: binaries
           path: |
-            ./*/bin/*
-            ./*/obj/*
+            ./*/*/bin/*
+            ./*/*/obj/*
           if-no-files-found: error
           retention-days: 5
 
@@ -76,7 +76,7 @@ jobs:
         if: success() || failure()
         with:
           name: test report
-          path: ./*/TestResults/*.trx
+          path: ./*/*/TestResults/*.trx
           reporter: dotnet-trx
 
   publish:
@@ -94,7 +94,7 @@ jobs:
         with:
           name: binaries
       - name: Upload release artifacts
-        run: gh release upload "${TAG_NAME}" ./*/bin/${BUILD_CONFIGURATION}/*.nupkg ./*/bin/${BUILD_CONFIGURATION}/*.snupkg
+        run: gh release upload "${TAG_NAME}" ./*/*/bin/${BUILD_CONFIGURATION}/*.nupkg ./*/*/bin/${BUILD_CONFIGURATION}/*.snupkg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG_NAME: ${{ github.event.release.tag_name }}
@@ -103,4 +103,4 @@ jobs:
         with:
           dotnet-version: 10.0.x
       - name: Publish NuGet package
-        run: dotnet nuget push ./*/bin/${BUILD_CONFIGURATION}/*.nupkg --api-key "${{ secrets.NUGET_APIKEY }}" --source https://api.nuget.org/v3/index.json
+        run: dotnet nuget push ./*/*/bin/${BUILD_CONFIGURATION}/*.nupkg --api-key "${{ secrets.NUGET_APIKEY }}" --source https://api.nuget.org/v3/index.json
