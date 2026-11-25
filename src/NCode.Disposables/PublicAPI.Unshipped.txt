@@ -1,4 +1,5 @@
 #nullable enable
+NCode.Disposables.AsyncDisposableAction.IsDisposed.get -> bool
 NCode.Disposables.DisposableAction.IsDisposed.get -> bool
 NCode.Disposables.IDisposalStatus
 NCode.Disposables.IDisposalStatus.IsDisposed.get -> bool
