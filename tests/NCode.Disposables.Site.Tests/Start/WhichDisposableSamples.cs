@@ -150,5 +150,126 @@ public class WhichDisposableSamples
         Assert.False(connection.IsDisposed);
     }
 
+    [Fact]
+    public void SiteAnswerContextSample_Runs()
+    {
+        var uiContext = new SynchronizationContext();
+
+        // begin-snippet: SiteAnswerContext
+        List<string> log = [];
+
+        // uiContext is the SynchronizationContext captured on the UI thread.
+        var control = Disposable.Context(
+            Disposable.Create(() => log.Add("disposed")),
+            uiContext
+        );
+        control.Dispose(); // Send: returns once the context has disposed it
+        // end-snippet
+
+        Assert.Equal(["disposed"], log);
+    }
+
+    #endregion
+
+    #region Shares A Resource Samples
+
+    [Fact]
+    public void SiteAnswerSharedSample_Runs()
+    {
+        // begin-snippet: SiteAnswerShared
+        List<string> log = [];
+
+        var first = Disposable.Shared(Disposable.Create(() => log.Add("closed")));
+        var second = first.AddReference();
+        first.Dispose();
+        second.Dispose(); // log: "closed": the last lease disposes it
+        // end-snippet
+
+        Assert.Equal(["closed"], log);
+    }
+
+    #endregion
+
+    #region Releases Or Cancels Samples
+
+    [Fact]
+    public void SiteAnswerLockSample_Runs()
+    {
+        // begin-snippet: SiteAnswerLock
+        using var semaphore = new SemaphoreSlim(1, 1);
+
+        using (semaphore.Lock())
+        {
+            // semaphore.CurrentCount == 0
+        }
+
+        // semaphore.CurrentCount == 1
+        // end-snippet
+
+        Assert.Equal(1, semaphore.CurrentCount);
+    }
+
+    [Fact]
+    public void SiteAnswerCancellationSample_Runs()
+    {
+        // begin-snippet: SiteAnswerCancellation
+        var cancellation = Disposable.Cancellation();
+        var token = cancellation.Token;
+        cancellation.Dispose(); // token.IsCancellationRequested == true
+        // end-snippet
+
+        Assert.True(token.IsCancellationRequested);
+    }
+
+    #endregion
+
+    #region Stands In Samples
+
+    [Fact]
+    public void SiteAnswerEmptySample_Runs()
+    {
+        // begin-snippet: SiteAnswerEmpty
+        IDisposable Subscribe(bool enabled) =>
+            enabled ? Disposable.Create(() => { }) : Disposable.Empty;
+
+        using var subscription = Subscribe(enabled: false); // Disposable.Empty
+        // end-snippet
+
+        Assert.Same(Disposable.Empty, subscription);
+    }
+
+    [Fact]
+    public void SiteAnswerFlagSample_Runs()
+    {
+        // begin-snippet: SiteAnswerFlag
+        var flag = Disposable.Flag();
+        flag.Dispose(); // flag.IsDisposed == true
+        // end-snippet
+
+        Assert.True(flag.IsDisposed);
+    }
+
+    #endregion
+
+    #region Bridges Sync And Async Samples
+
+    [Fact]
+    public async Task SiteAnswerAdapterSample_Runs()
+    {
+        // begin-snippet: SiteAnswerAdapter
+        List<string> log = [];
+        IDisposable legacy = Disposable.Create(() => log.Add("disposed"));
+
+        await using (AsyncDisposable.Adapt(legacy))
+        {
+            // code that takes an IAsyncDisposable
+        }
+
+        // log: "disposed"
+        // end-snippet
+
+        Assert.Equal(["disposed"], log);
+    }
+
     #endregion
 }
