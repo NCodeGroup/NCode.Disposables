@@ -35,3 +35,6 @@ static NCode.Disposables.DisposableExtensions.DisposeAllIgnoringExceptions(this 
 *REMOVED*NCode.Disposables.IAsyncDisposableAggregate.Disposable.set -> void
 *REMOVED*NCode.Disposables.IDisposableCollection
 *REMOVED*NCode.Disposables.IAsyncDisposableCollection
+*REMOVED*NCode.Disposables.AsyncDisposableAction.AsyncDisposableAction(System.Func<System.Threading.Tasks.ValueTask>! action, bool idempotent = true) -> void
+*REMOVED*NCode.Disposables.AsyncDisposableAdapter.AsyncDisposableAdapter(System.IDisposable! disposable, bool idempotent = true) -> void
+*REMOVED*NCode.Disposables.DisposableAction.DisposableAction(System.Action! action, bool idempotent = true) -> void

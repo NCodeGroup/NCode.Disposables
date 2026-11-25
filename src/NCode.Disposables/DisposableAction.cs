@@ -51,30 +51,6 @@ public sealed class DisposableAction : IDisposable, IDisposalStatus
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="DisposableAction"/> class with the specified
-    /// dispose action and idempotency setting.
-    /// </summary>
-    /// <param name="action">The delegate to invoke when <see cref="Dispose"/> is called.</param>
-    /// <param name="idempotent">
-    /// <see langword="true"/> (the default) to ensure multiple calls to <see cref="Dispose"/>
-    /// will only invoke the action once; <see langword="false"/> to allow multiple invocations.
-    /// </param>
-    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
-    // Callers that pass only the action bind to the constructor without the flag, so this one keeps its default until it is deleted.
-    // ADR-1007: deleted in the next major version.
-    [Obsolete(
-        "Use new DisposableAction(action), or Disposable.CreateRepeatable to run the action on every call. This constructor is deleted in the next major version.",
-        DiagnosticId = "NCDISP003"
-    )]
-#pragma warning disable RS0027 // optional parameter on an overload with fewer parameters than another
-    public DisposableAction(Action action, bool idempotent = true)
-#pragma warning restore RS0027
-        : this(action)
-    {
-        IsRepeatable = !idempotent;
-    }
-
-    /// <summary>
     /// Gets a value indicating whether <see cref="Dispose"/> has been called at least once.
     /// </summary>
     public bool IsDisposed => Volatile.Read(ref _disposed) != 0;

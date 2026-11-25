@@ -51,30 +51,6 @@ public sealed class AsyncDisposableAction : IAsyncDisposable, IDisposalStatus
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AsyncDisposableAction"/> class with the specified
-    /// asynchronous dispose action and idempotency setting.
-    /// </summary>
-    /// <param name="action">The asynchronous delegate to invoke when <see cref="DisposeAsync"/> is called.</param>
-    /// <param name="idempotent">
-    /// <see langword="true"/> (the default) to ensure multiple calls to <see cref="DisposeAsync"/>
-    /// will only invoke the action once; <see langword="false"/> to allow multiple invocations.
-    /// </param>
-    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
-    // Callers that pass only the action bind to the constructor without the flag, so this one keeps its default until it is deleted.
-    // ADR-1007: deleted in the next major version.
-    [Obsolete(
-        "Use new AsyncDisposableAction(action), or AsyncDisposable.CreateRepeatable to run the action on every call. This constructor is deleted in the next major version.",
-        DiagnosticId = "NCDISP003"
-    )]
-#pragma warning disable RS0027 // optional parameter on an overload with fewer parameters than another
-    public AsyncDisposableAction(Func<ValueTask> action, bool idempotent = true)
-#pragma warning restore RS0027
-        : this(action)
-    {
-        IsRepeatable = !idempotent;
-    }
-
-    /// <summary>
     /// Gets a value indicating whether <see cref="DisposeAsync"/> has been called at least once.
     /// </summary>
     public bool IsDisposed => Volatile.Read(ref _disposed) != 0;

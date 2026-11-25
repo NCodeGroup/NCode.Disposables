@@ -48,29 +48,6 @@ public sealed class AsyncDisposableAdapter : IAsyncDisposable, IDisposalStatus
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AsyncDisposableAdapter"/> class that wraps the specified
-    /// <see cref="IDisposable"/> with the specified idempotency setting.
-    /// </summary>
-    /// <param name="disposable">The underlying <see cref="IDisposable"/> instance to adapt.</param>
-    /// <param name="idempotent">
-    /// <see langword="true"/> (the default) to ensure multiple calls to <see cref="DisposeAsync"/>
-    /// will only dispose the underlying instance once; <see langword="false"/> to allow multiple disposals.
-    /// </param>
-    // Callers that pass only the disposable bind to the constructor without the flag, so this one keeps its default until it is deleted.
-    // ADR-1007: deleted in the next major version.
-    [Obsolete(
-        "Use new AsyncDisposableAdapter(disposable), or AsyncDisposable.AdaptRepeatable to dispose it on every call. This constructor is deleted in the next major version.",
-        DiagnosticId = "NCDISP003"
-    )]
-#pragma warning disable RS0027 // optional parameter on an overload with fewer parameters than another
-    public AsyncDisposableAdapter(IDisposable disposable, bool idempotent = true)
-#pragma warning restore RS0027
-        : this(disposable)
-    {
-        IsRepeatable = !idempotent;
-    }
-
-    /// <summary>
     /// Gets a value indicating whether <see cref="DisposeAsync"/> has been called at least once.
     /// </summary>
     public bool IsDisposed => Volatile.Read(ref _disposed) != 0;
