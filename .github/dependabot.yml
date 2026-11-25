@@ -6,7 +6,6 @@
 # advisory run is one pull request. A new .NET SDK major isn't offered: moving to a new .NET major is a planned migration
 # (/plan-migration). A docker entry a project adds ignores major updates of its base images the same way. One update
 # comes apart: a new release of the NCode Review action (NCodeGroup/code-review) has a pull request of its own.
-# The documentation site's toolchain, NCodeGroup/docs, skips the cooldown while it is built out (ADR-1011).
 version: 2
 updates:
   - package-ecosystem: github-actions
