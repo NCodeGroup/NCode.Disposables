@@ -1,0 +1,38 @@
+---
+title: Disposal status and late resources
+description: How to tell whether a disposable is disposed, and what a holder does with a resource that arrives after it was disposed.
+---
+
+A disposable can report whether it was disposed, and a holder that was disposed must still do something sensible with a resource handed to it afterwards. This page explains both.
+
+## Ask whether it is disposed
+
+Every disposable class that keeps disposal state implements `IDisposalStatus`, whose `IsDisposed` is true once disposal has started. The structs, which are the value disposables, the lock scopes and the leases, keep no state and don't implement it, nor do the empty disposables. `Disposable.Flag()` only records its disposal, so it is the way to observe one. [ADR-1005](https://github.com/NCodeGroup/NCode.Disposables/blob/main/docs/decisions/1005-disposables-are-concrete-sealed-types-that-report-their-disposal-status.md) records the decision.
+
+```cs snippet=DisposalStatus
+```
+
+## A resource that arrives after disposal
+
+A holder disposes such a resource at once, and a disposed holder reads `null`, as [ADR-1004](https://github.com/NCodeGroup/NCode.Disposables/blob/main/docs/decisions/1004-a-resource-handed-to-a-disposed-holder-is-disposed.md) records. An aggregate shows it:
+
+```cs snippet=SiteDisposalStatusLateAggregate
+```
+
+A single assignment holder does the same when the resource arrives after disposal:
+
+```cs snippet=SingleAssignmentDisposable
+```
+
+Each holder has a synchronous and an asynchronous way to hand over a resource:
+
+| Holder | Synchronous hand-off | Asynchronous hand-off |
+| --- | --- | --- |
+| Aggregate | The `Disposable` setter disposes it | `SetDisposableAsync` disposes it; the setter throws `ObjectDisposedException` |
+| Serial | The `Disposable` setter disposes it | `SetDisposableAsync` disposes it |
+| Single assignment | A first assignment disposes it; a second throws `InvalidOperationException` | `SetDisposableAsync` disposes it |
+| Collection | `Add` disposes it | `AddAsync` disposes it; `Add` throws `ObjectDisposedException` |
+
+## Why the holder disposes it
+
+A resource handed to a disposed holder has no owner left to dispose it, so keeping or dropping it would leak it. A disposed holder reads `null`, so no code reaches a disposed resource through it. To see the holders in use, [hold a resource that changes](/guides/hold-a-changing-resource/).
