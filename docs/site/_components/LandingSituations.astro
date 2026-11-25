@@ -1,0 +1,71 @@
+---
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
+// "Find your situation" on the landing page: each group is a sentence stem, completed by the guides that
+// answer it. Write a Markdown list inside it: one item per group, the stem in bold, then a nested list of links.
+// The links stay in Markdown, where the link check reads them.
+// Usage:
+//   <LandingSituations>
+//   - **I hold resources, and I need to…**
+//     - [dispose many together](/guides/dispose-many-resources/)
+//   </LandingSituations>
+---
+
+<div class="landing-situations">
+  <slot />
+</div>
+
+<style>
+  .landing-situations > :global(ul) {
+    display: grid;
+    gap: var(--nc-space-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .landing-situations > :global(ul > li) {
+    display: grid;
+    gap: var(--nc-space-4);
+    margin: 0;
+    padding: var(--nc-space-5);
+    border: var(--nc-border-hair) solid var(--nc-color-border);
+    border-radius: var(--nc-radius-panel);
+    background: var(--nc-color-surface);
+  }
+  .landing-situations > :global(ul > li > strong),
+  .landing-situations > :global(ul > li > p > strong) {
+    color: var(--nc-color-text);
+    font-size: var(--sl-text-lg);
+    font-stretch: var(--nc-type-heading-stretch);
+    font-weight: 600;
+  }
+  .landing-situations :global(ul ul) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--nc-space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .landing-situations :global(ul ul li) { margin: 0; max-width: 100%; }
+  .landing-situations :global(ul ul a) {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    min-height: var(--nc-control-md);
+    padding: var(--nc-space-2) var(--nc-space-4);
+    border: var(--nc-border-hair) solid var(--nc-color-border-strong);
+    border-radius: var(--nc-radius-control);
+    background: var(--nc-color-control);
+    box-shadow: inset 0 1px 0 var(--nc-color-glint), 0 var(--nc-travel) 0 var(--nc-color-lip);
+    color: var(--nc-color-text);
+    text-decoration: none;
+    line-height: 1.35;
+  }
+  .landing-situations :global(ul ul a:hover) { background: var(--nc-color-control-hover); }
+  .landing-situations :global(ul ul a:focus-visible) {
+    outline: var(--nc-focus-width) solid var(--nc-color-focus);
+    outline-offset: var(--nc-focus-gap);
+  }
+</style>

@@ -1,0 +1,161 @@
+---
+title: Which disposable?
+description: Answer at most three questions about what should happen when a scope ends, and get the type to use, its call and what to watch for.
+---
+
+import DisposableCard from '@site/components/DisposableCard.astro';
+import WhichDisposable from '@site/components/WhichDisposable.astro';
+
+Pick the disposable for what should happen when a scope ends. Answer the questions, and the card for your disposable is marked below, with its call, what to watch for and the guide that goes further. The answers stay in the page's address, so you can paste a choice into a pull request.
+
+## Answer at most three questions
+
+<WhichDisposable />
+
+## The same decision, as a list
+
+1. What should happen when the scope ends?
+   - Your own code runs: go to step 2.
+   - Resources you hold are disposed: go to step 3.
+   - A lock is released, or work is cancelled: go to step 5.
+   - Nothing, or only a record that it ended: go to step 6.
+   - An `IDisposable` is disposed by code that only takes an `IAsyncDisposable`: [adapt to async](#adapt-to-async).
+2. How often may your code run?
+   - Once, however often the scope is disposed: [run code once](#run-code-once).
+   - On every `Dispose` call: [run code every time](#run-code-every-time).
+   - On every call, in a hot path that must not allocate: [run code without allocating](#run-code-without-allocating).
+3. Which resources, and who owns them?
+   - Several, disposed together, the last one added first: [dispose many together](#dispose-many-together).
+   - One you keep in a field and replace over time: go to step 4.
+   - One that several owners share: [share through leases](#share-through-leases).
+   - One you build in steps and hand on only if every step succeeds: [hand on ownership](#hand-on-ownership).
+   - One that must be disposed on a UI thread or another `SynchronizationContext`: [dispose on a context](#dispose-on-a-context).
+4. What happens to the old one when you replace it?
+   - You keep it, or dispose it yourself: [replace and keep the old one](#replace-and-keep-the-old-one).
+   - It is disposed: [replace and dispose the old one](#replace-and-dispose-the-old-one).
+   - There is no old one: the resource arrives once, maybe after the scope began: [assign once](#assign-once).
+5. Which one?
+   - Release a `SemaphoreSlim` or a `ReaderWriterLockSlim`: [scope a lock](#scope-a-lock).
+   - Cancel a `CancellationToken`: [cancel on dispose](#cancel-on-dispose).
+6. Which one?
+   - Nothing, because a method must return a disposable anyway: [do nothing](#do-nothing).
+   - A record that the scope ended, to read later: [record disposal](#record-disposal).
+
+## Runs code
+
+<DisposableCard id="run-code-once" outcome="action">
+
+```cs snippet=SiteAnswerAction title="The call"
+```
+
+</DisposableCard>
+
+<DisposableCard id="run-code-every-time" outcome="repeatable-action">
+
+```cs snippet=SiteAnswerRepeatableAction title="The call"
+```
+
+</DisposableCard>
+
+<DisposableCard id="run-code-without-allocating" outcome="value-action">
+
+```cs snippet=SiteAnswerValueAction title="The call"
+```
+
+</DisposableCard>
+
+## Holds resources
+
+<DisposableCard id="dispose-many-together" outcome="collection">
+
+```cs snippet=SiteAnswerCollection title="The call"
+```
+
+</DisposableCard>
+
+<DisposableCard id="replace-and-keep-the-old-one" outcome="aggregate">
+
+```cs snippet=SiteAnswerAggregate title="The call"
+```
+
+</DisposableCard>
+
+<DisposableCard id="replace-and-dispose-the-old-one" outcome="serial">
+
+```cs snippet=SiteAnswerSerial title="The call"
+```
+
+</DisposableCard>
+
+<DisposableCard id="assign-once" outcome="single-assignment">
+
+```cs snippet=SiteAnswerSingleAssignment title="The call"
+```
+
+</DisposableCard>
+
+<DisposableCard id="hand-on-ownership" outcome="guard">
+
+```cs snippet=SiteAnswerGuard title="The call"
+```
+
+</DisposableCard>
+
+<DisposableCard id="dispose-on-a-context" outcome="context">
+
+```cs snippet=SiteAnswerContext title="The call"
+```
+
+</DisposableCard>
+
+## Shares a resource
+
+<DisposableCard id="share-through-leases" outcome="shared">
+
+```cs snippet=SiteAnswerShared title="The call"
+```
+
+</DisposableCard>
+
+## Releases or cancels
+
+<DisposableCard id="scope-a-lock" outcome="lock">
+
+```cs snippet=SiteAnswerLock title="The call"
+```
+
+</DisposableCard>
+
+<DisposableCard id="cancel-on-dispose" outcome="cancellation">
+
+```cs snippet=SiteAnswerCancellation title="The call"
+```
+
+</DisposableCard>
+
+## Stands in
+
+<DisposableCard id="do-nothing" outcome="empty">
+
+```cs snippet=SiteAnswerEmpty title="The call"
+```
+
+</DisposableCard>
+
+<DisposableCard id="record-disposal" outcome="flag">
+
+```cs snippet=SiteAnswerFlag title="The call"
+```
+
+</DisposableCard>
+
+## Bridges sync and async
+
+<DisposableCard id="adapt-to-async" outcome="adapter">
+
+```cs snippet=SiteAnswerAdapter title="The call"
+```
+
+</DisposableCard>
+
+Every disposable, side by side: [behavior of every disposable](/reference/behavior/).

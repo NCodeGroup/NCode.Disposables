@@ -6,6 +6,7 @@ Issues and pull requests are welcome. [README.md](README.md) explains the projec
 
 - Git, and PowerShell 7 (`pwsh`): every command here runs from the repository root in PowerShell 7.
 - The .NET SDK that [global.json](global.json) selects, and the runtime of each older .NET a test project targets, which `./build/Get-TestRuntimes.ps1` names. `./build/Install-Dotnet.ps1` installs both beside the .NET that runs `dotnet`, or into the folder `-InstallDir` names; run it as an administrator, or with `sudo`, when .NET is installed system-wide.
+- For the documentation site only: [NCodeGroup/docs](https://github.com/NCodeGroup/docs) cloned into a folder named `docs` beside the main checkout and set up as its README says, and Node.js on `PATH`, at the version its `.node-version` names.
 - On Windows, `git config --global core.longpaths true`, once: a plan's worktree under `.claude/worktrees/` can pass Windows' 260-character path limit.
 
 ## Set Up
@@ -18,11 +19,13 @@ Once in each clone, run `git config core.hooksPath .githooks`. It turns on `.git
 | --- | --- |
 | Build | `dotnet build` |
 | Test | `dotnet test` |
+| Serve the documentation site | `node build/site.mjs dev` |
+| Build the documentation site, then check its layout | `node build/site.mjs build --out <folder>`, then `node build/site.mjs check --out <folder>` |
 | The full gate, which CI runs | `./build/gate.ps1` |
 | The local gate before a push | `./build/gate.ps1 -Fast` |
 | Only the tests a filter matches | `./build/gate.ps1 -Fast -Filter 'FullyQualifiedName~OrderStore'` |
 
-The gate restores the tools, checks that the READMEs' samples match their tests, then runs the Definition of Done, which checks the decision index, builds in Release with warnings as errors, runs the tests, packs and ends with `Definition of Done: PASSED`. CI runs `./build/gate.ps1` on every pull request. A README sample is a test in `tests/NCode.Disposables.Tests/ReadmeSamplesTests.cs`: change it there and run `dotnet mdsnippets` to copy it into the READMEs ([ADR-1000](docs/decisions/1000-readme-samples-are-compiled-tests-that-markdownsnippets-copies-into-the-readmes.md)).
+The gate restores the tools, checks the sample keys, that the READMEs' samples match their tests and that the API map covers the public API, then runs the Definition of Done, which checks the decision index, builds in Release with warnings as errors, runs the tests, packs and ends with `Definition of Done: PASSED`. CI runs `./build/gate.ps1` on every pull request. A README sample is a test in `tests/NCode.Disposables.Tests/ReadmeSamplesTests.cs`: change it there and run `dotnet mdsnippets` to copy it into the READMEs ([ADR-1000](docs/decisions/1000-readme-samples-are-compiled-tests-that-markdownsnippets-copies-into-the-readmes.md)).
 
 ## Make a Change
 
@@ -32,6 +35,44 @@ The gate restores the tools, checks that the READMEs' samples match their tests,
 4. Keep `CHANGELOG.md` in the [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/) format; the first change consumers can see creates it. While `AGENTS.md`'s Landing section says `pre-release: untracked` and no version tag of 1.0.0 or later exists, its `## [Unreleased]` section describes the product as it is, under `### Added` and `### Security` only: edit the entry a change adds, reshapes or removes, so it matches the code (ADR-0015 in `docs/decisions/project-template/`). Otherwise add an entry for each change consumers can see under `## [Unreleased]`, grouped under `### Added`, `### Changed`, `### Deprecated`, `### Removed`, `### Fixed` or `### Security`, and a release moves the entries into its version's section.
 5. Before you push, pass the gate: `./build/gate.ps1 -Fast`.
 6. Open a pull request into the default branch whose description ends with a `Closes #<issue>` line. The default branch takes changes only through pull requests: a maintainer merges yours once CI passes.
+
+## Documentation Site
+
+The site's content is in `docs/site/`. The shared toolchain in [NCodeGroup/docs](https://github.com/NCodeGroup/docs) builds it, and this repository holds no `package.json`, no lockfile and no Node.js code ([ADR-1009](docs/decisions/1009-the-documentation-site-is-narrative-guides-built-by-a-shared-toolchain-outside-this-repository.md)). The toolchain's `CONTRACT.md` is the reference for pages, links, components and images. `.github/workflows/docs.yml` builds the site on every pull request, with the toolchain pinned by commit, and keeps the build for a week as the run's `github-pages` artifact. Each push to `main` also publishes it to GitHub Pages, at <https://disposables.ncode.io/> ([ADR-1012](docs/decisions/1012-the-documentation-site-is-published-to-github-pages-from-the-default-branch.md), [ADR-1013](docs/decisions/1013-the-documentation-site-is-served-at-disposables-ncode-io.md)); a pull request only builds it.
+
+To write a page:
+
+1. Add an `.mdx` file under `docs/site/`, never `.md`, with a `title` in its frontmatter. Its path is its URL: `docs/site/guides/share-a-resource.mdx` is `/guides/share-a-resource/`.
+2. List it in the `sidebar` of `docs/site/site.config.json`, which names only pages that exist.
+3. Write a link to another page from the site's root, with a trailing slash and without `/NCode.Disposables`: `[share a resource](/guides/share-a-resource/)`.
+4. Never type C# that must compile into a page. Include a sample by its key, with an empty code block:
+
+   ````md
+   ```cs snippet=SiteShareAResourceDoubleDispose
+   ```
+   ````
+
+5. Never copy a file of this repository into a page. Show it, or the lines between two texts of it, with an empty code block that names it; the site's build fills the block and links it to those lines at the commit it was built from:
+
+   ````md
+   ```xml file=Directory.Build.props from="<ItemGroup" to="</ItemGroup>"
+   ```
+   ````
+
+6. Give a guide a `## Pitfalls` section, which the `requiredHeadings` rule of `docs/site/site.config.json` requires.
+
+To write a sample ([ADR-1010](docs/decisions/1010-site-samples-are-compiled-tests-in-a-project-of-their-own-included-by-key-when-the-site-is-built.md)):
+
+1. Add a fact to the page's class in `tests/NCode.Disposables.Site.Tests`, a test project that cannot see the library's internal members, so a sample is code a user of the package can write. The class is named for the page's file, in a folder named for the page's folder: `docs/site/guides/share-a-resource.mdx` has `Guides/ShareAResourceSamples.cs`, class `ShareAResourceSamples` in namespace `SiteSamples.Guides`. That file shows the form.
+2. Put the sample between `// begin-snippet: <Key>` and `// end-snippet`, each alone on its line, name the fact `<Key>Sample_Runs`, and assert after the region what the sample's comments claim.
+3. Start the key with `Site`, in PascalCase letters and digits: `SiteShareAResourceDoubleDispose`. A key is defined once in the repository, whatever its letter case, and only a site sample's key starts with `Site`; the gate checks all three rules, and the form of every marker. A page may also include a README sample by its key, and a change to that sample changes the README too.
+4. Run `dotnet csharpier format .`, then `./build/gate.ps1 -Fast`.
+
+The site's own components are in `docs/site/_components/`, each with its usage in a comment at its top, and `ApiMap.astro` draws `data/api-map.json`, which the gate checks against `src/NCode.Disposables/PublicAPI.Shipped.txt`; `WhichDisposable.astro`, `DisposableCard.astro` and `BehaviorMatrix.astro` draw `data/disposables.json`, and `LifecycleTimeline.astro` draws `data/timelines.json`. A component styles itself with the brand's public tokens, prefixed `--nc-`, and Starlight's `--sl-text-*` sizes, never a step of a colour ramp or of the type scale, such as `--nc-blue-600` or `--nc-text-sm`; the site's build fails a component that reads one, or a `--nc-` token the brand does not define.
+
+A component is laid out for a content column of about 36rem, its width in a 1280-pixel window beside the sidebar and the "On this page" panel, and never sets a `min-width` wider than that. Data with more than three or four fields, or with long identifiers, is one card per entry with each field labelled, not a table that scrolls sideways: `ApiMap.astro` draws its data that way. A Markdown table must fit the column too.
+
+To see the result, clone NCodeGroup/docs into a folder named `docs` beside the main checkout and set it up as its README says, with Node.js on `PATH`. `node build/site.mjs dev` serves the site at `http://localhost:4321/`, and `node build/site.mjs build --out <folder>` builds it into a folder outside this repository and stops on a sample key no test defines, a file a page includes that is not there, a component that reads a token the brand does not offer, or a guide without its headings. `node build/site.mjs check --out <folder>` then loads each page of that build at 1440, 1280, 1024 and 390 px, as the documentation site workflow does, and names every element that leaves its content column or hides content sideways; `--browser <path>` names a Chromium-based browser, such as Google Chrome or Microsoft Edge, unless `DOCS_BROWSER` names one or `npm run browser` has run in the toolchain. `build/site.mjs` is a copy of the toolchain's `fixture/build/site.mjs`: it finds the toolchain from the main checkout and from a plan's worktree under `.claude/worktrees/` alike, and `--toolchain <folder>` or `DOCS_TOOLCHAIN` names a clone elsewhere. None of these commands writes into this repository. The gate does not build the site; the documentation site workflow does, on every pull request.
 
 ## Review Requirements
 

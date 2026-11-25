@@ -1,0 +1,53 @@
+---
+title: Once, or on every call
+description: Which disposables run their cleanup once however often they are disposed, which run it on every call, and why.
+---
+
+Disposing a disposable twice is allowed by the `IDisposable` contract, but what a second call does is up to the type. In this library the answer depends on the kind of type: a class runs its cleanup once, a struct runs it on every call. This page shows which is which, how the factory names tell them apart, and how threads fit in.
+
+## Classes run their cleanup once
+
+Every disposable class takes its cleanup with an atomic operation, so the cleanup runs once even when several threads dispose it at once: one thread takes the action, and the others find it taken.
+
+```cs snippet=SiteOnceOrEveryTimeThreads
+```
+
+The same holds for an action disposable disposed in sequence:
+
+```cs snippet=ActionDisposable
+```
+
+The holders swap their resource atomically, and a collection's members take one lock while its enumeration walks a snapshot.
+
+## Structs run it on every dispose
+
+`ValueDisposable<TState>`, `AsyncValueDisposable<TState>`, the lock scopes and the leases are `readonly struct`s. They allocate nothing, a copy is the same disposable, and every dispose of every copy runs again. Dispose each once, through `using`. The reasoning is in [ADR-1006](https://github.com/NCodeGroup/NCode.Disposables/blob/main/docs/decisions/1006-value-disposables-and-lock-scopes-are-non-idempotent-structs.md).
+
+```cs snippet=ValueDisposable
+```
+
+Copying a value disposable copies the disposable, not the work it did, so each copy runs the action again:
+
+```cs snippet=SiteRunCodeOnDisposeValueCopy
+```
+
+A lock scope is a struct too, so disposing one twice releases the lock twice:
+
+```cs snippet=SiteScopeALockDoubleRelease
+```
+
+## The name says which
+
+Where a type can behave either way, the factory's name says which. The default is the first column, and the behavior named for the other is the second. No member takes a `bool` that picks a behavior ([ADR-1007](https://github.com/NCodeGroup/NCode.Disposables/blob/main/docs/decisions/1007-behavior-is-chosen-by-a-factory-name-not-a-flag-parameter.md)).
+
+| The default | Named for the other behavior |
+| --- | --- |
+| `Disposable.Create` | `Disposable.CreateRepeatable` |
+| `AsyncDisposable.Adapt` | `AsyncDisposable.AdaptRepeatable` |
+| `Disposable.Context`, through `Send` | `Disposable.PostingContext`, through `Post` |
+| `Disposable.Collection` | `Disposable.CollectionIgnoringExceptions` |
+| `DisposeAll()` | `DisposeAllIgnoringExceptions()` |
+
+## Threads and leases
+
+A lease's `AddReference`, `TryAddReference` and `Dispose` are safe from any thread, and the release action runs once, on the thread that releases the last lease. See [the behavior of every disposable](/reference/behavior/) for each type's behavior side by side.

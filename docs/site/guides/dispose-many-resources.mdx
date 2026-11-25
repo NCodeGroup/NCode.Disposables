@@ -1,0 +1,82 @@
+---
+title: Dispose many resources together
+description: Dispose several resources in reverse order, every one of them even when one throws, and choose what happens to their errors.
+---
+
+import { Pitfalls } from '@ncodegroup/docs/components';
+
+Code that opens several resources has to close all of them, even when one fails to close. This page shows how to dispose resources in reverse order, add one after disposal, handle the errors, dispose a list you already have, deal with items that are also `IAsyncDisposable`, and what to watch for.
+
+## Dispose in reverse order
+
+`Disposable.Collection` returns a `DisposableCollection`, an `ICollection<IDisposable>` that disposes its items in reverse order, last added first. It disposes them on its first `Dispose` only. `Remove` and `Clear` take items out without disposing them.
+
+```cs snippet=CollectionDisposable
+```
+
+## Add after disposal
+
+An item added to a collection that is already disposed is disposed at once and not kept, as [ADR-1004](https://github.com/NCodeGroup/NCode.Disposables/blob/main/docs/decisions/1004-a-resource-handed-to-a-disposed-holder-is-disposed.md) records.
+
+```cs snippet=CollectionLateAdd
+```
+
+The asynchronous collection does the same through `AddAsync`:
+
+```cs snippet=CollectionLateAddAsync
+```
+
+## Handle the errors
+
+A collection disposes every item even when one throws. One failure is rethrown as it is; several are thrown together as one `AggregateException` whose inner exceptions are in disposal order.
+
+```cs snippet=SiteDisposeManyResourcesErrors
+```
+
+`Disposable.CollectionIgnoringExceptions` and `DisposeAllIgnoringExceptions()` ignore the failures instead.
+
+```cs snippet=CollectionErrors
+```
+
+## Dispose a list you already have
+
+`DisposeAll()` disposes the items of any `IEnumerable<object?>` in reverse order. It skips `null` and every item that isn't disposable.
+
+```cs snippet=DisposeAll
+```
+
+`DisposeAllAsync()` does the same asynchronously:
+
+```cs snippet=DisposeAllAsync
+```
+
+## Items that are also IAsyncDisposable
+
+A type such as `Stream` implements both interfaces. Synchronous disposal disposes such an item through `IDisposable`, as [ADR-1001](https://github.com/NCodeGroup/NCode.Disposables/blob/main/docs/decisions/1001-synchronous-disposal-disposes-an-item-that-implements-both-interfaces-through-idisposable.md) records. Use `AsyncDisposable.Collection` when you want `DisposeAsync` to run.
+
+```cs snippet=CollectionStream
+```
+
+## Pitfalls
+
+An item that is only `IAsyncDisposable` cannot be disposed synchronously. Here `DisposeAll()` disposes the other item first, then throws:
+
+```cs snippet=SiteDisposeManyResourcesAsyncOnly
+```
+
+<Pitfalls>
+
+- **An item that is only `IAsyncDisposable`.**
+  - *You write* `items.DisposeAll()` for a list that holds such an item.
+  - *What happens:* the other items are disposed, then `InvalidOperationException` is thrown, which `DisposeAllIgnoringExceptions()` does not ignore.
+  - *Write instead:* `DisposeAllAsync()` or `AsyncDisposable.Collection`.
+- **Expecting `Remove` to dispose.**
+  - *You write* `resources.Remove(item)`.
+  - *What happens:* the item leaves the collection undisposed.
+  - *Write instead:* dispose it yourself after removing it.
+- **`Add` on a disposed async collection.**
+  - *You write* `resources.Add(item)` after `DisposeAsync`.
+  - *What happens:* `ObjectDisposedException`, because `Add` cannot await the item's disposal.
+  - *Write instead:* `await resources.AddAsync(item)`, which disposes it.
+
+</Pitfalls>

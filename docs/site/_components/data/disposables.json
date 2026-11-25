@@ -1,0 +1,243 @@
+{
+  "$comment": "The disposables of NCode.Disposables, for the picker on /start/which-disposable/ (WhichDisposable.astro, DisposableCard.astro) and the matrix on /reference/behavior/ (BehaviorMatrix.astro): one data file, so the two cannot disagree. `anchor` is the card's anchor on /start/which-disposable/; `snippet` the key of the call its card shows. Booleans in `behavior`: true, false, or null where the question does not apply. Text fields take `code` and [links](/x/).",
+  "questions": [
+    {
+      "id": "goal",
+      "text": "What should happen when the scope ends?",
+      "answers": [
+        { "text": "My own code runs", "next": "code" },
+        { "text": "Resources I hold are disposed", "next": "resources" },
+        { "text": "A lock is released, or work is cancelled", "next": "release" },
+        { "text": "Nothing, or only a record that it ended", "next": "nothing" },
+        { "text": "An `IDisposable` is disposed by code that only takes an `IAsyncDisposable`", "outcome": "adapter" }
+      ]
+    },
+    {
+      "id": "code",
+      "text": "How often may your code run?",
+      "answers": [
+        { "text": "Once, however often the scope is disposed", "outcome": "action" },
+        { "text": "On every `Dispose` call", "outcome": "repeatable-action" },
+        { "text": "On every call, in a hot path that must not allocate", "outcome": "value-action" }
+      ]
+    },
+    {
+      "id": "resources",
+      "text": "Which resources, and who owns them?",
+      "answers": [
+        { "text": "Several, disposed together, the last one added first", "outcome": "collection" },
+        { "text": "One I keep in a field and replace over time", "next": "replace" },
+        { "text": "One that several owners share", "outcome": "shared" },
+        { "text": "One I build in steps and hand on only if every step succeeds", "outcome": "guard" },
+        { "text": "One that must be disposed on a UI thread or another `SynchronizationContext`", "outcome": "context" }
+      ]
+    },
+    {
+      "id": "replace",
+      "text": "What happens to the old one when you replace it?",
+      "answers": [
+        { "text": "I keep it, or dispose it myself", "outcome": "aggregate" },
+        { "text": "It is disposed", "outcome": "serial" },
+        { "text": "There is no old one: the resource arrives once, maybe after the scope began", "outcome": "single-assignment" }
+      ]
+    },
+    {
+      "id": "release",
+      "text": "Which one?",
+      "answers": [
+        { "text": "Release a `SemaphoreSlim` or a `ReaderWriterLockSlim`", "outcome": "lock" },
+        { "text": "Cancel a `CancellationToken`", "outcome": "cancellation" }
+      ]
+    },
+    {
+      "id": "nothing",
+      "text": "Which one?",
+      "answers": [
+        { "text": "Nothing: a method must return a disposable anyway", "outcome": "empty" },
+        { "text": "Record that the scope ended, to read later", "outcome": "flag" }
+      ]
+    }
+  ],
+  "outcomes": [
+    {
+      "id": "action",
+      "anchor": "run-code-once",
+      "name": "`Disposable.Create`",
+      "kind": "Runs code",
+      "asyncName": "`AsyncDisposable.Create`",
+      "snippet": "SiteAnswerAction",
+      "use": "Run a cleanup action when a scope ends, such as unsubscribing a handler.",
+      "watchFor": "The action runs on the first `Dispose` only. Up to eight arguments pass state to a `static` lambda.",
+      "guide": "/guides/run-code-on-dispose/",
+      "behavior": { "safeTwice": true, "reportsStatus": true, "allocationFree": false, "syncAndAsync": true, "lateResource": null, "holds": "An `Action`, or a `Func` whose result it discards", "onDispose": "Runs the action on the first call; later calls do nothing" }
+    },
+    {
+      "id": "repeatable-action",
+      "anchor": "run-code-every-time",
+      "name": "`Disposable.CreateRepeatable`",
+      "kind": "Runs code",
+      "asyncName": "`AsyncDisposable.CreateRepeatable`",
+      "snippet": "SiteAnswerRepeatableAction",
+      "use": "Run an action on every `Dispose` call, such as counting how often a scope ends.",
+      "watchFor": "Every call runs the action again, so the action must be safe to repeat.",
+      "guide": "/guides/run-code-on-dispose/",
+      "behavior": { "safeTwice": false, "reportsStatus": true, "allocationFree": false, "syncAndAsync": true, "lateResource": null, "holds": "An `Action`", "onDispose": "Runs the action on every call" }
+    },
+    {
+      "id": "value-action",
+      "anchor": "run-code-without-allocating",
+      "name": "`Disposable.CreateValue`",
+      "kind": "Runs code",
+      "asyncName": "`AsyncDisposable.CreateValue`",
+      "snippet": "SiteAnswerValueAction",
+      "use": "Run a static action with a state value in a hot path, without allocating.",
+      "watchFor": "It is a struct: every dispose of every copy runs the action, and `default` does nothing. Dispose it once, through `using`.",
+      "guide": "/guides/run-code-on-dispose/",
+      "behavior": { "safeTwice": false, "reportsStatus": false, "allocationFree": true, "syncAndAsync": true, "lateResource": null, "holds": "A static `Action<TState>` and its state", "onDispose": "Runs the action on every dispose of every copy" }
+    },
+    {
+      "id": "collection",
+      "anchor": "dispose-many-together",
+      "name": "`Disposable.Collection`",
+      "kind": "Holds resources",
+      "asyncName": "`AsyncDisposable.Collection`",
+      "snippet": "SiteAnswerCollection",
+      "use": "Dispose several resources together, the last one added first.",
+      "watchFor": "Every item is disposed even when one throws: one failure is rethrown, several as one `AggregateException`. `CollectionIgnoringExceptions` ignores them.",
+      "guide": "/guides/dispose-many-resources/",
+      "behavior": { "safeTwice": true, "reportsStatus": true, "allocationFree": false, "syncAndAsync": true, "lateResource": true, "holds": "Any number of resources, in the order you add them", "onDispose": "Disposes every item in reverse order, on the first call" }
+    },
+    {
+      "id": "aggregate",
+      "anchor": "replace-and-keep-the-old-one",
+      "name": "`Disposable.Aggregate`",
+      "kind": "Holds resources",
+      "asyncName": "`AsyncDisposable.Aggregate`",
+      "snippet": "SiteAnswerAggregate",
+      "use": "Hold one resource in a field and swap it, keeping the old one alive.",
+      "watchFor": "Replacing the resource does not dispose the old one: that is yours to do.",
+      "guide": "/guides/hold-a-changing-resource/",
+      "behavior": { "safeTwice": true, "reportsStatus": true, "allocationFree": false, "syncAndAsync": true, "lateResource": true, "holds": "One resource, or `null`", "onDispose": "Disposes the resource it holds" }
+    },
+    {
+      "id": "serial",
+      "anchor": "replace-and-dispose-the-old-one",
+      "name": "`Disposable.Serial`",
+      "kind": "Holds resources",
+      "asyncName": "`AsyncDisposable.Serial`",
+      "snippet": "SiteAnswerSerial",
+      "use": "Hold one resource in a field and dispose the old one each time you replace it, such as a subscription you renew.",
+      "watchFor": "The async form replaces through `SetDisposableAsync`, which awaits the old one's disposal.",
+      "guide": "/guides/hold-a-changing-resource/",
+      "behavior": { "safeTwice": true, "reportsStatus": true, "allocationFree": false, "syncAndAsync": true, "lateResource": true, "holds": "One resource, or `null`", "onDispose": "Disposes the resource it holds" }
+    },
+    {
+      "id": "single-assignment",
+      "anchor": "assign-once",
+      "name": "`Disposable.SingleAssignment`",
+      "kind": "Holds resources",
+      "asyncName": "`AsyncDisposable.SingleAssignment`",
+      "snippet": "SiteAnswerSingleAssignment",
+      "use": "Create the holder first and give it its one resource later, such as a connection that is still opening.",
+      "watchFor": "A second assignment throws `InvalidOperationException`, also after disposal.",
+      "guide": "/guides/hold-a-changing-resource/",
+      "behavior": { "safeTwice": true, "reportsStatus": true, "allocationFree": false, "syncAndAsync": true, "lateResource": true, "holds": "One resource, assigned once", "onDispose": "Disposes the resource, if one was assigned" }
+    },
+    {
+      "id": "guard",
+      "anchor": "hand-on-ownership",
+      "name": "`Disposable.Guard`",
+      "kind": "Holds resources",
+      "asyncName": "`AsyncDisposable.Guard`",
+      "snippet": "SiteAnswerGuard",
+      "use": "Build a resource in steps and hand it to the caller only when every step succeeds.",
+      "watchFor": "Return `guard.Release()`, not `guard.Value`: the guard disposes a value it still owns.",
+      "guide": "/guides/hand-on-ownership/",
+      "behavior": { "safeTwice": true, "reportsStatus": true, "allocationFree": false, "syncAndAsync": true, "lateResource": null, "holds": "One resource, until `Release()` hands it on", "onDispose": "Disposes the resource unless it was released" }
+    },
+    {
+      "id": "shared",
+      "anchor": "share-through-leases",
+      "name": "`SharedReference.Create`",
+      "kind": "Shares a resource",
+      "asyncName": "`AsyncSharedReference.Create`",
+      "snippet": "SiteAnswerShared",
+      "use": "Give one expensive resource to several owners, and dispose it when the last one is done.",
+      "watchFor": "A lease is a struct: dispose each lease exactly once, because a second dispose releases another owner's reference.",
+      "guide": "/guides/share-a-resource/",
+      "behavior": { "safeTwice": false, "reportsStatus": false, "allocationFree": false, "syncAndAsync": true, "lateResource": null, "holds": "A lease on a reference-counted resource", "onDispose": "Releases one reference; the last release disposes the resource" }
+    },
+    {
+      "id": "context",
+      "anchor": "dispose-on-a-context",
+      "name": "`Disposable.Context`",
+      "kind": "Holds resources",
+      "asyncName": "`AsyncDisposable.Context`",
+      "snippet": "SiteAnswerContext",
+      "use": "Dispose a resource on the thread that owns it, such as a control on a UI thread.",
+      "watchFor": "`Dispose` waits for the context through `Send`; `Disposable.PostingContext` posts and returns at once.",
+      "guide": "/guides/dispose-on-a-context/",
+      "behavior": { "safeTwice": true, "reportsStatus": true, "allocationFree": false, "syncAndAsync": true, "lateResource": null, "holds": "One resource and a `SynchronizationContext`", "onDispose": "Disposes the resource once, on the context" }
+    },
+    {
+      "id": "lock",
+      "anchor": "scope-a-lock",
+      "name": "`semaphore.Lock()` and `LockAsync()`",
+      "kind": "Releases or cancels",
+      "asyncName": "None: `LockAsync()` waits asynchronously and returns the same scope",
+      "snippet": "SiteAnswerLock",
+      "use": "Release a `SemaphoreSlim` or a `ReaderWriterLockSlim` when a scope ends, without allocating.",
+      "watchFor": "The scope is a struct: disposing it twice releases the lock twice. `ReadLock()`, `UpgradeableReadLock()` and `WriteLock()` do the same for a `ReaderWriterLockSlim`.",
+      "guide": "/guides/scope-a-lock/",
+      "behavior": { "safeTwice": false, "reportsStatus": false, "allocationFree": true, "syncAndAsync": false, "lateResource": null, "holds": "The lock it took", "onDispose": "Releases the lock on every dispose" }
+    },
+    {
+      "id": "cancellation",
+      "anchor": "cancel-on-dispose",
+      "name": "`Disposable.Cancellation`",
+      "kind": "Releases or cancels",
+      "asyncName": "`AsyncDisposable.Cancellation`",
+      "snippet": "SiteAnswerCancellation",
+      "use": "Cancel work, such as a background loop, when a scope ends.",
+      "watchFor": "A source you pass in is cancelled but not disposed; one it creates is disposed after it is cancelled.",
+      "guide": "/guides/cancel-on-dispose/",
+      "behavior": { "safeTwice": true, "reportsStatus": true, "allocationFree": false, "syncAndAsync": true, "lateResource": null, "holds": "A `CancellationTokenSource`", "onDispose": "Cancels its token, then disposes a source it created" }
+    },
+    {
+      "id": "empty",
+      "anchor": "do-nothing",
+      "name": "`Disposable.Empty`",
+      "kind": "Stands in",
+      "asyncName": "`AsyncDisposable.Empty`",
+      "snippet": "SiteAnswerEmpty",
+      "use": "Return a disposable from a method that has nothing to clean up.",
+      "watchFor": "It is one shared instance, so returning it allocates nothing.",
+      "guide": "/guides/run-code-on-dispose/",
+      "behavior": { "safeTwice": true, "reportsStatus": false, "allocationFree": true, "syncAndAsync": true, "lateResource": null, "holds": "Nothing", "onDispose": "Nothing" }
+    },
+    {
+      "id": "flag",
+      "anchor": "record-disposal",
+      "name": "`Disposable.Flag`",
+      "kind": "Stands in",
+      "asyncName": "None",
+      "snippet": "SiteAnswerFlag",
+      "use": "Record that a scope ended, and read it later from `IsDisposed`.",
+      "watchFor": "It disposes nothing: it only sets `IsDisposed`.",
+      "guide": "/concepts/disposal-status/",
+      "behavior": { "safeTwice": true, "reportsStatus": true, "allocationFree": false, "syncAndAsync": false, "lateResource": null, "holds": "Nothing but its flag", "onDispose": "Sets `IsDisposed`" }
+    },
+    {
+      "id": "adapter",
+      "anchor": "adapt-to-async",
+      "name": "`AsyncDisposable.Adapt`",
+      "kind": "Bridges sync and async",
+      "asyncName": "It is the async form of an `IDisposable`",
+      "snippet": "SiteAnswerAdapter",
+      "use": "Pass an `IDisposable` to code that only takes an `IAsyncDisposable`.",
+      "watchFor": "It disposes the resource once; `AsyncDisposable.AdaptRepeatable` disposes it on every call. `null` throws `ArgumentNullException`.",
+      "guide": "/guides/bridge-sync-and-async/",
+      "behavior": { "safeTwice": true, "reportsStatus": true, "allocationFree": false, "syncAndAsync": null, "lateResource": null, "holds": "One `IDisposable`", "onDispose": "Disposes the resource once, synchronously" }
+    }
+  ]
+}

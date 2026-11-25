@@ -1,0 +1,5 @@
+# The site's samples are shown in the documentation site's content column, which holds about 86 characters of code.
+# CSharpier formats this project to 90 columns, so a sample inside a method, indented 8 spaces in its file, stays
+# within that width on the page once the site removes its indentation (ADR-1010). Comments are wrapped by hand.
+[*.cs]
+max_line_length = 90

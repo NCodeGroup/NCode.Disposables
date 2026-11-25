@@ -1,4 +1,6 @@
 {
   "Convention": "InPlaceOverwrite",
-  "OmitSnippetLinks": true
+  "OmitSnippetLinks": true,
+  "ExcludeMarkdownFiles": ["*.mdx"],
+  "ExcludeSnippetFiles": ["*.astro"]
 }

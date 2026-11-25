@@ -119,6 +119,8 @@ flowchart LR
 | `SemaphoreSlimExtensions` | `Lock()` and `LockAsync()`, which return a `ValueDisposable` lock scope that releases the semaphore on dispose and throws `OperationCanceledException` when the wait is cancelled ([ADR-1006](decisions/1006-value-disposables-and-lock-scopes-are-non-idempotent-structs.md)). |
 | `ReaderWriterLockSlimExtensions` | `ReadLock()`, `UpgradeableReadLock()` and `WriteLock()`, which return a `ValueDisposable` lock scope that exits the lock on dispose ([ADR-1006](decisions/1006-value-disposables-and-lock-scopes-are-non-idempotent-structs.md)). |
 | `NCode.Disposables.Tests` | xUnit tests of every type, and in `ReadmeSamplesTests.cs` the README samples ([ADR-1000](decisions/1000-readme-samples-are-compiled-tests-that-markdownsnippets-copies-into-the-readmes.md)). |
+| `NCode.Disposables.Site.Tests` | The documentation site's samples, compiled against the public API only ([ADR-1010](decisions/1010-site-samples-are-compiled-tests-in-a-project-of-their-own-included-by-key-when-the-site-is-built.md)) |
+| `docs/site/` | The documentation site's pages, settings, components and data, built by NCodeGroup/docs ([ADR-1009](decisions/1009-the-documentation-site-is-narrative-guides-built-by-a-shared-toolchain-outside-this-repository.md)) |
 
 The package does no I/O and starts no threads, and it keeps no mutable static state: its only static values are the
 `Singleton` instances of the empty disposables, the holders' private `Sentinel` markers and the lock scopes' cached
@@ -157,3 +159,8 @@ records. `publish.yml` tests and packs the tagged commit, pushes to nuget.org th
 maintainer approves the `nuget` environment, and calls `release-provenance.yml` and `raise-baseline.yml`
 ([ADR-0137](decisions/project-template/0137-the-release-workflow-starts-package-publishing.md),
 [ADR-0151](decisions/project-template/0151-release-follow-ups-are-jobs-publish-calls.md)).
+
+`docs.yml` builds the documentation site with NCodeGroup/docs, pinned by commit, on every pull request and publishes it
+to GitHub Pages from every push to the default branch, at https://disposables.ncode.io/
+([ADR-1012](decisions/1012-the-documentation-site-is-published-to-github-pages-from-the-default-branch.md),
+[ADR-1013](decisions/1013-the-documentation-site-is-served-at-disposables-ncode-io.md)).

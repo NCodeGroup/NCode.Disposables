@@ -1,0 +1,49 @@
+---
+title: Dispose on a UI thread
+description: Dispose a resource on the SynchronizationContext that owns it, waiting for it or not.
+---
+
+import { Pitfalls } from '@ncodegroup/docs/components';
+
+Some resources, such as a UI control, must be disposed on the thread that owns them. A context disposable wraps the resource with the `SynchronizationContext` of that thread and runs the disposal there, whichever thread calls `Dispose`. This page shows how to dispose and wait, how to dispose without waiting, how to dispose asynchronously, and what to watch for.
+
+## Dispose and wait
+
+`Disposable.Context` calls the context's `Send` and returns once the resource is disposed. The resource is disposed once, however often `Dispose` is called.
+
+```cs snippet=ContextDisposable
+```
+
+## Dispose without waiting
+
+`Disposable.PostingContext` calls the context's `Post`, between `OperationStarted` and `OperationCompleted`, so `Dispose` returns at once and the context disposes the resource later.
+
+```cs snippet=SiteDisposeOnAContextPosting
+```
+
+## Dispose asynchronously
+
+`AsyncDisposable.Context` posts the disposal to the context, and `DisposeAsync` completes once it has run.
+
+```cs snippet=AsyncContextDisposable
+```
+
+## Pitfalls
+
+When the context's `Post` throws, `Dispose` rethrows and the resource is not disposed:
+
+```cs snippet=SiteDisposeOnAContextPostFails
+```
+
+<Pitfalls>
+
+- **A context that refuses the work.**
+  - *You write* `Disposable.PostingContext(control, uiContext)` after the UI thread shut down.
+  - *What happens:* `Dispose` calls `OperationCompleted` and throws the context's exception, and the control stays undisposed, because it must be disposed on its own thread.
+  - *Write instead:* handle the exception where the UI shuts down.
+- **Sending to a UI thread that is waiting for you.**
+  - *You write* `Disposable.Context(control, uiContext).Dispose()` on a background thread the UI thread is waiting for.
+  - *What happens:* `Send` waits for the UI thread, which waits in turn, so neither moves.
+  - *Write instead:* `Disposable.PostingContext` or `AsyncDisposable.Context`.
+
+</Pitfalls>

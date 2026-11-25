@@ -1,0 +1,18 @@
+---
+title: Behavior of every disposable
+description: "Every disposable side by side: whether it is safe to dispose twice, reports IsDisposed, allocates, has an async form and disposes a late resource."
+---
+
+import BehaviorMatrix from '@site/components/BehaviorMatrix.astro';
+
+The matrix below and [Which disposable?](/start/which-disposable/) are drawn from one data file, so they agree. Each name links its card on that page.
+
+<BehaviorMatrix />
+
+## Reading the matrix
+
+- *Safe to dispose twice:* a second `Dispose` does nothing. [Once, or on every call](/concepts/once-or-every-time/) explains the types that run their action again.
+- *Reports `IsDisposed`:* it implements `IDisposalStatus`.
+- *Allocation-free:* a struct, or one shared instance.
+- *Sync and async forms:* `Disposable` and `AsyncDisposable` both create it.
+- *Disposes a late resource:* a resource handed to it after disposal is disposed at once, and "Does not apply" marks a type that is handed no resource. [Disposal status and late resources](/concepts/disposal-status/) explains the rule.

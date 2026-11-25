@@ -65,6 +65,7 @@ second.Dispose(); // log: "connection closed"
 
 ## Learn more
 
+- [Documentation site](https://disposables.ncode.io/): a quick start, a picker for the type you need, a guide for each task and the API map
 - [README and samples](https://github.com/NCodeGroup/NCode.Disposables#readme): every type, with a tested sample for each
 - [API overview](https://github.com/NCodeGroup/NCode.Disposables#api-overview)
 - [Thread safety](https://github.com/NCodeGroup/NCode.Disposables#thread-safety)

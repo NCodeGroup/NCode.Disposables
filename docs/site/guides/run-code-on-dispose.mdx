@@ -1,0 +1,82 @@
+---
+title: Run code on dispose
+description: Turn a delegate into a disposable that runs once, on every call, without allocating, or asynchronously.
+---
+
+import { Pitfalls } from '@ncodegroup/docs/components';
+
+A disposable can be nothing more than a delegate that runs when a scope ends. This page shows how to run code once or on every call, pass state to it, discard a result, run asynchronous code, avoid an allocation, return a disposable that does nothing, and what to watch for.
+
+## Run code once
+
+`Disposable.Create` turns an `Action` into an `IDisposable`. The action runs on the first `Dispose` only, even when several threads dispose at once. `Disposable.CreateRepeatable` runs it on every call.
+
+```cs snippet=ActionDisposable
+```
+
+## Pass state to the action
+
+The overloads that take state pass it to the action as arguments, so a `static` lambda captures nothing and allocates no closure. The overloads take up to eight arguments.
+
+```cs snippet=ActionWithState
+```
+
+A `HashSet<string>` and its key work the same way:
+
+```cs snippet=SiteRunCodeOnDisposeState
+```
+
+## Discard a result
+
+The `Func` overloads discard the delegate's result, so a method that returns a value can run on dispose without a wrapper.
+
+```cs snippet=SiteRunCodeOnDisposeFunc
+```
+
+## Run asynchronous code
+
+`AsyncDisposable.Create` takes a `Func<ValueTask>`, or an `Action` that it runs synchronously. Its state overloads take only `Func<…, ValueTask>`, so a `Task`-returning lambda is never dropped, as [ADR-1005](https://github.com/NCodeGroup/NCode.Disposables/blob/main/docs/decisions/1005-disposables-are-concrete-sealed-types-that-report-their-disposal-status.md) records.
+
+```cs snippet=AsyncActionDisposable
+```
+
+```cs snippet=AsyncActionWithState
+```
+
+## Run code without allocating
+
+`Disposable.CreateValue` returns a struct that allocates nothing. Dispose it once, through `using`. It runs its action on every dispose, as [once, or on every call](/concepts/once-or-every-time/) explains.
+
+```cs snippet=ValueDisposable
+```
+
+## Return a disposable that does nothing
+
+`Disposable.Empty` is a shared disposable whose `Dispose` does nothing, for a method that sometimes has nothing to clean up.
+
+```cs snippet=EmptyDisposable
+```
+
+## Pitfalls
+
+A value disposable is a struct, so a copy of it runs the action again. Here the original and its copy are both disposed, and the action runs twice:
+
+```cs snippet=SiteRunCodeOnDisposeValueCopy
+```
+
+<Pitfalls>
+
+- **Copying a value disposable.**
+  - *You write* `var copy = scope;` and dispose both.
+  - *What happens:* the action runs once per dispose of every copy.
+  - *Write instead:* dispose one value, once, through `using`.
+- **Repeating cleanup that must run once.**
+  - *You write* `Disposable.CreateRepeatable(() => pool.Return(buffer))`.
+  - *What happens:* a second `Dispose` returns the buffer twice.
+  - *Write instead:* `Disposable.Create`, which runs the action once.
+- **Disposing a `default` value disposable.**
+  - *You write* `ValueDisposable<Stopwatch> scope = default;`.
+  - *What happens:* `Dispose` does nothing, because it holds no action.
+  - *Write instead:* `Disposable.CreateValue(static watch => watch.Stop(), stopwatch)`.
+
+</Pitfalls>

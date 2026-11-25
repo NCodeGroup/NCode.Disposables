@@ -1,0 +1,155 @@
+---
+title: NCode.Disposables
+description: "Building blocks for IDisposable and IAsyncDisposable in .NET: run code on dispose, dispose many resources in reverse order, replace, guard and share resources, cancel on dispose, scope a lock and dispose on a synchronization context."
+tableOfContents: false
+hero:
+  title: >-
+    <span class="landing-eyebrow" aria-hidden="true"><span>NCode.Disposables</span><span>a .NET library from NCode
+    Group</span><span>Apache-2.0</span></span>Clean up in the right order, once.
+  tagline: >-
+    <p>One <code>using</code> statement disposes one thing. Real cleanup undoes a registration, disposes several
+    resources in the right order, hands one resource to several owners or waits for a UI thread. NCode.Disposables
+    gives each of these a small type, and every sample on this site is a test.</p>
+    <p class="landing-limit">It depends on no other package, does no I/O and starts no threads.</p>
+  image:
+    html: >-
+      <figure class="landing-stack not-content" aria-label="A drawing: the quick start's three resources, disposed
+      in the reverse of the order they were added."><div class="landing-stack__lamps" aria-hidden="true"><span
+      class="ncode-status"><span class="ncode-lamp ncode-lamp--on"></span>Reverse order</span><span
+      class="ncode-status"><span class="ncode-lamp ncode-lamp--on"></span>Each once</span><span
+      class="ncode-readout">3 resources</span></div><div class="landing-stack__screen" aria-hidden="true"><div
+      class="landing-stack__head"><span>resources</span><span>Dispose()</span></div><ol
+      class="landing-stack__rows"><li class="ls-row"><span class="ls-row__n">3</span><code>fileLock</code><span
+      class="ls-row__log">lock released</span></li><li class="ls-row"><span
+      class="ls-row__n">2</span><code>cache</code><span class="ls-row__log">cache flushed</span></li><li
+      class="ls-row ls-row--cursor"><span class="ls-row__n">1</span><code>connection</code><span
+      class="ls-row__log">connection closed</span></li></ol></div><figcaption>The quick start's collection as it
+      is disposed: the last resource added goes first, and each goes once. A drawing of the order, not a trace of a
+      real process.</figcaption></figure>
+  actions:
+    - text: Quick start
+      link: /start/quick-start/
+      icon: right-arrow
+      variant: primary
+    - text: Which disposable?
+      link: /start/which-disposable/
+      variant: secondary
+---
+
+import { Card, CardGrid } from '@ncodegroup/docs/components';
+import LandingHero from '@site/components/LandingHero.astro';
+import LandingSituations from '@site/components/LandingSituations.astro';
+
+```sh
+dotnet add package NCode.Disposables
+```
+
+<LandingHero />
+
+<div class="landing-badges">
+
+[![NuGet version](https://img.shields.io/nuget/v/NCode.Disposables?logo=nuget)](https://www.nuget.org/packages/NCode.Disposables/)
+[![NuGet downloads](https://img.shields.io/nuget/dt/NCode.Disposables?logo=nuget)](https://www.nuget.org/packages/NCode.Disposables/)
+[![CI](https://github.com/NCodeGroup/NCode.Disposables/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/NCodeGroup/NCode.Disposables/actions/workflows/ci.yml?query=branch%3Amain)
+[![Target framework](https://img.shields.io/badge/dynamic/xml?url=https%3A%2F%2Fraw.githubusercontent.com%2FNCodeGroup%2FNCode.Disposables%2Fmain%2Fsrc%2FNCode.Disposables%2FNCode.Disposables.csproj&query=%2F%2FTargetFramework%20%7C%20%2F%2FTargetFrameworks&label=target&logo=dotnet&color=512BD4)](https://www.nuget.org/packages/NCode.Disposables#supportedframeworks-body-tab)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/NCodeGroup/NCode.Disposables/badge)](https://scorecard.dev/viewer/?uri=github.com/NCodeGroup/NCode.Disposables)
+[![License](https://img.shields.io/github/license/NCodeGroup/NCode.Disposables)](https://github.com/NCodeGroup/NCode.Disposables/blob/main/LICENSE.txt)
+
+</div>
+
+<CardGrid>
+<Card title="You have a task">
+
+Each guide is one situation, its code and its pitfalls.
+
+[Find your situation](#find-your-situation)
+
+</Card>
+<Card title="You are choosing a type">
+
+[Which disposable?](/start/which-disposable/)
+
+[Behavior of every disposable](/reference/behavior/)
+
+</Card>
+<Card title="You want the rules">
+
+[Once, or on every call](/concepts/once-or-every-time/)
+
+[Disposal status and late resources](/concepts/disposal-status/)
+
+</Card>
+</CardGrid>
+
+## One scope, many resources
+
+Three resources go into one collection, and one `Dispose` releases all of them.
+
+```cs snippet=SiteQuickStartMany
+```
+
+The drawing above is this sample; [hold a resource that changes](/guides/hold-a-changing-resource/) shows what each holder does with the resources it is given.
+
+## What it does. What it does not.
+
+<CardGrid>
+<Card title="It does">
+
+- Run each class's cleanup once, even when several threads dispose it, unless a member named `Repeatable` asks for
+  every call.
+- Dispose a collection's items in reverse order, every one even when one throws.
+- Dispose a resource handed to a holder that is already disposed.
+  [ADR-1004](https://github.com/NCodeGroup/NCode.Disposables/blob/main/docs/decisions/1004-a-resource-handed-to-a-disposed-holder-is-disposed.md)
+- Share one resource through reference-counted leases.
+- Dispose a resource on its `SynchronizationContext`.
+- Scope a `SemaphoreSlim` or `ReaderWriterLockSlim` lock in a struct that allocates nothing.
+
+</Card>
+<Card title="It does not">
+
+- Make a struct safe to dispose twice. A value disposable, a lock scope or a lease runs again on every dispose.
+  [Once, or on every call](/concepts/once-or-every-time/)
+- Dispose an item that is only `IAsyncDisposable` from synchronous code: `DisposeAll()` throws
+  `InvalidOperationException`.
+- Dispose anything you never dispose. No type has a finalizer.
+- Hide failures. The exceptions items throw reach you unless you choose a member named `IgnoringExceptions`.
+- Dispose a resource on the calling thread when its context refuses the work.
+
+</Card>
+</CardGrid>
+
+## Find your situation
+
+Each guide is one situation, its code and its pitfalls.
+
+<LandingSituations>
+- **I clean up after my own code, and I need to…**
+  - [run code when a scope ends](/guides/run-code-on-dispose/)
+  - [cancel work when a scope ends](/guides/cancel-on-dispose/)
+  - [release a lock when a scope ends](/guides/scope-a-lock/)
+- **I hold resources, and I need to…**
+  - [dispose many together](/guides/dispose-many-resources/)
+  - [replace one I keep in a field](/guides/hold-a-changing-resource/)
+  - [hand one on only when setup succeeds](/guides/hand-on-ownership/)
+  - [share one between several owners](/guides/share-a-resource/)
+  - [dispose one on a UI thread](/guides/dispose-on-a-context/)
+  - [pass one to code that only takes `IAsyncDisposable`](/guides/bridge-sync-and-async/)
+- **I review code that uses it, and I need to…**
+  - [know what runs once and what runs every time](/concepts/once-or-every-time/)
+  - [know what happens to a resource that arrives late](/concepts/disposal-status/)
+  - [see every type side by side](/reference/behavior/)
+</LandingSituations>
+
+Not sure which type you need? [Which disposable?](/start/which-disposable/) asks a few questions and names one.
+
+## In the package
+
+- One assembly, `NCode.Disposables`, with every type in the namespace `NCode.Disposables`. It has no dependencies,
+  performs no I/O, starts no threads and keeps no mutable static state.
+- The target framework is the one the project file declares, which the badge shows and
+  [nuget.org](https://www.nuget.org/packages/NCode.Disposables#supportedframeworks-body-tab) lists.
+- Every C# sample on this site is a test the pull request build compiles and runs.
+- The reasons behind the design are on record in
+  [docs/decisions](https://github.com/NCodeGroup/NCode.Disposables/tree/main/docs/decisions).
+- Apache License 2.0, copyright NCode Group. A vulnerability is reported privately, as the
+  [security policy](https://github.com/NCodeGroup/NCode.Disposables/blob/main/SECURITY.md) says.

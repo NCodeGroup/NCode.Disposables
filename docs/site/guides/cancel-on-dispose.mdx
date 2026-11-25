@@ -1,0 +1,49 @@
+---
+title: Cancel work on dispose
+description: Cancel a token when a scope ends, with a source the disposable creates or one you own.
+---
+
+import { Pitfalls } from '@ncodegroup/docs/components';
+
+Work that waits on a `CancellationToken` should stop when the scope that started it ends. A cancellation disposable cancels its token when you dispose it, so a `using` block is enough to stop the work. This page shows how to cancel when the scope ends, how to cancel a source you own, how to cancel asynchronously, and what to watch for.
+
+## Cancel when the scope ends
+
+`Disposable.Cancellation()` creates its own `CancellationTokenSource` and exposes its `Token`. The first `Dispose` cancels the token, then disposes the source it created.
+
+```cs snippet=CancellationDisposable
+```
+
+## Cancel a source you own
+
+`Disposable.Cancellation(source)` cancels a source that you created, and leaves it to you to dispose. The token keeps working after `Dispose`, because the source is still alive.
+
+```cs snippet=SiteCancelOnDisposeOwnSource
+```
+
+## Cancel asynchronously
+
+`AsyncDisposable.Cancellation()` does the same through `DisposeAsync`: it cancels with `CancelAsync`, then disposes the source it created.
+
+```cs snippet=SiteCancelOnDisposeAsync
+```
+
+## Pitfalls
+
+A token callback that throws makes `Dispose` throw an `AggregateException`:
+
+```cs snippet=SiteCancelOnDisposeThrowingCallback
+```
+
+<Pitfalls>
+
+- **Expecting your source to be disposed.**
+  - *You write* `Disposable.Cancellation(source)`.
+  - *What happens:* it cancels the source and never disposes it.
+  - *Write instead:* dispose the source yourself, through `using`, or let `Disposable.Cancellation()` create it.
+- **A token callback that throws.**
+  - *You write* `token.Register(() => throw …)`.
+  - *What happens:* `Dispose` throws `AggregateException` after it disposed a source it created.
+  - *Write instead:* catch exceptions inside the callback.
+
+</Pitfalls>

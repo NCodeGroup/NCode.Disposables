@@ -1,0 +1,87 @@
+{
+  "$comment": "The figures LifecycleTimeline.astro draws: four stops and a lane per type. A stop's cells are tokens separated by spaces: an upper-case letter is a live resource, the same letter in lower case that resource disposed, a digit a reference count, `.` an empty place. Text fields take `code`.",
+  "figures": [
+    {
+      "id": "holders",
+      "label": "What each holder does at four moments",
+      "caption": "Each holder is given resource A, then B, then disposed, then given C. A cell is a resource: lit while it lives, struck through once it is disposed. A second assignment throws `InvalidOperationException`.",
+      "stops": ["Given A", "Given B", "`Dispose`", "Given C afterwards"],
+      "lanes": [
+        {
+          "owner": "`Disposable.Aggregate`",
+          "stops": [
+            { "cells": "A . .", "text": "Holds A" },
+            { "cells": "A B .", "text": "Holds B; A is not disposed, and is yours again" },
+            { "cells": "A b .", "text": "Disposes B, the one it holds" },
+            { "cells": "A b c", "text": "Disposes C at once" }
+          ]
+        },
+        {
+          "owner": "`Disposable.Serial`",
+          "stops": [
+            { "cells": "A . .", "text": "Holds A" },
+            { "cells": "a B .", "text": "Holds B and disposes A" },
+            { "cells": "a b .", "text": "Disposes B" },
+            { "cells": "a b c", "text": "Disposes C at once" }
+          ]
+        },
+        {
+          "owner": "`Disposable.SingleAssignment`",
+          "stops": [
+            { "cells": "A . .", "text": "Holds A" },
+            { "cells": "A B .", "text": "Throws; B stays yours" },
+            { "cells": "a B .", "text": "Disposes A" },
+            { "cells": "a B C", "text": "Throws; C stays yours" }
+          ]
+        },
+        {
+          "owner": "`Disposable.Collection`",
+          "stops": [
+            { "cells": "A . .", "text": "`Add(A)`: holds A" },
+            { "cells": "A B .", "text": "`Add(B)`: holds A and B" },
+            { "cells": "a b .", "text": "Disposes B, then A" },
+            { "cells": "a b c", "text": "`Add(C)` disposes C at once" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "leases",
+      "label": "The reference count at four moments",
+      "caption": "A resource, R, behind a reference count. A digit is the count; R is lit while the resource lives and struck through once it is disposed.",
+      "stops": ["`Create`", "`AddReference()`", "A `Dispose`", "Another `Dispose`"],
+      "lanes": [
+        {
+          "owner": "Two leases, each disposed once",
+          "stops": [
+            { "cells": "1 R", "text": "`first`: the count is 1" },
+            { "cells": "2 R", "text": "`second`, on the same resource" },
+            { "cells": "1 R", "text": "`second.Dispose()`: the resource stays" },
+            { "cells": "0 r", "text": "`first.Dispose()`: the last release disposes it" }
+          ]
+        },
+        {
+          "owner": "One lease disposed twice",
+          "stops": [
+            { "cells": "1 R", "text": "`first`" },
+            { "cells": "2 R", "text": "`second`" },
+            { "cells": "1 R", "text": "`first.Dispose()`" },
+            {
+              "cells": "0 r",
+              "text": "`first.Dispose()` again: disposed while `second` still uses it"
+            }
+          ]
+        },
+        {
+          "owner": "`Create` with a release action",
+          "stops": [
+            { "cells": "1 R", "text": "`Create` with `onRelease`" },
+            { "cells": "2 R", "text": "A second lease" },
+            { "cells": "1 R", "text": "One lease released" },
+            { "cells": "0 r", "text": "The last release runs the action once" }
+          ]
+        }
+      ]
+    }
+  ]
+}

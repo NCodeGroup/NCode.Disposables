@@ -1,0 +1,176 @@
+---
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+//
+// One figure of docs/site/_components/data/timelines.json: one lane per type and four stops, drawn in
+// cells. It carries no fact the page's text does not. Static: no script.
+// Usage: <LifecycleTimeline figure="holders" />
+//
+// A stop's cells are tokens separated by spaces: an upper-case letter is a live resource, the same letter
+// in lower case that resource disposed, a digit a reference count, `.` an empty place. Text fields take
+// `code`.
+import timelines from '@site/components/data/timelines.json';
+import { inline } from '@site/components/lib/text';
+
+interface Props {
+  figure: string;
+}
+
+type Stop = { cells?: string; text: string };
+type Lane = { owner: string; stops: Stop[] };
+type Figure = { id: string; label: string; caption: string; stops: string[]; lanes: Lane[] };
+
+const { figure } = Astro.props;
+const data = (timelines.figures as Figure[]).find((item) => item.id === figure);
+if (!data) {
+  throw new Error(`[lifecycle timeline] no figure with the id "${figure}" in timelines.json`);
+}
+if (data.stops.length !== 4) {
+  throw new Error(`[lifecycle timeline] figure "${figure}" has ${data.stops.length} stops, not 4`);
+}
+for (const lane of data.lanes) {
+  if (lane.stops.length !== 4) {
+    throw new Error(`[lifecycle timeline] figure "${figure}", lane "${lane.owner}" has ${lane.stops.length} stops, not 4`);
+  }
+}
+
+const stops = data.stops;
+const lanes = data.lanes;
+const cell = (token: string) =>
+  /^[A-Z]$/.test(token)
+    ? { kind: 'live', text: token }
+    : /^[a-z]$/.test(token)
+      ? { kind: 'gone', text: token.toUpperCase() }
+      : /^[0-9]$/.test(token)
+        ? { kind: 'count', text: token }
+        : { kind: 'free', text: '' };
+---
+
+<figure class="timeline not-content" aria-labelledby={`${figure}-timeline-caption`}>
+  <div class="timeline__grid" role="table" aria-label={data.label}>
+    <div class="timeline__row timeline__row--head" role="row">
+      <span role="columnheader" class="timeline__owner-head">Type</span>
+      {stops.map((stop, index) => (
+        <span role="columnheader" class="timeline__stop-head">
+          <span class="timeline__n">{index + 1}</span>
+          <span set:html={inline(stop)} />
+        </span>
+      ))}
+    </div>
+    {lanes.map((lane) => (
+      <div class="timeline__row" role="row">
+        <span role="rowheader" class="timeline__owner" set:html={inline(lane.owner)} />
+        {lane.stops.map((stop, index) => (
+          <span role="cell" class:list={['timeline__stop', index === 2 && 'timeline__stop--dispose']}>
+            <span class="timeline__label" aria-hidden="true"><span class="timeline__n">{index + 1}</span><span set:html={inline(stops[index])} /></span>
+            {stop.cells && (
+              <span class="timeline__cells" aria-hidden="true">
+                {stop.cells.split(' ').map((token) => {
+                  const drawn = cell(token);
+                  return <span class:list={['cell', `cell--${drawn.kind}`]}>{drawn.text}</span>;
+                })}
+              </span>
+            )}
+            <span class="timeline__text" set:html={inline(stop.text)} />
+          </span>
+        ))}
+      </div>
+    ))}
+  </div>
+  <figcaption id={`${figure}-timeline-caption`} class="timeline__caption">
+    <span set:html={inline(data.caption)} />
+    <span class="timeline__kind">A drawing of the behavior, not a trace of a real process.</span>
+  </figcaption>
+</figure>
+
+<style>
+  .timeline {
+    display: grid;
+    gap: var(--nc-space-4);
+    margin: var(--nc-space-6) 0;
+    padding: var(--nc-space-5);
+    border: var(--nc-border-hair) solid var(--nc-color-border);
+    border-radius: var(--nc-radius-module);
+    background: var(--nc-color-surface);
+    box-shadow: var(--nc-elevation-flush);
+    color: var(--nc-color-text);
+  }
+  .timeline__grid {
+    display: grid;
+    gap: 2px;
+    padding: var(--nc-space-3);
+    border-radius: var(--nc-radius-panel);
+    background: var(--nc-color-screen);
+    color: var(--nc-color-on-screen);
+  }
+  .timeline__row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--nc-space-3);
+    align-items: start;
+    padding: var(--nc-space-3) var(--nc-space-2);
+  }
+  .timeline__row + .timeline__row:not(.timeline__row--head) { border-top: 1px solid var(--nc-color-screen-border); }
+  .timeline__row--head > span {
+    font-size: 0.6875rem;
+    font-stretch: var(--nc-type-label-stretch);
+    font-weight: 600;
+    letter-spacing: var(--nc-type-label-tracking);
+    text-transform: uppercase;
+    color: var(--nc-color-on-screen-muted);
+  }
+  .timeline__stop-head { display: flex; align-items: center; gap: var(--nc-space-2); }
+  .timeline__row--head :global(code) { font-family: var(--nc-font-mono); text-transform: none; letter-spacing: 0; }
+  .timeline__n {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 1.125rem;
+    height: 1.125rem;
+    border-radius: var(--nc-radius-round);
+    box-shadow: inset 0 0 0 1px var(--nc-color-screen-border);
+    font-family: var(--nc-font-mono);
+    font-size: 0.625rem;
+    color: var(--nc-color-on-screen-secondary);
+  }
+  .timeline__owner { grid-column: 1 / -1; font-size: var(--sl-text-xs); font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
+  .timeline__owner-head { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .timeline__owner :global(code) { font-family: var(--nc-font-mono); font-stretch: var(--nc-type-code-stretch); font-size: 0.92em; color: var(--nc-color-screen-lit); }
+  .timeline__stop { display: grid; gap: var(--nc-space-2); min-width: 0; }
+  .timeline__label { display: none; }
+  .timeline__cells { display: grid; grid-template-columns: repeat(4, minmax(0, 1.875rem)); gap: 3px; }
+  .timeline__text { font-size: var(--sl-text-2xs); line-height: 1.3; color: var(--nc-color-on-screen-secondary); }
+  .timeline__text :global(code) { font-family: var(--nc-font-mono); overflow-wrap: anywhere; }
+  .timeline__stop--dispose .timeline__text { color: var(--nc-color-on-screen); }
+
+  .cell {
+    display: grid;
+    place-items: center;
+    height: 1.5rem;
+    border-radius: var(--nc-radius-cell);
+    font-family: var(--nc-font-mono);
+    font-stretch: var(--nc-type-code-stretch);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    line-height: 1;
+    font-feature-settings: 'zero' 1;
+  }
+  .cell--free { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--nc-color-screen-border) 60%, transparent); }
+  .cell--live { background: var(--nc-color-screen-raised); color: var(--nc-color-screen-lit); }
+  .cell--gone { box-shadow: inset 0 0 0 1px var(--nc-color-screen-border); color: var(--nc-color-on-screen-muted); text-decoration: line-through; }
+  .cell--count { background: color-mix(in srgb, var(--nc-color-screen-hot) 16%, var(--nc-color-screen-raised)); color: var(--nc-color-screen-hot); }
+
+  .timeline__caption { display: grid; gap: var(--nc-space-2); font-size: var(--sl-text-sm); line-height: 1.5; }
+  .timeline__caption :global(code) { font-family: var(--nc-font-mono); font-size: 0.88em; }
+  .timeline__kind { display: flex; flex-wrap: wrap; align-items: center; gap: var(--nc-space-3); color: var(--nc-color-text-secondary); font-size: var(--sl-text-xs); }
+
+  /* Below the width of four stops, each lane becomes a card of four labeled stops, two by two. */
+  @media (max-width: 52rem) {
+    .timeline { padding: var(--nc-space-4); }
+    /* Hidden but still read aloud: without padding the row is a 1 px box, which leaves the layout alone. */
+    .timeline__row--head { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); }
+    .timeline__row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--nc-space-3) var(--nc-space-4); }
+    .timeline__label { display: flex; align-items: center; gap: var(--nc-space-2); font-size: 0.6875rem; color: var(--nc-color-on-screen-muted); }
+    .timeline__label :global(code) { font-family: var(--nc-font-mono); }
+  }
+</style>
