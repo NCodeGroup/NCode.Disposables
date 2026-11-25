@@ -134,6 +134,31 @@ public class AsyncDisposableContextTests
     }
 
     [Fact]
+    public async Task DisposeAsync_WhenPostThrows_CompletesOperationAndPropagatesException()
+    {
+        const string message = "Post failed";
+
+        var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
+        context.Setup(x => x.OperationStarted());
+        context.Setup(x => x.OperationCompleted());
+        context
+            .Setup(x => x.Post(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
+            .Throws(new InvalidOperationException(message));
+
+        var item = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+
+        var disposable = new AsyncDisposableContext(item.Object, context.Object);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await disposable.DisposeAsync()
+        );
+
+        Assert.Equal(message, exception.Message);
+        context.Verify(x => x.OperationStarted(), Times.Once);
+        context.Verify(x => x.OperationCompleted(), Times.Once);
+    }
+
+    [Fact]
     public async Task DisposeAsync_BeforePostedCallbackRuns_DoesNotComplete()
     {
         SendOrPostCallback? posted = null;
