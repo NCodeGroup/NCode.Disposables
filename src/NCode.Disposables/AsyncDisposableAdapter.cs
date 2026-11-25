@@ -22,9 +22,14 @@ namespace NCode.Disposables;
 /// are handled safely using atomic operations.
 /// </para>
 /// </remarks>
-public sealed class AsyncDisposableAdapter : IAsyncDisposable, IDisposalStatus
+/// <param name="disposable">The underlying <see cref="IDisposable"/> instance to adapt.</param>
+/// <exception cref="ArgumentNullException"><paramref name="disposable"/> is <see langword="null"/>.</exception>
+public sealed class AsyncDisposableAdapter(IDisposable disposable)
+    : IAsyncDisposable,
+        IDisposalStatus
 {
-    private IDisposable? _disposable;
+    private IDisposable? _disposable = disposable
+        ?? throw new ArgumentNullException(nameof(disposable));
 
     /// <summary>
     /// Holds 1 after disposal has been requested and 0 before; <see cref="IsDisposed"/> reads it.
@@ -36,19 +41,6 @@ public sealed class AsyncDisposableAdapter : IAsyncDisposable, IDisposalStatus
     /// instead of only the first.
     /// </summary>
     internal bool IsRepeatable { get; init; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AsyncDisposableAdapter"/> class that wraps the specified
-    /// <see cref="IDisposable"/>, which is disposed only once.
-    /// </summary>
-    /// <param name="disposable">The underlying <see cref="IDisposable"/> instance to adapt.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="disposable"/> is <see langword="null"/>.</exception>
-    public AsyncDisposableAdapter(IDisposable disposable)
-    {
-        ArgumentNullException.ThrowIfNull(disposable);
-
-        _disposable = disposable;
-    }
 
     /// <summary>
     /// Gets a value indicating whether <see cref="DisposeAsync"/> has been called at least once.
