@@ -222,37 +222,7 @@ public sealed class AsyncDisposableExtensionsTests : IDisposable
     }
 
     [Fact]
-    public async Task DisposeAllAsync_WithIgnoreExceptions_SuppressesAllExceptions()
-    {
-        var order = string.Empty;
-        var collection = new[]
-        {
-            AsyncDisposable.Create(() =>
-            {
-                order += "1";
-                return ValueTask.CompletedTask;
-            }),
-            AsyncDisposable.Create(() => throw new InvalidOperationException()),
-            AsyncDisposable.Create(() =>
-            {
-                order += "2";
-                return ValueTask.CompletedTask;
-            }),
-            AsyncDisposable.Create(() => throw new InvalidOperationException()),
-            AsyncDisposable.Create(() =>
-            {
-                order += "3";
-                return ValueTask.CompletedTask;
-            }),
-        };
-
-        await collection.DisposeAllAsync(ignoreExceptions: true);
-
-        Assert.Equal("321", order);
-    }
-
-    [Fact]
-    public async Task DisposeAllAsync_WithIgnoreExceptionsFalse_CollectsExceptions()
+    public async Task DisposeAllAsync_WhenItemsThrow_CollectsExceptions()
     {
         var disposeCount = 0;
         var collection = new[]
@@ -285,7 +255,7 @@ public sealed class AsyncDisposableExtensionsTests : IDisposable
         };
 
         await Assert.ThrowsAsync<AggregateException>(async () =>
-            await collection.DisposeAllAsync(ignoreExceptions: false)
+            await collection.DisposeAllAsync()
         );
 
         Assert.Equal(5, disposeCount);
@@ -335,6 +305,40 @@ public sealed class AsyncDisposableExtensionsTests : IDisposable
         await Assert.ThrowsAsync<InvalidOperationException>(async () =>
             await collection.DisposeAllAsync()
         );
+
+        Assert.Equal("321", order);
+    }
+
+    #endregion
+
+    #region DisposeAllIgnoringExceptionsAsync Tests
+
+    [Fact]
+    public async Task DisposeAllIgnoringExceptionsAsync_WhenItemsThrow_DisposesEveryItem()
+    {
+        var order = string.Empty;
+        var collection = new[]
+        {
+            AsyncDisposable.Create(() =>
+            {
+                order += "1";
+                return ValueTask.CompletedTask;
+            }),
+            AsyncDisposable.Create(() => throw new InvalidOperationException()),
+            AsyncDisposable.Create(() =>
+            {
+                order += "2";
+                return ValueTask.CompletedTask;
+            }),
+            AsyncDisposable.Create(() => throw new InvalidOperationException()),
+            AsyncDisposable.Create(() =>
+            {
+                order += "3";
+                return ValueTask.CompletedTask;
+            }),
+        };
+
+        await collection.DisposeAllIgnoringExceptionsAsync();
 
         Assert.Equal("321", order);
     }
@@ -405,6 +409,55 @@ public sealed class AsyncDisposableExtensionsTests : IDisposable
 
         Assert.DoesNotContain(methods, method => method.Name == "AsSharedReference");
     }
+
+    #endregion
+
+    #region Deprecated Overload Tests
+
+#pragma warning disable NCDISP003 // tests the deprecated overloads until they are deleted
+
+    [Fact]
+    public async Task DisposeAllAsync_WithIgnoreExceptionsTrue_IgnoresFailures()
+    {
+        var log = new List<string>();
+        var collection = new[]
+        {
+            AsyncDisposable.Create(() =>
+            {
+                log.Add("first");
+                return ValueTask.CompletedTask;
+            }),
+            AsyncDisposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
+        };
+
+        await collection.DisposeAllAsync(ignoreExceptions: true);
+
+        Assert.Equal(["first"], log);
+    }
+
+    [Fact]
+    public async Task DisposeAllAsync_WithIgnoreExceptionsFalse_RethrowsFailure()
+    {
+        var log = new List<string>();
+        var collection = new[]
+        {
+            AsyncDisposable.Create(() =>
+            {
+                log.Add("first");
+                return ValueTask.CompletedTask;
+            }),
+            AsyncDisposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
+        };
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await collection.DisposeAllAsync(ignoreExceptions: false)
+        );
+
+        Assert.Equal("Dispose failed.", exception.Message);
+        Assert.Equal(["first"], log);
+    }
+
+#pragma warning restore NCDISP003
 
     #endregion
 

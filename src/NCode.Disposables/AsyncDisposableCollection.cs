@@ -98,7 +98,14 @@ public sealed class AsyncDisposableCollection : IAsyncDisposableCollection, IDis
             _list.Clear();
         }
 
-        await items.DisposeAllAsync(_ignoreExceptions).ConfigureAwait(false);
+        if (_ignoreExceptions)
+        {
+            await items.DisposeAllIgnoringExceptionsAsync().ConfigureAwait(false);
+        }
+        else
+        {
+            await items.DisposeAllAsync().ConfigureAwait(false);
+        }
     }
 
     /// <summary>

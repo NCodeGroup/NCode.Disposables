@@ -45,6 +45,53 @@ public static class AsyncDisposableExtensions
         /// Disposes all items in a collection that implement <see cref="IAsyncDisposable"/> or <see cref="IDisposable"/>,
         /// processing items in reverse order.
         /// </summary>
+        /// <returns>A <see cref="ValueTask"/> that represents the asynchronous dispose operation.</returns>
+        /// <remarks>
+        /// <para>
+        /// Items are disposed in reverse order (LIFO), which is typically appropriate for resource cleanup
+        /// scenarios where resources may have dependencies.
+        /// </para>
+        /// <para>
+        /// Items implementing <see cref="IAsyncDisposable"/> are disposed asynchronously via
+        /// <see cref="IAsyncDisposable.DisposeAsync"/>. Items implementing only <see cref="IDisposable"/>
+        /// are disposed synchronously via <see cref="IDisposable.Dispose"/>.
+        /// </para>
+        /// <para>
+        /// When multiple items throw exceptions, an <see cref="AggregateException"/> containing all exceptions
+        /// is thrown. If only one item throws, that exception is rethrown directly with its original stack trace
+        /// preserved.
+        /// </para>
+        /// </remarks>
+        /// <exception cref="AggregateException">Multiple items threw exceptions during disposal.</exception>
+        public ValueTask DisposeAllAsync() =>
+            DisposeAllAsyncCore(collection, ignoreExceptions: false);
+
+        /// <summary>
+        /// Disposes all items in a collection that implement <see cref="IAsyncDisposable"/> or <see cref="IDisposable"/>,
+        /// processing items in reverse order and ignoring the exceptions that items throw.
+        /// </summary>
+        /// <returns>A <see cref="ValueTask"/> that represents the asynchronous dispose operation.</returns>
+        /// <remarks>
+        /// <para>
+        /// Items are disposed in reverse order (LIFO), which is typically appropriate for resource cleanup
+        /// scenarios where resources may have dependencies.
+        /// </para>
+        /// <para>
+        /// Items implementing <see cref="IAsyncDisposable"/> are disposed asynchronously via
+        /// <see cref="IAsyncDisposable.DisposeAsync"/>. Items implementing only <see cref="IDisposable"/>
+        /// are disposed synchronously via <see cref="IDisposable.Dispose"/>.
+        /// </para>
+        /// <para>
+        /// Every exception that an item throws during disposal is ignored, so the remaining items are still disposed.
+        /// </para>
+        /// </remarks>
+        public ValueTask DisposeAllIgnoringExceptionsAsync() =>
+            DisposeAllAsyncCore(collection, ignoreExceptions: true);
+
+        /// <summary>
+        /// Disposes all items in a collection that implement <see cref="IAsyncDisposable"/> or <see cref="IDisposable"/>,
+        /// processing items in reverse order.
+        /// </summary>
         /// <param name="ignoreExceptions">
         /// <see langword="true"/> to suppress exceptions thrown by individual items during disposal and continue
         /// disposing remaining items; <see langword="false"/> (the default) to collect and throw exceptions.
@@ -69,43 +116,54 @@ public static class AsyncDisposableExtensions
         /// <exception cref="AggregateException">
         /// Multiple items threw exceptions during disposal and <paramref name="ignoreExceptions"/> is <see langword="false"/>.
         /// </exception>
-        public async ValueTask DisposeAllAsync(bool ignoreExceptions = false)
+        // ADR-1007: deleted in the next major version.
+        [Obsolete(
+            "Use DisposeAllAsync(), or DisposeAllIgnoringExceptionsAsync() to ignore the exceptions items throw. This overload is deleted in the next major version.",
+            DiagnosticId = "NCDISP003"
+        )]
+        public ValueTask DisposeAllAsync(bool ignoreExceptions = false) =>
+            DisposeAllAsyncCore(collection, ignoreExceptions);
+    }
+
+    private static async ValueTask DisposeAllAsyncCore(
+        IEnumerable<object?> collection,
+        bool ignoreExceptions
+    )
+    {
+        List<Exception>? exceptions = null;
+
+        foreach (var item in collection.Reverse())
         {
-            List<Exception>? exceptions = null;
-
-            foreach (var item in collection.Reverse())
+            try
             {
-                try
+                switch (item)
                 {
-                    switch (item)
-                    {
-                        case IAsyncDisposable asyncDisposable:
-                            await asyncDisposable.DisposeAsync().ConfigureAwait(false);
-                            break;
+                    case IAsyncDisposable asyncDisposable:
+                        await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+                        break;
 
-                        case IDisposable disposable:
-                            disposable.Dispose();
-                            break;
-                    }
-                }
-                catch (Exception exception)
-                {
-                    if (ignoreExceptions)
-                        continue;
-                    exceptions ??= [];
-                    exceptions.Add(exception);
+                    case IDisposable disposable:
+                        disposable.Dispose();
+                        break;
                 }
             }
-
-            if (exceptions == null)
-                return;
-
-            if (exceptions.Count > 1)
+            catch (Exception exception)
             {
-                throw new AggregateException(exceptions);
+                if (ignoreExceptions)
+                    continue;
+                exceptions ??= [];
+                exceptions.Add(exception);
             }
-
-            ExceptionDispatchInfo.Throw(exceptions[0]);
         }
+
+        if (exceptions == null)
+            return;
+
+        if (exceptions.Count > 1)
+        {
+            throw new AggregateException(exceptions);
+        }
+
+        ExceptionDispatchInfo.Throw(exceptions[0]);
     }
 }
