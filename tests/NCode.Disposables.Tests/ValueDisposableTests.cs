@@ -10,7 +10,11 @@ public class ValueDisposableTests
     [Fact]
     public void Constructor_NullAction_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => new ValueDisposable<int>(null!, 1));
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            new ValueDisposable<int>(null!, 1)
+        );
+
+        Assert.Equal("action", exception.ParamName);
     }
 
     #endregion
@@ -18,7 +22,7 @@ public class ValueDisposableTests
     #region Dispose Tests
 
     [Fact]
-    public void Dispose_InvokesActionWithState()
+    public void Dispose_WithAction_InvokesActionWithState()
     {
         const int expectedState = 42;
         var received = new List<int>();
@@ -44,15 +48,17 @@ public class ValueDisposableTests
     }
 
     [Fact]
-    public void Default_Dispose_DoesNothing()
+    public void Dispose_WhenDefault_DoesNotThrow()
     {
         ValueDisposable<int> disposable = default;
 
-        disposable.Dispose();
+        var exception = Record.Exception(disposable.Dispose);
+
+        Assert.Null(exception);
     }
 
     [Fact]
-    public void UsingStatement_InvokesActionOnce()
+    public void Dispose_InUsingStatement_InvokesActionOnce()
     {
         const int expectedState = 5;
         var received = new List<int>();

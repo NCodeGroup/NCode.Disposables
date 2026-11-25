@@ -10,7 +10,11 @@ public class AsyncValueDisposableTests
     [Fact]
     public void Constructor_NullAction_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => new AsyncValueDisposable<int>(null!, 1));
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            new AsyncValueDisposable<int>(null!, 1)
+        );
+
+        Assert.Equal("action", exception.ParamName);
     }
 
     #endregion
@@ -18,7 +22,7 @@ public class AsyncValueDisposableTests
     #region DisposeAsync Tests
 
     [Fact]
-    public async Task DisposeAsync_InvokesActionWithState()
+    public async Task DisposeAsync_WithAction_InvokesActionWithState()
     {
         const int expectedState = 42;
         var received = new List<int>();
@@ -58,15 +62,17 @@ public class AsyncValueDisposableTests
     }
 
     [Fact]
-    public async Task Default_DisposeAsync_DoesNothing()
+    public async Task DisposeAsync_WhenDefault_DoesNotThrow()
     {
         AsyncValueDisposable<int> disposable = default;
 
-        await disposable.DisposeAsync();
+        var exception = await Record.ExceptionAsync(async () => await disposable.DisposeAsync());
+
+        Assert.Null(exception);
     }
 
     [Fact]
-    public async Task AwaitUsingStatement_InvokesActionOnce()
+    public async Task DisposeAsync_InAwaitUsingStatement_InvokesActionOnce()
     {
         const int expectedState = 5;
         var received = new List<int>();
