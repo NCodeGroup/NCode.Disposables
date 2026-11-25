@@ -27,9 +27,10 @@ namespace NCode.Disposables;
 /// <see cref="AddAsync"/> after the collection is disposed disposes the added item instead of storing it.
 /// </para>
 /// </remarks>
-#pragma warning disable NCDISP002 // implements the deprecated interface until it is deleted
-public sealed class AsyncDisposableCollection : IAsyncDisposableCollection, IDisposalStatus
-#pragma warning restore NCDISP002
+public sealed class AsyncDisposableCollection
+    : IAsyncDisposable,
+        ICollection<IAsyncDisposable>,
+        IDisposalStatus
 {
     private int _disposed;
     private readonly List<IAsyncDisposable> _list;

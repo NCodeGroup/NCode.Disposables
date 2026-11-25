@@ -34,3 +34,4 @@ static NCode.Disposables.DisposableExtensions.DisposeAllIgnoringExceptions(this 
 *REMOVED*NCode.Disposables.IAsyncDisposableAggregate.Disposable.get -> System.IAsyncDisposable?
 *REMOVED*NCode.Disposables.IAsyncDisposableAggregate.Disposable.set -> void
 *REMOVED*NCode.Disposables.IDisposableCollection
+*REMOVED*NCode.Disposables.IAsyncDisposableCollection
