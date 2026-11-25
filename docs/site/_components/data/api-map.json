@@ -1124,6 +1124,249 @@
         "NCode.Disposables.AsyncDisposableCollection.IsReadOnly.get -> bool",
         "NCode.Disposables.AsyncDisposableCollection.Remove(System.IAsyncDisposable! item) -> bool"
       ]
+    },
+    {
+      "id": "sharedreferencelease-t",
+      "group": "shared",
+      "type": "SharedReferenceLease<T>",
+      "member": null,
+      "signatures": [
+        "public readonly struct SharedReferenceLease<T>(ISharedReferenceOwner<T> owner) : IDisposable",
+        "public bool IsActive { get; }",
+        "public T Value { get; }",
+        "public SharedReferenceLease<T> AddReference()",
+        "public bool TryAddReference(out SharedReferenceLease<T> reference)",
+        "public void Dispose()"
+      ],
+      "summary": "A `readonly struct` lease: `Value`, `IsActive`, `AddReference`, `TryAddReference`, and `Dispose`, which releases one reference. A copy is the same lease, and a `default` lease's `Value` throws `InvalidOperationException`.",
+      "page": "/guides/share-a-resource/",
+      "api": [
+        "NCode.Disposables.SharedReferenceLease<T>",
+        "NCode.Disposables.SharedReferenceLease<T>.AddReference() -> NCode.Disposables.SharedReferenceLease<T>",
+        "NCode.Disposables.SharedReferenceLease<T>.Dispose() -> void",
+        "NCode.Disposables.SharedReferenceLease<T>.IsActive.get -> bool",
+        "NCode.Disposables.SharedReferenceLease<T>.SharedReferenceLease() -> void",
+        "NCode.Disposables.SharedReferenceLease<T>.SharedReferenceLease(NCode.Disposables.ISharedReferenceOwner<T>! owner) -> void",
+        "NCode.Disposables.SharedReferenceLease<T>.TryAddReference(out NCode.Disposables.SharedReferenceLease<T> reference) -> bool",
+        "NCode.Disposables.SharedReferenceLease<T>.Value.get -> T"
+      ]
+    },
+    {
+      "id": "asyncsharedreferencelease-t",
+      "group": "shared",
+      "type": "AsyncSharedReferenceLease<T>",
+      "member": null,
+      "signatures": [
+        "public readonly struct AsyncSharedReferenceLease<T>(IAsyncSharedReferenceOwner<T> owner) : IAsyncDisposable",
+        "public bool IsActive { get; }",
+        "public T Value { get; }",
+        "public AsyncSharedReferenceLease<T> AddReference()",
+        "public bool TryAddReference(out AsyncSharedReferenceLease<T> reference)",
+        "public ValueTask DisposeAsync()"
+      ],
+      "summary": "As `SharedReferenceLease<T>`, released with `DisposeAsync`.",
+      "page": "/guides/share-a-resource/",
+      "api": [
+        "NCode.Disposables.AsyncSharedReferenceLease<T>",
+        "NCode.Disposables.AsyncSharedReferenceLease<T>.AddReference() -> NCode.Disposables.AsyncSharedReferenceLease<T>",
+        "NCode.Disposables.AsyncSharedReferenceLease<T>.AsyncSharedReferenceLease() -> void",
+        "NCode.Disposables.AsyncSharedReferenceLease<T>.AsyncSharedReferenceLease(NCode.Disposables.IAsyncSharedReferenceOwner<T>! owner) -> void",
+        "NCode.Disposables.AsyncSharedReferenceLease<T>.DisposeAsync() -> System.Threading.Tasks.ValueTask",
+        "NCode.Disposables.AsyncSharedReferenceLease<T>.IsActive.get -> bool",
+        "NCode.Disposables.AsyncSharedReferenceLease<T>.TryAddReference(out NCode.Disposables.AsyncSharedReferenceLease<T> reference) -> bool",
+        "NCode.Disposables.AsyncSharedReferenceLease<T>.Value.get -> T"
+      ]
+    },
+    {
+      "id": "sharedreferenceowner-t",
+      "group": "shared",
+      "type": "SharedReferenceOwner<T>",
+      "member": null,
+      "signatures": [
+        "public sealed class SharedReferenceOwner<T>(T value, Action<T> onRelease) : ISharedReferenceOwner<T>",
+        "public T Value { get; }",
+        "public SharedReferenceLease<T> AddReference()",
+        "public bool TryAddReference(out SharedReferenceLease<T> reference)",
+        "public int ReleaseReference()"
+      ],
+      "summary": "The reference count behind the leases, starting at 1. The release action runs once, on the thread that releases the last lease; after that `AddReference` and `Value` throw `ObjectDisposedException`.",
+      "page": "/guides/share-a-resource/",
+      "api": [
+        "NCode.Disposables.SharedReferenceOwner<T>",
+        "NCode.Disposables.SharedReferenceOwner<T>.AddReference() -> NCode.Disposables.SharedReferenceLease<T>",
+        "NCode.Disposables.SharedReferenceOwner<T>.ReleaseReference() -> int",
+        "NCode.Disposables.SharedReferenceOwner<T>.SharedReferenceOwner(T value, System.Action<T>! onRelease) -> void",
+        "NCode.Disposables.SharedReferenceOwner<T>.TryAddReference(out NCode.Disposables.SharedReferenceLease<T> reference) -> bool",
+        "NCode.Disposables.SharedReferenceOwner<T>.Value.get -> T"
+      ]
+    },
+    {
+      "id": "asyncsharedreferenceowner-t",
+      "group": "shared",
+      "type": "AsyncSharedReferenceOwner<T>",
+      "member": null,
+      "signatures": [
+        "public sealed class AsyncSharedReferenceOwner<T>(T value, Func<T, ValueTask> onRelease) : IAsyncSharedReferenceOwner<T>",
+        "public T Value { get; }",
+        "public AsyncSharedReferenceLease<T> AddReference()",
+        "public bool TryAddReference(out AsyncSharedReferenceLease<T> reference)",
+        "public ValueTask<int> ReleaseReferenceAsync()",
+        "public int UnsafeReleaseReference()"
+      ],
+      "summary": "As `SharedReferenceOwner<T>`, released with `ReleaseReferenceAsync`.",
+      "page": "/guides/share-a-resource/",
+      "api": [
+        "NCode.Disposables.AsyncSharedReferenceOwner<T>",
+        "NCode.Disposables.AsyncSharedReferenceOwner<T>.AddReference() -> NCode.Disposables.AsyncSharedReferenceLease<T>",
+        "NCode.Disposables.AsyncSharedReferenceOwner<T>.AsyncSharedReferenceOwner(T value, System.Func<T, System.Threading.Tasks.ValueTask>! onRelease) -> void",
+        "NCode.Disposables.AsyncSharedReferenceOwner<T>.ReleaseReferenceAsync() -> System.Threading.Tasks.ValueTask<int>",
+        "NCode.Disposables.AsyncSharedReferenceOwner<T>.TryAddReference(out NCode.Disposables.AsyncSharedReferenceLease<T> reference) -> bool",
+        "NCode.Disposables.AsyncSharedReferenceOwner<T>.UnsafeReleaseReference() -> int",
+        "NCode.Disposables.AsyncSharedReferenceOwner<T>.Value.get -> T"
+      ]
+    },
+    {
+      "id": "isharedreferenceowner-t",
+      "group": "shared",
+      "type": "ISharedReferenceOwner<T>",
+      "member": null,
+      "signatures": [
+        "public interface ISharedReferenceOwner<T>",
+        "T Value { get; }",
+        "SharedReferenceLease<T> AddReference()",
+        "bool TryAddReference(out SharedReferenceLease<T> reference)",
+        "int ReleaseReference()"
+      ],
+      "summary": "The owner a `SharedReferenceLease<T>` releases through.",
+      "page": "/guides/share-a-resource/",
+      "api": [
+        "NCode.Disposables.ISharedReferenceOwner<T>",
+        "NCode.Disposables.ISharedReferenceOwner<T>.AddReference() -> NCode.Disposables.SharedReferenceLease<T>",
+        "NCode.Disposables.ISharedReferenceOwner<T>.ReleaseReference() -> int",
+        "NCode.Disposables.ISharedReferenceOwner<T>.TryAddReference(out NCode.Disposables.SharedReferenceLease<T> reference) -> bool",
+        "NCode.Disposables.ISharedReferenceOwner<T>.Value.get -> T"
+      ]
+    },
+    {
+      "id": "iasyncsharedreferenceowner-t",
+      "group": "shared",
+      "type": "IAsyncSharedReferenceOwner<T>",
+      "member": null,
+      "signatures": [
+        "public interface IAsyncSharedReferenceOwner<T>",
+        "T Value { get; }",
+        "AsyncSharedReferenceLease<T> AddReference()",
+        "bool TryAddReference(out AsyncSharedReferenceLease<T> reference)",
+        "ValueTask<int> ReleaseReferenceAsync()"
+      ],
+      "summary": "The owner an `AsyncSharedReferenceLease<T>` releases through.",
+      "page": "/guides/share-a-resource/",
+      "api": [
+        "NCode.Disposables.IAsyncSharedReferenceOwner<T>",
+        "NCode.Disposables.IAsyncSharedReferenceOwner<T>.AddReference() -> NCode.Disposables.AsyncSharedReferenceLease<T>",
+        "NCode.Disposables.IAsyncSharedReferenceOwner<T>.ReleaseReferenceAsync() -> System.Threading.Tasks.ValueTask<int>",
+        "NCode.Disposables.IAsyncSharedReferenceOwner<T>.TryAddReference(out NCode.Disposables.AsyncSharedReferenceLease<T> reference) -> bool",
+        "NCode.Disposables.IAsyncSharedReferenceOwner<T>.Value.get -> T"
+      ]
+    },
+    {
+      "id": "disposableextensions",
+      "group": "extensions",
+      "type": "DisposableExtensions",
+      "member": null,
+      "signatures": [
+        "public static class DisposableExtensions",
+        "public static ValueTask DisposeAsyncIfAvailable(this IDisposable? disposable)",
+        "public static SharedReferenceLease<T> AsSharedReference<T>(this T value) where T : IDisposable",
+        "public static void DisposeAll(this IEnumerable<object?> collection)",
+        "public static void DisposeAllIgnoringExceptions(this IEnumerable<object?> collection)"
+      ],
+      "summary": "`DisposeAll()` and `DisposeAllIgnoringExceptions()` dispose each `IDisposable` of a list in reverse order; `DisposeAsyncIfAvailable()` prefers `DisposeAsync`; `AsSharedReference()` calls `SharedReference.Create`.",
+      "page": "/guides/dispose-many-resources/",
+      "api": [
+        "NCode.Disposables.DisposableExtensions",
+        "NCode.Disposables.DisposableExtensions.extension(System.Collections.Generic.IEnumerable<object?>!)",
+        "NCode.Disposables.DisposableExtensions.extension(System.Collections.Generic.IEnumerable<object?>!).DisposeAll() -> void",
+        "NCode.Disposables.DisposableExtensions.extension(System.Collections.Generic.IEnumerable<object?>!).DisposeAllIgnoringExceptions() -> void",
+        "NCode.Disposables.DisposableExtensions.extension(System.IDisposable?)",
+        "NCode.Disposables.DisposableExtensions.extension(System.IDisposable?).DisposeAsyncIfAvailable() -> System.Threading.Tasks.ValueTask",
+        "NCode.Disposables.DisposableExtensions.extension<T>(T)",
+        "NCode.Disposables.DisposableExtensions.extension<T>(T).AsSharedReference() -> NCode.Disposables.SharedReferenceLease<T>",
+        "static NCode.Disposables.DisposableExtensions.AsSharedReference<T>(this T value) -> NCode.Disposables.SharedReferenceLease<T>",
+        "static NCode.Disposables.DisposableExtensions.DisposeAll(this System.Collections.Generic.IEnumerable<object?>! collection) -> void",
+        "static NCode.Disposables.DisposableExtensions.DisposeAllIgnoringExceptions(this System.Collections.Generic.IEnumerable<object?>! collection) -> void",
+        "static NCode.Disposables.DisposableExtensions.DisposeAsyncIfAvailable(this System.IDisposable? disposable) -> System.Threading.Tasks.ValueTask"
+      ]
+    },
+    {
+      "id": "asyncdisposableextensions",
+      "group": "extensions",
+      "type": "AsyncDisposableExtensions",
+      "member": null,
+      "signatures": [
+        "public static class AsyncDisposableExtensions",
+        "public static AsyncSharedReferenceLease<T> AsAsyncSharedReference<T>(this T value) where T : IAsyncDisposable",
+        "public static ValueTask DisposeAllAsync(this IEnumerable<object?> collection)",
+        "public static ValueTask DisposeAllIgnoringExceptionsAsync(this IEnumerable<object?> collection)"
+      ],
+      "summary": "`DisposeAllAsync()` and `DisposeAllIgnoringExceptionsAsync()` prefer `DisposeAsync`; `AsAsyncSharedReference()` calls `AsyncSharedReference.Create`.",
+      "page": "/guides/dispose-many-resources/",
+      "api": [
+        "NCode.Disposables.AsyncDisposableExtensions",
+        "NCode.Disposables.AsyncDisposableExtensions.extension(System.Collections.Generic.IEnumerable<object?>!)",
+        "NCode.Disposables.AsyncDisposableExtensions.extension(System.Collections.Generic.IEnumerable<object?>!).DisposeAllAsync() -> System.Threading.Tasks.ValueTask",
+        "NCode.Disposables.AsyncDisposableExtensions.extension(System.Collections.Generic.IEnumerable<object?>!).DisposeAllIgnoringExceptionsAsync() -> System.Threading.Tasks.ValueTask",
+        "NCode.Disposables.AsyncDisposableExtensions.extension<T>(T)",
+        "NCode.Disposables.AsyncDisposableExtensions.extension<T>(T).AsAsyncSharedReference() -> NCode.Disposables.AsyncSharedReferenceLease<T>",
+        "static NCode.Disposables.AsyncDisposableExtensions.AsAsyncSharedReference<T>(this T value) -> NCode.Disposables.AsyncSharedReferenceLease<T>",
+        "static NCode.Disposables.AsyncDisposableExtensions.DisposeAllAsync(this System.Collections.Generic.IEnumerable<object?>! collection) -> System.Threading.Tasks.ValueTask",
+        "static NCode.Disposables.AsyncDisposableExtensions.DisposeAllIgnoringExceptionsAsync(this System.Collections.Generic.IEnumerable<object?>! collection) -> System.Threading.Tasks.ValueTask"
+      ]
+    },
+    {
+      "id": "semaphoreslimextensions",
+      "group": "extensions",
+      "type": "SemaphoreSlimExtensions",
+      "member": null,
+      "signatures": [
+        "public static class SemaphoreSlimExtensions",
+        "public static ValueDisposable<SemaphoreSlim> Lock(this SemaphoreSlim semaphore, CancellationToken cancellationToken = default)",
+        "public static ValueTask<ValueDisposable<SemaphoreSlim>> LockAsync(this SemaphoreSlim semaphore, CancellationToken cancellationToken = default)"
+      ],
+      "summary": "`Lock()` and `LockAsync()` wait for the semaphore and return a scope that releases it; a cancelled wait throws `OperationCanceledException`.",
+      "page": "/guides/scope-a-lock/",
+      "api": [
+        "NCode.Disposables.SemaphoreSlimExtensions",
+        "NCode.Disposables.SemaphoreSlimExtensions.extension(System.Threading.SemaphoreSlim!)",
+        "NCode.Disposables.SemaphoreSlimExtensions.extension(System.Threading.SemaphoreSlim!).Lock(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> NCode.Disposables.ValueDisposable<System.Threading.SemaphoreSlim!>",
+        "NCode.Disposables.SemaphoreSlimExtensions.extension(System.Threading.SemaphoreSlim!).LockAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<NCode.Disposables.ValueDisposable<System.Threading.SemaphoreSlim!>>",
+        "static NCode.Disposables.SemaphoreSlimExtensions.Lock(this System.Threading.SemaphoreSlim! semaphore, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> NCode.Disposables.ValueDisposable<System.Threading.SemaphoreSlim!>",
+        "static NCode.Disposables.SemaphoreSlimExtensions.LockAsync(this System.Threading.SemaphoreSlim! semaphore, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<NCode.Disposables.ValueDisposable<System.Threading.SemaphoreSlim!>>"
+      ]
+    },
+    {
+      "id": "readerwriterlockslimextensions",
+      "group": "extensions",
+      "type": "ReaderWriterLockSlimExtensions",
+      "member": null,
+      "signatures": [
+        "public static class ReaderWriterLockSlimExtensions",
+        "public static ValueDisposable<ReaderWriterLockSlim> ReadLock(this ReaderWriterLockSlim readerWriterLock)",
+        "public static ValueDisposable<ReaderWriterLockSlim> UpgradeableReadLock(this ReaderWriterLockSlim readerWriterLock)",
+        "public static ValueDisposable<ReaderWriterLockSlim> WriteLock(this ReaderWriterLockSlim readerWriterLock)"
+      ],
+      "summary": "`ReadLock()`, `UpgradeableReadLock()` and `WriteLock()` enter the lock and return a scope that exits it.",
+      "page": "/guides/scope-a-lock/",
+      "api": [
+        "NCode.Disposables.ReaderWriterLockSlimExtensions",
+        "NCode.Disposables.ReaderWriterLockSlimExtensions.extension(System.Threading.ReaderWriterLockSlim!)",
+        "NCode.Disposables.ReaderWriterLockSlimExtensions.extension(System.Threading.ReaderWriterLockSlim!).ReadLock() -> NCode.Disposables.ValueDisposable<System.Threading.ReaderWriterLockSlim!>",
+        "NCode.Disposables.ReaderWriterLockSlimExtensions.extension(System.Threading.ReaderWriterLockSlim!).UpgradeableReadLock() -> NCode.Disposables.ValueDisposable<System.Threading.ReaderWriterLockSlim!>",
+        "NCode.Disposables.ReaderWriterLockSlimExtensions.extension(System.Threading.ReaderWriterLockSlim!).WriteLock() -> NCode.Disposables.ValueDisposable<System.Threading.ReaderWriterLockSlim!>",
+        "static NCode.Disposables.ReaderWriterLockSlimExtensions.ReadLock(this System.Threading.ReaderWriterLockSlim! readerWriterLock) -> NCode.Disposables.ValueDisposable<System.Threading.ReaderWriterLockSlim!>",
+        "static NCode.Disposables.ReaderWriterLockSlimExtensions.UpgradeableReadLock(this System.Threading.ReaderWriterLockSlim! readerWriterLock) -> NCode.Disposables.ValueDisposable<System.Threading.ReaderWriterLockSlim!>",
+        "static NCode.Disposables.ReaderWriterLockSlimExtensions.WriteLock(this System.Threading.ReaderWriterLockSlim! readerWriterLock) -> NCode.Disposables.ValueDisposable<System.Threading.ReaderWriterLockSlim!>"
+      ]
     }
   ]
 }
