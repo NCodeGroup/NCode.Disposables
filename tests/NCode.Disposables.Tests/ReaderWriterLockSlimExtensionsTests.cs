@@ -63,6 +63,18 @@ public class ReaderWriterLockSlimExtensionsTests
         Assert.True(readerWriterLock.IsWriteLockHeld);
     }
 
+    [Fact]
+    public void UpgradeableReadLock_NullLock_ThrowsArgumentNullException()
+    {
+        ReaderWriterLockSlim readerWriterLock = null!;
+
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            readerWriterLock.UpgradeableReadLock()
+        );
+
+        Assert.Equal("readerWriterLock", exception.ParamName);
+    }
+
     #endregion
 
     #region WriteLock Tests
@@ -86,6 +98,16 @@ public class ReaderWriterLockSlimExtensionsTests
         scope.Dispose();
 
         Assert.False(readerWriterLock.IsWriteLockHeld);
+    }
+
+    [Fact]
+    public void WriteLock_NullLock_ThrowsArgumentNullException()
+    {
+        ReaderWriterLockSlim readerWriterLock = null!;
+
+        var exception = Assert.Throws<ArgumentNullException>(() => readerWriterLock.WriteLock());
+
+        Assert.Equal("readerWriterLock", exception.ParamName);
     }
 
     #endregion

@@ -93,5 +93,17 @@ public class SemaphoreSlimExtensionsTests
         Assert.Equal(0, semaphore.CurrentCount);
     }
 
+    [Fact]
+    public async Task LockAsync_NullSemaphore_ThrowsArgumentNullException()
+    {
+        SemaphoreSlim semaphore = null!;
+
+        var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+            await semaphore.LockAsync()
+        );
+
+        Assert.Equal("semaphore", exception.ParamName);
+    }
+
     #endregion
 }
