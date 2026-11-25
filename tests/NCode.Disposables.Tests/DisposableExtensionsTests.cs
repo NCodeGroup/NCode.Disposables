@@ -379,47 +379,6 @@ public sealed class DisposableExtensionsTests : UnitTestBase
 
     #endregion
 
-    #region Deprecated Overload Tests
-
-#pragma warning disable NCDISP003 // tests the deprecated overloads until they are deleted
-
-    [Fact]
-    public void DisposeAll_WithIgnoreExceptionsTrue_IgnoresFailures()
-    {
-        var log = new List<string>();
-        var collection = new[]
-        {
-            Disposable.Create(() => log.Add("first")),
-            Disposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
-        };
-
-        collection.DisposeAll(ignoreExceptions: true);
-
-        Assert.Equal(["first"], log);
-    }
-
-    [Fact]
-    public void DisposeAll_WithIgnoreExceptionsFalse_RethrowsFailure()
-    {
-        var log = new List<string>();
-        var collection = new[]
-        {
-            Disposable.Create(() => log.Add("first")),
-            Disposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
-        };
-
-        var exception = Assert.Throws<InvalidOperationException>(() =>
-            collection.DisposeAll(ignoreExceptions: false)
-        );
-
-        Assert.Equal("Dispose failed.", exception.Message);
-        Assert.Equal(["first"], log);
-    }
-
-#pragma warning restore NCDISP003
-
-    #endregion
-
     private sealed class DualDisposable : IDisposable, IAsyncDisposable
     {
         public bool DisposeCalled { get; private set; }
