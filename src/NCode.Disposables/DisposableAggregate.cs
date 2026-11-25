@@ -4,7 +4,7 @@
 namespace NCode.Disposables;
 
 /// <summary>
-/// Provides a thread-safe implementation of <see cref="IDisposableAggregate"/> that manages
+/// Provides a thread-safe holder that manages
 /// a mutable reference to an underlying <see cref="IDisposable"/> instance.
 /// </summary>
 /// <remarks>
@@ -31,7 +31,14 @@ public sealed class DisposableAggregate : IDisposableAggregate, IDisposalStatus
     /// <summary>
     /// Gets a value indicating whether <see cref="Dispose"/> has been called at least once.
     /// </summary>
-    public bool IsDisposed => ReferenceEquals(Volatile.Read(ref _disposable), Sentinel);
+    public bool IsDisposed
+    {
+        get
+        {
+            var current = Volatile.Read(ref _disposable);
+            return ReferenceEquals(current, Sentinel);
+        }
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DisposableAggregate"/> class
@@ -87,9 +94,7 @@ public sealed class DisposableAggregate : IDisposableAggregate, IDisposalStatus
     /// </remarks>
     public IDisposable? Disposable
     {
-        // Uses SpinLock pattern:
-        // http://www.albahari.com/threading/part5.aspx#_SpinLock_and_SpinWait
-        // http://www.adammil.net/blog/v111_Creating_High-Performance_Locks_and_Lock-free_Code_for_NET_.html
+        // Lock-free: retry the CompareExchange, backing off with SpinWait, until no other thread changed the field in between.
 
         get
         {
