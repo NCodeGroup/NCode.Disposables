@@ -135,6 +135,42 @@ public class DisposableTests : UnitTestBase
 
     #endregion
 
+    #region Shared Tests
+
+    [Fact]
+    public void Shared_WithDisposable_DisposesItWhenTheLastLeaseIsReleased()
+    {
+        var count = 0;
+        var resource = Disposable.CreateRepeatable(() => count++);
+        var lease = Disposable.Shared(resource);
+        var second = lease.AddReference();
+
+        lease.Dispose();
+        var countAfterFirstRelease = count;
+        second.Dispose();
+
+        Assert.Equal(0, countAfterFirstRelease);
+        Assert.Equal(1, count);
+    }
+
+    [Fact]
+    public void Shared_WithOnRelease_ReleasesTheValueWhenTheLastLeaseIsReleased()
+    {
+        const string value = "resource";
+        var released = new List<string>();
+        var lease = Disposable.Shared(value, released.Add);
+        var second = lease.AddReference();
+
+        lease.Dispose();
+        var releasedAfterFirstRelease = released.Count;
+        second.Dispose();
+
+        Assert.Equal(0, releasedAfterFirstRelease);
+        Assert.Equal([value], released);
+    }
+
+    #endregion
+
     #region Collection Tests
 
     [Fact]
@@ -221,6 +257,303 @@ public class DisposableTests : UnitTestBase
 
         Assert.Equal(1, count);
         Assert.True(disposable.IsDisposed);
+    }
+
+    [Fact]
+    public void Create_FuncWithOneArgument_PassesArgument()
+    {
+        var actual = new List<int>();
+
+        var disposable = Disposable.Create(
+            (int a1) =>
+            {
+                actual.Add(a1);
+                return actual.Count;
+            },
+            1
+        );
+        disposable.Dispose();
+
+        Assert.Equal([1], actual);
+    }
+
+    [Fact]
+    public void Create_TwoArguments_PassesArguments()
+    {
+        var actual = new List<int>();
+
+        var disposable = Disposable.Create((int a1, int a2) => actual.AddRange([a1, a2]), 1, 2);
+        disposable.Dispose();
+
+        Assert.Equal([1, 2], actual);
+    }
+
+    [Fact]
+    public void Create_FuncWithTwoArguments_PassesArguments()
+    {
+        var actual = new List<int>();
+
+        var disposable = Disposable.Create(
+            (int a1, int a2) =>
+            {
+                actual.AddRange([a1, a2]);
+                return actual.Count;
+            },
+            1,
+            2
+        );
+        disposable.Dispose();
+
+        Assert.Equal([1, 2], actual);
+    }
+
+    [Fact]
+    public void Create_ThreeArguments_PassesArguments()
+    {
+        var actual = new List<int>();
+
+        var disposable = Disposable.Create(
+            (int a1, int a2, int a3) => actual.AddRange([a1, a2, a3]),
+            1,
+            2,
+            3
+        );
+        disposable.Dispose();
+
+        Assert.Equal([1, 2, 3], actual);
+    }
+
+    [Fact]
+    public void Create_FuncWithThreeArguments_PassesArguments()
+    {
+        var actual = new List<int>();
+
+        var disposable = Disposable.Create(
+            (int a1, int a2, int a3) =>
+            {
+                actual.AddRange([a1, a2, a3]);
+                return actual.Count;
+            },
+            1,
+            2,
+            3
+        );
+        disposable.Dispose();
+
+        Assert.Equal([1, 2, 3], actual);
+    }
+
+    [Fact]
+    public void Create_FourArguments_PassesArguments()
+    {
+        var actual = new List<int>();
+
+        var disposable = Disposable.Create(
+            (int a1, int a2, int a3, int a4) => actual.AddRange([a1, a2, a3, a4]),
+            1,
+            2,
+            3,
+            4
+        );
+        disposable.Dispose();
+
+        Assert.Equal([1, 2, 3, 4], actual);
+    }
+
+    [Fact]
+    public void Create_FuncWithFourArguments_PassesArguments()
+    {
+        var actual = new List<int>();
+
+        var disposable = Disposable.Create(
+            (int a1, int a2, int a3, int a4) =>
+            {
+                actual.AddRange([a1, a2, a3, a4]);
+                return actual.Count;
+            },
+            1,
+            2,
+            3,
+            4
+        );
+        disposable.Dispose();
+
+        Assert.Equal([1, 2, 3, 4], actual);
+    }
+
+    [Fact]
+    public void Create_FiveArguments_PassesArguments()
+    {
+        var actual = new List<int>();
+
+        var disposable = Disposable.Create(
+            (int a1, int a2, int a3, int a4, int a5) => actual.AddRange([a1, a2, a3, a4, a5]),
+            1,
+            2,
+            3,
+            4,
+            5
+        );
+        disposable.Dispose();
+
+        Assert.Equal([1, 2, 3, 4, 5], actual);
+    }
+
+    [Fact]
+    public void Create_FuncWithFiveArguments_PassesArguments()
+    {
+        var actual = new List<int>();
+
+        var disposable = Disposable.Create(
+            (int a1, int a2, int a3, int a4, int a5) =>
+            {
+                actual.AddRange([a1, a2, a3, a4, a5]);
+                return actual.Count;
+            },
+            1,
+            2,
+            3,
+            4,
+            5
+        );
+        disposable.Dispose();
+
+        Assert.Equal([1, 2, 3, 4, 5], actual);
+    }
+
+    [Fact]
+    public void Create_SixArguments_PassesArguments()
+    {
+        var actual = new List<int>();
+
+        var disposable = Disposable.Create(
+            (int a1, int a2, int a3, int a4, int a5, int a6) =>
+                actual.AddRange([a1, a2, a3, a4, a5, a6]),
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+        );
+        disposable.Dispose();
+
+        Assert.Equal([1, 2, 3, 4, 5, 6], actual);
+    }
+
+    [Fact]
+    public void Create_FuncWithSixArguments_PassesArguments()
+    {
+        var actual = new List<int>();
+
+        var disposable = Disposable.Create(
+            (int a1, int a2, int a3, int a4, int a5, int a6) =>
+            {
+                actual.AddRange([a1, a2, a3, a4, a5, a6]);
+                return actual.Count;
+            },
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+        );
+        disposable.Dispose();
+
+        Assert.Equal([1, 2, 3, 4, 5, 6], actual);
+    }
+
+    [Fact]
+    public void Create_SevenArguments_PassesArguments()
+    {
+        var actual = new List<int>();
+
+        var disposable = Disposable.Create(
+            (int a1, int a2, int a3, int a4, int a5, int a6, int a7) =>
+                actual.AddRange([a1, a2, a3, a4, a5, a6, a7]),
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+        );
+        disposable.Dispose();
+
+        Assert.Equal([1, 2, 3, 4, 5, 6, 7], actual);
+    }
+
+    [Fact]
+    public void Create_FuncWithSevenArguments_PassesArguments()
+    {
+        var actual = new List<int>();
+
+        var disposable = Disposable.Create(
+            (int a1, int a2, int a3, int a4, int a5, int a6, int a7) =>
+            {
+                actual.AddRange([a1, a2, a3, a4, a5, a6, a7]);
+                return actual.Count;
+            },
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+        );
+        disposable.Dispose();
+
+        Assert.Equal([1, 2, 3, 4, 5, 6, 7], actual);
+    }
+
+    [Fact]
+    public void Create_EightArguments_PassesArguments()
+    {
+        var actual = new List<int>();
+
+        var disposable = Disposable.Create(
+            (int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8) =>
+                actual.AddRange([a1, a2, a3, a4, a5, a6, a7, a8]),
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8
+        );
+        disposable.Dispose();
+
+        Assert.Equal([1, 2, 3, 4, 5, 6, 7, 8], actual);
+    }
+
+    [Fact]
+    public void Create_FuncWithEightArguments_PassesArguments()
+    {
+        var actual = new List<int>();
+
+        var disposable = Disposable.Create(
+            (int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8) =>
+            {
+                actual.AddRange([a1, a2, a3, a4, a5, a6, a7, a8]);
+                return actual.Count;
+            },
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8
+        );
+        disposable.Dispose();
+
+        Assert.Equal([1, 2, 3, 4, 5, 6, 7, 8], actual);
     }
 
     #endregion

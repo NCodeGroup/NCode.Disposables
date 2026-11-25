@@ -72,6 +72,17 @@ public class AsyncDisposableTests : UnitTestBase
         Assert.False(aggregate.IsDisposed);
     }
 
+    [Fact]
+    public async Task Aggregate_WithDisposable_HoldsIt()
+    {
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
+        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask).Verifiable();
+
+        await using var aggregate = AsyncDisposable.Aggregate(mockDisposable.Object);
+
+        Assert.Same(mockDisposable.Object, aggregate.Disposable);
+    }
+
     #endregion
 
     #region Serial Tests
@@ -223,6 +234,135 @@ public class AsyncDisposableTests : UnitTestBase
     }
 
     [Fact]
+    public async Task Create_TwoArguments_PassesArguments()
+    {
+        var actual = new List<int>();
+
+        var disposable = AsyncDisposable.Create(
+            (int a1, int a2) =>
+            {
+                actual.AddRange([a1, a2]);
+                return ValueTask.CompletedTask;
+            },
+            1,
+            2
+        );
+        await disposable.DisposeAsync();
+
+        Assert.Equal([1, 2], actual);
+    }
+
+    [Fact]
+    public async Task Create_ThreeArguments_PassesArguments()
+    {
+        var actual = new List<int>();
+
+        var disposable = AsyncDisposable.Create(
+            (int a1, int a2, int a3) =>
+            {
+                actual.AddRange([a1, a2, a3]);
+                return ValueTask.CompletedTask;
+            },
+            1,
+            2,
+            3
+        );
+        await disposable.DisposeAsync();
+
+        Assert.Equal([1, 2, 3], actual);
+    }
+
+    [Fact]
+    public async Task Create_FourArguments_PassesArguments()
+    {
+        var actual = new List<int>();
+
+        var disposable = AsyncDisposable.Create(
+            (int a1, int a2, int a3, int a4) =>
+            {
+                actual.AddRange([a1, a2, a3, a4]);
+                return ValueTask.CompletedTask;
+            },
+            1,
+            2,
+            3,
+            4
+        );
+        await disposable.DisposeAsync();
+
+        Assert.Equal([1, 2, 3, 4], actual);
+    }
+
+    [Fact]
+    public async Task Create_FiveArguments_PassesArguments()
+    {
+        var actual = new List<int>();
+
+        var disposable = AsyncDisposable.Create(
+            (int a1, int a2, int a3, int a4, int a5) =>
+            {
+                actual.AddRange([a1, a2, a3, a4, a5]);
+                return ValueTask.CompletedTask;
+            },
+            1,
+            2,
+            3,
+            4,
+            5
+        );
+        await disposable.DisposeAsync();
+
+        Assert.Equal([1, 2, 3, 4, 5], actual);
+    }
+
+    [Fact]
+    public async Task Create_SixArguments_PassesArguments()
+    {
+        var actual = new List<int>();
+
+        var disposable = AsyncDisposable.Create(
+            (int a1, int a2, int a3, int a4, int a5, int a6) =>
+            {
+                actual.AddRange([a1, a2, a3, a4, a5, a6]);
+                return ValueTask.CompletedTask;
+            },
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+        );
+        await disposable.DisposeAsync();
+
+        Assert.Equal([1, 2, 3, 4, 5, 6], actual);
+    }
+
+    [Fact]
+    public async Task Create_SevenArguments_PassesArguments()
+    {
+        var actual = new List<int>();
+
+        var disposable = AsyncDisposable.Create(
+            (int a1, int a2, int a3, int a4, int a5, int a6, int a7) =>
+            {
+                actual.AddRange([a1, a2, a3, a4, a5, a6, a7]);
+                return ValueTask.CompletedTask;
+            },
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+        );
+        await disposable.DisposeAsync();
+
+        Assert.Equal([1, 2, 3, 4, 5, 6, 7], actual);
+    }
+
+    [Fact]
     public async Task Create_EightArguments_PassesArguments()
     {
         var actual = new List<int>();
@@ -357,6 +497,46 @@ public class AsyncDisposableTests : UnitTestBase
         );
 
         Assert.Equal("action", exception.ParamName);
+    }
+
+    #endregion
+
+    #region Shared Tests
+
+    [Fact]
+    public async Task Shared_WithDisposable_DisposesItWhenTheLastLeaseIsReleased()
+    {
+        var count = 0;
+        var resource = AsyncDisposable.CreateRepeatable(() => count++);
+        var lease = AsyncDisposable.Shared(resource);
+        var second = lease.AddReference();
+
+        await lease.DisposeAsync();
+        var countAfterFirstRelease = count;
+        await second.DisposeAsync();
+
+        Assert.Equal(0, countAfterFirstRelease);
+        Assert.Equal(1, count);
+    }
+
+    [Fact]
+    public async Task Shared_WithOnRelease_ReleasesTheValueWhenTheLastLeaseIsReleased()
+    {
+        const string value = "resource";
+        var released = new List<string>();
+        var lease = AsyncDisposable.Shared(value, v =>
+        {
+            released.Add(v);
+            return ValueTask.CompletedTask;
+        });
+        var second = lease.AddReference();
+
+        await lease.DisposeAsync();
+        var releasedAfterFirstRelease = released.Count;
+        await second.DisposeAsync();
+
+        Assert.Equal(0, releasedAfterFirstRelease);
+        Assert.Equal([value], released);
     }
 
     #endregion
