@@ -4,41 +4,6 @@
 namespace NCode.Disposables;
 
 /// <summary>
-/// Represents an <see cref="IDisposable"/> container that aggregates and manages
-/// a reference to another underlying <see cref="IDisposable"/> instance, allowing
-/// the underlying instance to be replaced or cleared during the aggregate's lifetime.
-/// </summary>
-/// <remarks>
-/// <para>
-/// This interface enables scenarios where the disposable resource needs to be swapped
-/// or updated dynamically, while still providing proper disposal semantics.
-/// </para>
-/// <para>
-/// When the aggregate is disposed, it will also dispose the currently held underlying instance.
-/// </para>
-/// </remarks>
-public interface IDisposableAggregate : IDisposable
-{
-    /// <summary>
-    /// Gets or sets the underlying <see cref="IDisposable"/> instance managed by this aggregate.
-    /// </summary>
-    /// <value>
-    /// The current underlying <see cref="IDisposable"/> instance, or <see langword="null"/> if no instance is set.
-    /// </value>
-    /// <remarks>
-    /// <para>
-    /// Setting this property does not dispose the previous instance. If disposal of the previous
-    /// instance is required, it must be done explicitly before setting a new value.
-    /// </para>
-    /// <para>
-    /// After the aggregate has been disposed, the getter returns <see langword="null"/>
-    /// and the setter disposes the value it is given.
-    /// </para>
-    /// </remarks>
-    IDisposable? Disposable { get; set; }
-}
-
-/// <summary>
 /// Provides a thread-safe implementation of <see cref="IDisposableAggregate"/> that manages
 /// a mutable reference to an underlying <see cref="IDisposable"/> instance.
 /// </summary>
@@ -56,7 +21,9 @@ public interface IDisposableAggregate : IDisposable
 /// Setting the <see cref="Disposable"/> property does not automatically dispose the previous instance.
 /// </para>
 /// </remarks>
+#pragma warning disable NCDISP002 // implements the deprecated interface until it is deleted
 public sealed class DisposableAggregate : IDisposableAggregate, IDisposalStatus
+#pragma warning restore NCDISP002
 {
     private static readonly IDisposable Sentinel = new DisposableEmpty();
     private IDisposable? _disposable;

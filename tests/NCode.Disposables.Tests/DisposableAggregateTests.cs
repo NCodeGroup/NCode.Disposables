@@ -320,6 +320,7 @@ public class DisposableAggregateTests
 
     #region Interface Tests
 
+#pragma warning disable NCDISP002 // implements the deprecated interface until it is deleted
     [Fact]
     public void ImplementsIDisposableAggregate()
     {
@@ -327,6 +328,7 @@ public class DisposableAggregateTests
 
         Assert.IsAssignableFrom<IDisposableAggregate>(aggregate);
     }
+#pragma warning restore NCDISP002
 
     [Fact]
     public void ImplementsIDisposable()
