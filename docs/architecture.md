@@ -96,7 +96,7 @@ flowchart LR
 | Component | Role |
 | --- | --- |
 | `Disposable` | Static factory that returns the concrete types: `Empty`, `Create` (an `Action` or a `Func<TResult>`, each also taking up to eight arguments, and `Create(Action, idempotent)`), `CreateValue`, `Aggregate`, `Serial`, `SingleAssignment`, `Guard`, `Cancellation`, `Flag`, `Collection`, `Context` and `Shared`, which calls `SharedReference.Create`. |
-| `AsyncDisposable` | Static factory that returns the concrete types: `Empty`, `Create` (a `Func<ValueTask>` or an `Action`), `CreateValue`, `Adapt`, `Aggregate`, `Serial`, `SingleAssignment`, `Guard`, `Cancellation`, `Collection`, `Context` and `Shared`, which calls `AsyncSharedReference.Create`. |
+| `AsyncDisposable` | Static factory that returns the concrete types: `Empty`, `Create` (a `Func<ValueTask>`, which also takes up to eight arguments, or an `Action`, and `Create(Func<ValueTask>, idempotent)` and `Create(Action, idempotent)`), `CreateValue`, `Adapt`, `Aggregate`, `Serial`, `SingleAssignment`, `Guard`, `Cancellation`, `Collection`, `Context` and `Shared`, which calls `AsyncSharedReference.Create`. |
 | `DisposableEmpty`, `AsyncDisposableEmpty` | Do nothing; `Singleton` is the instance `Empty` returns. |
 | `DisposableAction`, `AsyncDisposableAction` | Run a delegate on the first dispose, taken with `Interlocked.Exchange` so it runs once across threads, or on every dispose with `idempotent: false`. |
 | `DisposableAggregate`, `AsyncDisposableAggregate` | Hold one replaceable resource in `Disposable`, swapped atomically; disposing the aggregate disposes the resource it holds, and after disposal `Disposable` reads `null` and a resource set on it is disposed ([ADR-1004](decisions/1004-a-resource-handed-to-a-disposed-holder-is-disposed.md)); `AsyncDisposableAggregate`'s setter throws `ObjectDisposedException` after disposal, and `SetDisposableAsync` disposes the resource; the interfaces `IDisposableAggregate` and `IAsyncDisposableAggregate` are obsolete (`NCDISP002`, [ADR-1005](decisions/1005-disposables-are-concrete-sealed-types-that-report-their-disposal-status.md)). |
@@ -120,10 +120,11 @@ flowchart LR
 | `ReaderWriterLockSlimExtensions` | `ReadLock()`, `UpgradeableReadLock()` and `WriteLock()`, which return a `ValueDisposable` lock scope that exits the lock on dispose ([ADR-1006](decisions/1006-value-disposables-and-lock-scopes-are-non-idempotent-structs.md)). |
 | `NCode.Disposables.Tests` | xUnit tests of every type, and in `ReadmeSamplesTests.cs` the README samples ([ADR-1000](decisions/1000-readme-samples-are-compiled-tests-that-markdownsnippets-copies-into-the-readmes.md)). |
 
-The package does no I/O, starts no threads, and keeps no static state beyond the `Singleton` instances of the empty
-disposables. It shows people no text: the exceptions it throws on purpose are `ArgumentNullException`,
-`ObjectDisposedException` and `InvalidOperationException` and, from the lock scopes, `OperationCanceledException`, for
-developers.
+The package does no I/O and starts no threads, and it keeps no mutable static state: its only static values are the
+`Singleton` instances of the empty disposables, the holders' private `Sentinel` markers and the lock scopes' cached
+release delegates, none of which changes once created. It shows people no text: the exceptions it throws on purpose are
+`ArgumentNullException`, `ObjectDisposedException` and `InvalidOperationException` and, from the lock scopes,
+`OperationCanceledException`, for developers.
 
 ## Design Rules
 

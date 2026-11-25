@@ -406,7 +406,7 @@ cancellation.Dispose(); // cancels the token, then disposes the source it create
 
 ### Checking whether a disposable is disposed
 
-Every disposable that keeps state implements `IDisposalStatus`, whose `IsDisposed` is `true` once disposal has started. `Disposable.Flag()` does nothing else:
+Every disposable class that keeps disposal state implements `IDisposalStatus`, whose `IsDisposed` is `true` once disposal has started. The structs, which are the value disposables, the lock scopes and the shared-reference leases, keep no disposal state and don't implement it, and a shared-reference owner is a reference count, not a disposable. `Disposable.Flag()` only records its disposal:
 
 <!-- snippet: DisposalStatus -->
 ```cs
