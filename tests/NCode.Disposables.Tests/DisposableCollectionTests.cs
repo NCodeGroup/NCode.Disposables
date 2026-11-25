@@ -45,6 +45,16 @@ public sealed class DisposableCollectionTests : UnitTestBase
         Assert.Throws<ArgumentNullException>(() => new DisposableCollection(null!));
     }
 
+    [Fact]
+    public void Constructor_WithNullItem_ThrowsArgumentException()
+    {
+        IDisposable[] items = [Disposable.Empty, null!];
+
+        var exception = Assert.Throws<ArgumentException>(() => new DisposableCollection(items));
+
+        Assert.Equal("collection", exception.ParamName);
+    }
+
     #endregion
 
     #region Add Tests
