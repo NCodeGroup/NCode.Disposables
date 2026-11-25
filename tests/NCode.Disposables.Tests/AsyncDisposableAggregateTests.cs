@@ -355,6 +355,7 @@ public class AsyncDisposableAggregateTests : UnitTestBase
         {
             var aggregate = new AsyncDisposableAggregate();
             var mockDisposable = CreateStrictMock<IAsyncDisposable>();
+            // Not verifiable: when the dispose wins the race, the setter throws ObjectDisposedException and never disposes this value.
             mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
 
             var setTask = Task.Run(() =>
