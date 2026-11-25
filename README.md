@@ -133,6 +133,38 @@ using (var current = Disposable.Aggregate(primary))
 ```
 <!-- endSnippet -->
 
+### Replacing a resource and disposing the old one
+
+`Disposable.Serial` holds one resource and disposes it when another replaces it. Once the serial disposable is disposed, it disposes any resource it is given, and `Disposable` reads `null`. `AsyncDisposable.Serial` does the same through `SetDisposableAsync`:
+
+<!-- snippet: SerialDisposable -->
+```cs
+var log = new List<string>();
+using (var subscription = Disposable.Serial())
+{
+    subscription.Disposable = Disposable.Create(() => log.Add("first closed"));
+    subscription.Disposable = Disposable.Create(() => log.Add("second closed")); // disposes the first
+}
+
+// log: "first closed", "second closed"
+```
+<!-- endSnippet -->
+
+### Assigning a resource once
+
+`Disposable.SingleAssignment` takes one resource, once; a second assignment throws `InvalidOperationException`. A resource that arrives after it is disposed is disposed at once. `AsyncDisposable.SingleAssignment` takes it through `SetDisposableAsync`:
+
+<!-- snippet: SingleAssignmentDisposable -->
+```cs
+var log = new List<string>();
+var pending = Disposable.SingleAssignment();
+pending.Dispose(); // disposed before the resource arrived
+pending.Disposable = Disposable.Create(() => log.Add("late resource closed")); // disposed at once
+
+// log: "late resource closed"
+```
+<!-- endSnippet -->
+
 ### Disposing many resources together
 
 `Disposable.Collection` is an `ICollection<IDisposable>` that disposes its items in reverse order, the last one added first, on its first `Dispose`; later calls do nothing, and an item added after that is never disposed. `Remove` and `Clear` take items out without disposing them:

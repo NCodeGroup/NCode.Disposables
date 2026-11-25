@@ -131,6 +131,46 @@ public class ReadmeSamplesTests
 
     #endregion
 
+    #region Serial Tests
+
+    [Fact]
+    public void SerialDisposableSample_Runs()
+    {
+        // begin-snippet: SerialDisposable
+        var log = new List<string>();
+        using (var subscription = Disposable.Serial())
+        {
+            subscription.Disposable = Disposable.Create(() => log.Add("first closed"));
+            subscription.Disposable = Disposable.Create(() => log.Add("second closed")); // disposes the first
+        }
+
+        // log: "first closed", "second closed"
+        // end-snippet
+
+        Assert.Equal(["first closed", "second closed"], log);
+    }
+
+    #endregion
+
+    #region Single Assignment Tests
+
+    [Fact]
+    public void SingleAssignmentDisposableSample_Runs()
+    {
+        // begin-snippet: SingleAssignmentDisposable
+        var log = new List<string>();
+        var pending = Disposable.SingleAssignment();
+        pending.Dispose(); // disposed before the resource arrived
+        pending.Disposable = Disposable.Create(() => log.Add("late resource closed")); // disposed at once
+
+        // log: "late resource closed"
+        // end-snippet
+
+        Assert.Equal(["late resource closed"], log);
+    }
+
+    #endregion
+
     #region Collection Tests
 
     [Fact]
