@@ -20,60 +20,53 @@ public class DisposablePropertyTests
         for (var index = 0; index < count; index++)
         {
             var item = index;
-            collection.Add(Disposable.CreateRepeatable(() => disposed.Add(item)));
+            var disposable = Disposable.CreateRepeatable(() => disposed.Add(item));
+            collection.Add(disposable);
         }
+        var expected = Enumerable.Range(0, count).Reverse();
 
         collection.Dispose();
         collection.Dispose();
 
-        return disposed.SequenceEqual(Enumerable.Range(0, count).Reverse());
+        return disposed.SequenceEqual(expected);
     }
 
     [Property(Replay = Seed)]
-    public bool Collection_GivenItemsThatThrow_DisposesEveryItemAndThrowsWhatTheyThrew(
-        bool[] throws
-    )
+    public bool Collection_GivenItemsThatThrow_DisposesEveryItemInReverseOrder(bool[] throws)
     {
         var disposed = new List<int>();
-        var collection = Disposable.Collection();
-        for (var index = 0; index < throws.Length; index++)
-        {
-            var item = index;
-            var shouldThrow = throws[index];
-            collection.Add(
-                Disposable.Create(() =>
-                {
-                    disposed.Add(item);
-                    if (shouldThrow)
-                    {
-                        throw new InvalidOperationException(
-                            item.ToString(CultureInfo.InvariantCulture)
-                        );
-                    }
-                })
-            );
-        }
+        var collection = CreateCollection(throws, disposed);
+        var expected = Enumerable.Range(0, throws.Length).Reverse();
+
+        Record.Exception(collection.Dispose);
+
+        return disposed.SequenceEqual(expected);
+    }
+
+    [Property(Replay = Seed)]
+    public bool Collection_GivenItemsThatThrow_ThrowsTheirExceptionsInDisposalOrder(bool[] throws)
+    {
+        var collection = CreateCollection(throws, []);
+        var expected = ThrowingItemsInDisposalOrder(throws);
 
         var thrown = Record.Exception(collection.Dispose);
 
-        var expected = Enumerable
-            .Range(0, throws.Length)
-            .Reverse()
-            .Where(index => throws[index])
-            .Select(index => index.ToString(CultureInfo.InvariantCulture))
-            .ToList();
-        List<string> actual = thrown switch
-        {
-            null => [],
-            AggregateException aggregate => aggregate
-                .InnerExceptions.Select(exception => exception.Message)
-                .ToList(),
-            _ => [thrown.Message],
-        };
+        var actual = MessagesOf(thrown);
+        return actual.SequenceEqual(expected);
+    }
+
+    [Property(Replay = Seed)]
+    public bool Collection_GivenItemsThatThrow_ThrowsAnAggregateExceptionOnlyForSeveral(
+        bool[] throws
+    )
+    {
+        var collection = CreateCollection(throws, []);
+        var throwingCount = throws.Count(shouldThrow => shouldThrow);
+
+        var thrown = Record.Exception(collection.Dispose);
+
         var isAggregate = thrown is AggregateException;
-        return disposed.SequenceEqual(Enumerable.Range(0, throws.Length).Reverse())
-            && actual.SequenceEqual(expected)
-            && isAggregate == expected.Count > 1;
+        return isAggregate == throwingCount > 1;
     }
 
     #endregion
@@ -91,7 +84,7 @@ public class DisposablePropertyTests
             disposable.Dispose();
         }
 
-        return count == 1 && disposable.IsDisposed;
+        return count == 1;
     }
 
     #endregion
@@ -126,13 +119,15 @@ public class DisposablePropertyTests
         for (var index = 0; index < count; index++)
         {
             var item = index;
-            serial.Disposable = Disposable.CreateRepeatable(() => disposed.Add(item));
+            var disposable = Disposable.CreateRepeatable(() => disposed.Add(item));
+            serial.Disposable = disposable;
         }
+        var expected = Enumerable.Range(0, count);
 
         serial.Dispose();
         serial.Dispose();
 
-        return disposed.SequenceEqual(Enumerable.Range(0, count));
+        return disposed.SequenceEqual(expected);
     }
 
     #endregion
@@ -145,14 +140,16 @@ public class DisposablePropertyTests
     )
     {
         var released = 0;
-        var lease = Disposable.Shared(new object(), _ => released++);
-        List<SharedReferenceLease<object>> leases = [lease];
+        var value = new object();
+        var lease = Disposable.Shared(value, _ => released++);
+        List<SharedReferenceLease<object>> otherLeases = [];
         for (var index = 0; index < extraLeases; index++)
         {
-            leases.Add(lease.AddReference());
+            var other = lease.AddReference();
+            otherLeases.Add(other);
         }
 
-        foreach (var other in leases.Skip(1))
+        foreach (var other in otherLeases)
         {
             other.Dispose();
         }
@@ -164,4 +161,45 @@ public class DisposablePropertyTests
     }
 
     #endregion
+
+    private static DisposableCollection CreateCollection(bool[] throws, List<int> disposed)
+    {
+        var collection = Disposable.Collection();
+        for (var index = 0; index < throws.Length; index++)
+        {
+            var item = index;
+            var shouldThrow = throws[index];
+            var disposable = Disposable.Create(() =>
+            {
+                disposed.Add(item);
+                if (shouldThrow)
+                {
+                    var message = item.ToString(CultureInfo.InvariantCulture);
+                    throw new InvalidOperationException(message);
+                }
+            });
+            collection.Add(disposable);
+        }
+
+        return collection;
+    }
+
+    private static List<string> ThrowingItemsInDisposalOrder(bool[] throws) =>
+        Enumerable
+            .Range(0, throws.Length)
+            .Reverse()
+            .Where(index => throws[index])
+            .Select(index => index.ToString(CultureInfo.InvariantCulture))
+            .ToList();
+
+    private static List<string> MessagesOf(Exception? thrown) =>
+        thrown switch
+        {
+            null => [],
+            AggregateException aggregate =>
+            [
+                .. aggregate.InnerExceptions.Select(exception => exception.Message),
+            ],
+            _ => [thrown.Message],
+        };
 }

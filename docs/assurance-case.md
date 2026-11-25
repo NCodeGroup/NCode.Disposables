@@ -103,7 +103,7 @@ privilege and open design."
 
 [//]: # "Maintainers: add the tests and the coverage the project keeps."
 
-- **Tests (R1–R6):** xUnit tests of every type, 721 in all, cover a second dispose (such as
+- **Tests (R1–R6):** xUnit tests of every type, 723 in all, cover a second dispose (such as
   `Dispose_Twice_DisposesOnce`), concurrent disposal and assignment from several threads (such as
   `Dispose_ConcurrentCalls_DisposesOnlyOnce` and `Dispose_ConcurrentWithAdd_DisposesEveryItemOnce`), `null` arguments,
   a resource handed to a disposed holder, and a context whose `Post` throws
