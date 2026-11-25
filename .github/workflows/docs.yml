@@ -1,0 +1,38 @@
+name: Documentation site
+
+# Builds the documentation site from docs/site/ with the shared toolchain in NCodeGroup/docs (ADR-1009), on every pull
+# request and every push to the default branch, so a page that names a sample key no test defines, links to a page that
+# does not exist, or has an element that leaves its content column at 1440, 1280, 1024 or 390 px, fails here. The build
+# is kept for a week as the github-pages artifact, which a reviewer can download and browse. A run on the default
+# branch also publishes it to GitHub Pages, at https://disposables.ncode.io/ (ADR-1012, ADR-1013): the repository's
+# Pages source is GitHub Actions, and the github-pages environment takes deployments from the default branch only.
+# The toolchain is pinned by commit, which selects its workflow, packages and theme together.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+permissions: {}
+
+# A newer push to a pull request cancels the run it supersedes. A run on the default branch is never cancelled once it
+# has started.
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
+
+jobs:
+  site:
+    # A called workflow keeps or reduces its caller's permissions, so this job grants what the toolchain's jobs ask
+    # for, its deploy job's included, which runs only on the default branch.
+    permissions:
+      contents: read # checks out this repository
+      pages: write # reads the site's URL, and creates the deployment
+      id-token: write # proves to GitHub Pages where the deployment comes from
+    # Taken the day it is released, not after project-template ADR-0009's cooldown, while the toolchain is built out
+    # (ADR-1011).
+    uses: NCodeGroup/docs/.github/workflows/site.yml@f796a21fc43a1001743446df21a6ed2d6f555c3c # v0.18.0
+    with:
+      content-path: docs/site
+      deploy: ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}

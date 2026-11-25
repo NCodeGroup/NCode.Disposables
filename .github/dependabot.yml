@@ -6,6 +6,7 @@
 # advisory run is one pull request. A new .NET SDK major isn't offered: moving to a new .NET major is a planned migration
 # (/plan-migration). A docker entry a project adds ignores major updates of its base images the same way. One update
 # comes apart: a new release of the NCode Review action (NCodeGroup/code-review) has a pull request of its own.
+# The documentation site's toolchain, NCodeGroup/docs, skips the cooldown while it is built out (ADR-1011).
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -15,6 +16,8 @@ updates:
       interval: weekly
     cooldown:
       default-days: 3
+      # NCodeGroup/docs is taken the day it is released while it is built out (ADR-1011).
+      exclude: ["NCodeGroup/docs", "NCodeGroup/docs/*"]
     groups:
       # Dependabot puts an update in the first group that matches it, so this one comes before the catch-all group:
       # .github/workflows/code-review-auto-merge.yml merges only a pull request whose one change is the NCode Review pin.
