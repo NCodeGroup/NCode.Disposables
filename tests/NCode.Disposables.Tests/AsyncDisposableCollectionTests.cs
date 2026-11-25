@@ -45,6 +45,18 @@ public class AsyncDisposableCollectionTests : UnitTestBase
         Assert.Throws<ArgumentNullException>(() => new AsyncDisposableCollection(null!));
     }
 
+    [Fact]
+    public void Constructor_WithNullItem_ThrowsArgumentException()
+    {
+        IAsyncDisposable[] items = [AsyncDisposable.Empty, null!];
+
+        var exception = Assert.Throws<ArgumentException>(() =>
+            new AsyncDisposableCollection(items)
+        );
+
+        Assert.Equal("collection", exception.ParamName);
+    }
+
     #endregion
 
     #region Add Tests

@@ -236,6 +236,7 @@ public static class AsyncDisposable
     /// <param name="collection">The <see cref="IAsyncDisposable"/> items to add to the collection.</param>
     /// <returns>A new <see cref="AsyncDisposableCollection"/> containing the specified items.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="collection"/> contains a <see langword="null"/> item.</exception>
     public static AsyncDisposableCollection Collection(params IAsyncDisposable[] collection)
     {
         ArgumentNullException.ThrowIfNull(collection);
@@ -251,6 +252,7 @@ public static class AsyncDisposable
     /// <param name="collection">The enumerable collection of <see cref="IAsyncDisposable"/> items to add.</param>
     /// <returns>A new <see cref="AsyncDisposableCollection"/> containing the specified items.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="collection"/> contains a <see langword="null"/> item.</exception>
     /// <remarks>
     /// When the collection is disposed, every item is still disposed; then the one exception is
     /// rethrown, or an <see cref="AggregateException"/> holding every exception is thrown when several items throw.
@@ -271,6 +273,7 @@ public static class AsyncDisposable
     /// <param name="collection">The <see cref="IAsyncDisposable"/> items to add to the collection.</param>
     /// <returns>A new <see cref="AsyncDisposableCollection"/> containing the specified items.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="collection"/> contains a <see langword="null"/> item.</exception>
     /// <remarks>
     /// Disposal continues for all items even if some throw exceptions, and the exceptions are ignored.
     /// </remarks>
@@ -293,6 +296,7 @@ public static class AsyncDisposable
     /// <param name="collection">The enumerable collection of <see cref="IAsyncDisposable"/> items to add.</param>
     /// <returns>A new <see cref="AsyncDisposableCollection"/> containing the specified items.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="collection"/> contains a <see langword="null"/> item.</exception>
     /// <remarks>
     /// Disposal continues for all items even if some throw exceptions, and the exceptions are ignored.
     /// </remarks>
