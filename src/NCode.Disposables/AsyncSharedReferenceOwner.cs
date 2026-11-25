@@ -97,8 +97,11 @@ public interface IAsyncSharedReferenceOwner<T>
 public sealed class AsyncSharedReferenceOwner<T>(T value, Func<T, ValueTask> onRelease)
     : IAsyncSharedReferenceOwner<T>
 {
-    private readonly Func<T, ValueTask> _onRelease = onRelease
-        ?? throw new ArgumentNullException(nameof(onRelease));
+    /// <summary>
+    /// Gets the callback that releases the resource when the reference count reaches zero.
+    /// </summary>
+    private Func<T, ValueTask> OnRelease { get; } =
+        onRelease ?? throw new ArgumentNullException(nameof(onRelease));
 
     private int _count = 1;
 
@@ -170,7 +173,7 @@ public sealed class AsyncSharedReferenceOwner<T>(T value, Func<T, ValueTask> onR
             {
                 if (newCount == 0)
                 {
-                    await _onRelease(value).ConfigureAwait(false);
+                    await OnRelease(value).ConfigureAwait(false);
                 }
 
                 return newCount;

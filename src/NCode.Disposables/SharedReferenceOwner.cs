@@ -94,8 +94,11 @@ public interface ISharedReferenceOwner<T>
 /// </remarks>
 public sealed class SharedReferenceOwner<T>(T value, Action<T> onRelease) : ISharedReferenceOwner<T>
 {
-    private readonly Action<T> _onRelease = onRelease
-        ?? throw new ArgumentNullException(nameof(onRelease));
+    /// <summary>
+    /// Gets the callback that releases the resource when the reference count reaches zero.
+    /// </summary>
+    private Action<T> OnRelease { get; } =
+        onRelease ?? throw new ArgumentNullException(nameof(onRelease));
 
     private int _count = 1;
 
@@ -168,7 +171,7 @@ public sealed class SharedReferenceOwner<T>(T value, Action<T> onRelease) : ISha
             {
                 if (newCount == 0)
                 {
-                    _onRelease(value);
+                    OnRelease(value);
                 }
 
                 return newCount;
