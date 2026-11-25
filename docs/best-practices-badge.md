@@ -4,15 +4,17 @@ A maintainer registers NCode.Disposables at [bestpractices.dev](https://www.best
 there, which is the source of truth; this page doesn't copy the answers. It maps the criteria that need a document to
 the evidence this repository holds, so registering is answering, not researching.
 [best-practices-criteria.md](best-practices-criteria.md), which the template keeps current, maps every criterion of the
-three levels to the answer to expect and its evidence, and holds the prompt that registers the project.
+three levels to the answer to expect and its evidence, and holds the prompt that updates the answers.
 
-[//]: # "Maintainers: once registered, name the project's number here and in the badge below, in place of PROJECT_ID."
+NCode.Disposables is [project 17114](https://www.bestpractices.dev/projects/17114).
 
 ## The Badge
 
+[README.md](../README.md) shows it among the badges at its top:
+
 ```html
-<a href="https://www.bestpractices.dev/projects/PROJECT_ID"><img alt="OpenSSF Best Practices"
-  src="https://www.bestpractices.dev/projects/PROJECT_ID/badge"></a>
+<a href="https://www.bestpractices.dev/projects/17114"><img alt="OpenSSF Best Practices"
+  src="https://www.bestpractices.dev/projects/17114/badge"></a>
 ```
 
 OpenSSF Scorecard's CII-Best-Practices check scores the badge level: in progress 2, passing 5, silver 7, gold 10
@@ -36,9 +38,17 @@ The silver criteria that need a document point to these:
 
 ## Where It Stands
 
-[//]: # "Maintainers: once registered, say which level the site shows and what keeps the next one from being earned, naming the criteria, not a percentage."
+The site shows the passing level, earned on 2026-11-25.
 
-Not registered yet. With one maintainer, silver stops below 100%: `access_continuity` is a MUST that only a second owner meets.
+- **Silver** is kept from being earned by `access_continuity`, a MUST that only a second owner of the GitHub
+  organization and the nuget.org package meets.
+- **Gold** is kept from being earned by silver and by these MUST criteria: `bus_factor`, `two_person_review`,
+  `contributors_unassociated`, `require_2FA` (the organization doesn't require two-factor authentication) and
+  `security_review`, which need people; `copyright_per_file` and `license_per_file`, because the scripts the template
+  owns, under `.template/`, `.claude/hooks/` and five under `build/`, carry no copyright or license header;
+  `small_tasks`, while no open issue carries the `good first issue` label; and `hardened_site`, because the
+  documentation site, served by GitHub Pages, sends no `strict-transport-security`, `content-security-policy` or
+  `x-content-type-options` header.
 
 ## Needs a Person
 
@@ -48,7 +58,7 @@ Not registered yet. With one maintainer, silver stops below 100%: `access_contin
 - `two_person_review` (gold MUST): a second maintainer.
 - `contributors_unassociated` (gold MUST): two significant contributors from different organizations.
 - `require_2FA` (gold MUST) and `secure_2FA` (gold SHOULD): the GitHub organization requires two-factor authentication, with
-  secure methods only, which only an owner can set and confirm.
+  secure methods only, which only an owner can set and confirm. The organization doesn't require it today.
 - `security_review` (gold MUST): a security review in the last five years, recorded in
   [assurance-case.md](assurance-case.md#security-reviews).
 - `dco` (silver SHOULD): unmet. The project doesn't ask for `Signed-off-by`
