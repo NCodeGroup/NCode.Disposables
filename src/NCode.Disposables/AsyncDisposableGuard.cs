@@ -19,7 +19,9 @@ namespace NCode.Disposables;
 /// operate on the same instance. All operations are thread-safe using lock-free atomic operations.
 /// </para>
 /// </remarks>
-public sealed class AsyncDisposableGuard<T> : IAsyncDisposable, IDisposalStatus
+/// <param name="value">The value to guard.</param>
+/// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
+public sealed class AsyncDisposableGuard<T>(T value) : IAsyncDisposable, IDisposalStatus
     where T : IAsyncDisposable
 {
     private const int Owned = 0;
@@ -33,22 +35,10 @@ public sealed class AsyncDisposableGuard<T> : IAsyncDisposable, IDisposalStatus
     private int _state;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AsyncDisposableGuard{T}"/> class.
-    /// </summary>
-    /// <param name="value">The value to guard.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
-    public AsyncDisposableGuard(T value)
-    {
-        ArgumentNullException.ThrowIfNull(value);
-
-        Value = value;
-    }
-
-    /// <summary>
     /// Gets the guarded value.
     /// </summary>
     /// <value>The value that is disposed with the guard unless ownership has been released.</value>
-    public T Value { get; }
+    public T Value { get; } = value ?? throw new ArgumentNullException(nameof(value));
 
     /// <summary>
     /// Gets a value indicating whether ownership of the value has been released to the caller.
