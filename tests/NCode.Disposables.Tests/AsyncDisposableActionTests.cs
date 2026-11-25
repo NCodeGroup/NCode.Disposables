@@ -27,26 +27,6 @@ public class AsyncDisposableActionTests
         Assert.NotNull(disposable);
     }
 
-    [Fact]
-    public void Constructor_WithIdempotentTrue_CreatesInstance()
-    {
-        var action = () => ValueTask.CompletedTask;
-
-        var disposable = new AsyncDisposableAction(action, idempotent: true);
-
-        Assert.NotNull(disposable);
-    }
-
-    [Fact]
-    public void Constructor_WithIdempotentFalse_CreatesInstance()
-    {
-        var action = () => ValueTask.CompletedTask;
-
-        var disposable = new AsyncDisposableAction(action, idempotent: false);
-
-        Assert.NotNull(disposable);
-    }
-
     #endregion
 
     #region DisposeAsync Tests
@@ -76,7 +56,7 @@ public class AsyncDisposableActionTests
             ++count;
             return ValueTask.CompletedTask;
         };
-        var disposable = new AsyncDisposableAction(action, idempotent: true);
+        var disposable = new AsyncDisposableAction(action);
 
         await disposable.DisposeAsync();
         await disposable.DisposeAsync();
@@ -94,7 +74,7 @@ public class AsyncDisposableActionTests
             ++count;
             return ValueTask.CompletedTask;
         };
-        var disposable = new AsyncDisposableAction(action, idempotent: false);
+        var disposable = AsyncDisposable.CreateRepeatable(action);
 
         await disposable.DisposeAsync();
         await disposable.DisposeAsync();
@@ -135,7 +115,7 @@ public class AsyncDisposableActionTests
             return ValueTask.CompletedTask;
 #pragma warning restore CS0162 // Unreachable code detected
         };
-        var disposable = new AsyncDisposableAction(action, idempotent: true);
+        var disposable = new AsyncDisposableAction(action);
 
         await Assert.ThrowsAsync<InvalidOperationException>(async () =>
             await disposable.DisposeAsync()
@@ -155,7 +135,7 @@ public class AsyncDisposableActionTests
             Interlocked.Increment(ref count);
             return ValueTask.CompletedTask;
         };
-        var disposable = new AsyncDisposableAction(action, idempotent: true);
+        var disposable = new AsyncDisposableAction(action);
 
         var tasks = Enumerable
             .Range(0, 100)
@@ -176,7 +156,7 @@ public class AsyncDisposableActionTests
             Interlocked.Increment(ref count);
             return ValueTask.CompletedTask;
         };
-        var disposable = new AsyncDisposableAction(action, idempotent: false);
+        var disposable = AsyncDisposable.CreateRepeatable(action);
         const int taskCount = 100;
 
         var tasks = Enumerable
@@ -249,10 +229,7 @@ public class AsyncDisposableActionTests
     [Fact]
     public async Task IsDisposed_NonIdempotentAfterDispose_ReturnsTrue()
     {
-        var disposable = new AsyncDisposableAction(
-            () => ValueTask.CompletedTask,
-            idempotent: false
-        );
+        var disposable = AsyncDisposable.CreateRepeatable(() => ValueTask.CompletedTask);
 
         await disposable.DisposeAsync();
 
@@ -271,6 +248,87 @@ public class AsyncDisposableActionTests
 
         Assert.True(disposable.IsDisposed);
     }
+
+    #endregion
+
+    #region Deprecated Overload Tests
+
+#pragma warning disable NCDISP003 // tests the deprecated overloads until they are deleted
+
+    [Fact]
+    public void Constructor_WithIdempotentTrue_CreatesInstance()
+    {
+        var action = () => ValueTask.CompletedTask;
+
+        var disposable = new AsyncDisposableAction(action, idempotent: true);
+
+        Assert.NotNull(disposable);
+    }
+
+    [Fact]
+    public void Constructor_WithIdempotentFalse_CreatesInstance()
+    {
+        var action = () => ValueTask.CompletedTask;
+
+        var disposable = new AsyncDisposableAction(action, idempotent: false);
+
+        Assert.NotNull(disposable);
+    }
+
+    [Fact]
+    public async Task Constructor_WithIdempotentFalse_InvokesActionEachTime()
+    {
+        var count = 0;
+        var disposable = new AsyncDisposableAction(
+            () =>
+            {
+                ++count;
+                return ValueTask.CompletedTask;
+            },
+            idempotent: false
+        );
+
+        await disposable.DisposeAsync();
+        await disposable.DisposeAsync();
+        await disposable.DisposeAsync();
+
+        Assert.Equal(3, count);
+    }
+
+    [Fact]
+    public async Task Create_WithFuncAndIdempotentFalse_InvokesActionEachTime()
+    {
+        var count = 0;
+        var disposable = AsyncDisposable.Create(
+            () =>
+            {
+                ++count;
+                return ValueTask.CompletedTask;
+            },
+            idempotent: false
+        );
+
+        await disposable.DisposeAsync();
+        await disposable.DisposeAsync();
+        await disposable.DisposeAsync();
+
+        Assert.Equal(3, count);
+    }
+
+    [Fact]
+    public async Task Create_WithActionAndIdempotentFalse_InvokesActionEachTime()
+    {
+        var count = 0;
+        var disposable = AsyncDisposable.Create(() => count++, idempotent: false);
+
+        await disposable.DisposeAsync();
+        await disposable.DisposeAsync();
+        await disposable.DisposeAsync();
+
+        Assert.Equal(3, count);
+    }
+
+#pragma warning restore NCDISP003
 
     #endregion
 }

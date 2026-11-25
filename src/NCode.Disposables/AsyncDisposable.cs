@@ -396,6 +396,11 @@ public static class AsyncDisposable
     /// </param>
     /// <returns>A new <see cref="AsyncDisposableAction"/> instance that invokes the specified action on disposal.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+    // ADR-1007: deleted in the next major version.
+    [Obsolete(
+        "Use AsyncDisposable.Create(action), or AsyncDisposable.CreateRepeatable to run the action on every call. This overload is deleted in the next major version.",
+        DiagnosticId = "NCDISP003"
+    )]
     public static AsyncDisposableAction Create(Func<ValueTask> action, bool idempotent)
     {
         ArgumentNullException.ThrowIfNull(action);
@@ -456,6 +461,11 @@ public static class AsyncDisposable
     /// <remarks>
     /// The synchronous action is wrapped to complete synchronously via <see cref="ValueTask.CompletedTask"/>.
     /// </remarks>
+    // ADR-1007: deleted in the next major version.
+    [Obsolete(
+        "Use AsyncDisposable.Create(action), or AsyncDisposable.CreateRepeatable to run the action on every call. This overload is deleted in the next major version.",
+        DiagnosticId = "NCDISP003"
+    )]
     public static AsyncDisposableAction Create(Action action, bool idempotent)
     {
         ArgumentNullException.ThrowIfNull(action);

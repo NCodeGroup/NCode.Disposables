@@ -61,6 +61,11 @@ public sealed class AsyncDisposableAction : IAsyncDisposable, IDisposalStatus
     /// </param>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
     // Callers that pass only the action bind to the constructor without the flag, so this one keeps its default until it is deleted.
+    // ADR-1007: deleted in the next major version.
+    [Obsolete(
+        "Use new AsyncDisposableAction(action), or AsyncDisposable.CreateRepeatable to run the action on every call. This constructor is deleted in the next major version.",
+        DiagnosticId = "NCDISP003"
+    )]
 #pragma warning disable RS0027 // optional parameter on an overload with fewer parameters than another
     public AsyncDisposableAction(Func<ValueTask> action, bool idempotent = true)
 #pragma warning restore RS0027
