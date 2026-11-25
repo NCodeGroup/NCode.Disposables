@@ -47,6 +47,10 @@ NCode.Disposables.AsyncDisposableCancellation.IsDisposed.get -> bool
 NCode.Disposables.AsyncDisposableCancellation.Token.get -> System.Threading.CancellationToken
 NCode.Disposables.AsyncDisposableCollection.AddAsync(System.IAsyncDisposable! item) -> System.Threading.Tasks.ValueTask
 NCode.Disposables.AsyncDisposableCollection.IsDisposed.get -> bool
+NCode.Disposables.AsyncDisposableContext
+NCode.Disposables.AsyncDisposableContext.AsyncDisposableContext(System.IAsyncDisposable! disposable, System.Threading.SynchronizationContext! context) -> void
+NCode.Disposables.AsyncDisposableContext.DisposeAsync() -> System.Threading.Tasks.ValueTask
+NCode.Disposables.AsyncDisposableContext.IsDisposed.get -> bool
 NCode.Disposables.AsyncDisposableGuard<T>
 NCode.Disposables.AsyncDisposableGuard<T>.AsyncDisposableGuard(T value) -> void
 NCode.Disposables.AsyncDisposableGuard<T>.DisposeAsync() -> System.Threading.Tasks.ValueTask
