@@ -103,13 +103,15 @@ privilege and open design."
 
 [//]: # "Maintainers: add the tests and the coverage the project keeps."
 
-- **Tests (R1–R6):** xUnit tests of every type, 689 in all, cover a second dispose (such as
+- **Tests (R1–R6):** xUnit tests of every type, 721 in all, cover a second dispose (such as
   `Dispose_Twice_DisposesOnce`), concurrent disposal and assignment from several threads (such as
   `Dispose_ConcurrentCalls_DisposesOnlyOnce` and `Dispose_ConcurrentWithAdd_DisposesEveryItemOnce`), `null` arguments,
   a resource handed to a disposed holder, and a context whose `Post` throws
-  (`Dispose_Posting_WhenPostThrows_CompletesOperationAndPropagatesException`). Measured on 2026-11-25, they cover
-  89.0% of the statements and 95.9% of the branches; the gate doesn't enforce a minimum. `publish.yml` runs them on
-  the tagged commit before each release.
+  (`Dispose_Posting_WhenPostThrows_CompletesOperationAndPropagatesException`). FsCheck property tests, replayed from a
+  fixed seed, check R1, R2 and R4 for any number of items, dispose calls and leases
+  (`tests/NCode.Disposables.Tests/DisposablePropertyTests.cs`). Measured on 2026-11-25, they cover 97.9% of the
+  statements and 96.0% of the branches; the gate doesn't enforce a minimum. `publish.yml` runs them on the tagged
+  commit before each release.
 - **Gate:** `./build/gate.ps1` checks that the README samples match their compiled tests
   ([ADR-1000](decisions/1000-readme-samples-are-compiled-tests-that-markdownsnippets-copies-into-the-readmes.md)), then
   runs `./build/dod.ps1`, which builds in Release with warnings as errors
