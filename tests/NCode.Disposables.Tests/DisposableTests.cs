@@ -162,11 +162,12 @@ public class DisposableTests : UnitTestBase
     public void CollectionIgnoringExceptions_WhenItemThrows_DisposesEveryItemWithoutThrowing()
     {
         var log = new List<string>();
-        var collection = Disposable.CollectionIgnoringExceptions(
-            Disposable.Create(() => log.Add("first")),
-            Disposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
-            Disposable.Create(() => log.Add("third"))
+        var first = Disposable.Create(() => log.Add("first"));
+        var failing = Disposable.Create(() =>
+            throw new InvalidOperationException("Dispose failed.")
         );
+        var third = Disposable.Create(() => log.Add("third"));
+        var collection = Disposable.CollectionIgnoringExceptions(first, failing, third);
 
         collection.Dispose();
 

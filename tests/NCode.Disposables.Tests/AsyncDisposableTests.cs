@@ -372,11 +372,12 @@ public class AsyncDisposableTests : UnitTestBase
     public async Task CollectionIgnoringExceptions_WhenItemThrows_DisposesEveryItemWithoutThrowing()
     {
         var log = new List<string>();
-        var collection = AsyncDisposable.CollectionIgnoringExceptions(
-            AsyncDisposable.Create(() => log.Add("first")),
-            AsyncDisposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
-            AsyncDisposable.Create(() => log.Add("third"))
+        var first = AsyncDisposable.Create(() => log.Add("first"));
+        var failing = AsyncDisposable.Create(() =>
+            throw new InvalidOperationException("Dispose failed.")
         );
+        var third = AsyncDisposable.Create(() => log.Add("third"));
+        var collection = AsyncDisposable.CollectionIgnoringExceptions(first, failing, third);
 
         await collection.DisposeAsync();
 
