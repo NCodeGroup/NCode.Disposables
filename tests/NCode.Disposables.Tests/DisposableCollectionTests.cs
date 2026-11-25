@@ -119,6 +119,51 @@ public sealed class DisposableCollectionTests : IDisposable
         Assert.Equal(2, collection.Count);
     }
 
+    [Fact]
+    public void Add_AfterDispose_DisposesItem()
+    {
+        var collection = new DisposableCollection();
+        var disposable = new Mock<IDisposable>(MockBehavior.Strict);
+        disposable.Setup(x => x.Dispose());
+        collection.Dispose();
+
+        collection.Add(disposable.Object);
+
+        disposable.Verify(x => x.Dispose(), Times.Once);
+    }
+
+    [Fact]
+    public void Add_AfterDispose_DoesNotAddItem()
+    {
+        var collection = new DisposableCollection();
+        var disposable = new Mock<IDisposable>(MockBehavior.Strict);
+        disposable.Setup(x => x.Dispose());
+        collection.Dispose();
+
+        collection.Add(disposable.Object);
+
+        Assert.Empty(collection);
+    }
+
+    [Fact]
+    public async Task Add_ConcurrentCalls_AddsEveryItem()
+    {
+        var collection = new DisposableCollection();
+
+        const int concurrentCalls = 1000;
+        var tasks = new Task[concurrentCalls];
+
+        for (var i = 0; i < concurrentCalls; i++)
+        {
+            var disposable = new Mock<IDisposable>(MockBehavior.Strict);
+            tasks[i] = Task.Run(() => collection.Add(disposable.Object));
+        }
+
+        await Task.WhenAll(tasks);
+
+        Assert.Equal(concurrentCalls, collection.Count);
+    }
+
     #endregion
 
     #region Remove Tests
@@ -394,6 +439,25 @@ public sealed class DisposableCollectionTests : IDisposable
         Assert.Same(disposable.Object, items[0]);
     }
 
+    [Fact]
+    public void GetEnumerator_AddWhileEnumerating_DoesNotThrow()
+    {
+        var collection = new DisposableCollection();
+        var disposable1 = new Mock<IDisposable>(MockBehavior.Strict);
+        var disposable2 = new Mock<IDisposable>(MockBehavior.Strict);
+        collection.Add(disposable1.Object);
+
+        var count = 0;
+        foreach (var _ in collection)
+        {
+            collection.Add(disposable2.Object);
+            count++;
+        }
+
+        Assert.Equal(1, count);
+        Assert.Equal(2, collection.Count);
+    }
+
     #endregion
 
     #region Dispose Tests
@@ -560,6 +624,30 @@ public sealed class DisposableCollectionTests : IDisposable
     }
 
     [Fact]
+    public async Task Dispose_ConcurrentWithAdd_DisposesEveryItemOnce()
+    {
+        var collection = new DisposableCollection();
+
+        const int itemCount = 1000;
+        var counts = new int[itemCount];
+        var tasks = new Task[itemCount + 1];
+
+        for (var i = 0; i < itemCount; i++)
+        {
+            var index = i;
+            var disposable = new TestDisposable(() => Interlocked.Increment(ref counts[index]));
+            tasks[i] = Task.Run(() => collection.Add(disposable));
+        }
+
+        tasks[itemCount] = Task.Run(() => collection.Dispose());
+
+        await Task.WhenAll(tasks);
+        collection.Dispose();
+
+        Assert.All(counts, count => Assert.Equal(1, count));
+    }
+
+    [Fact]
     public void Dispose_CanBeUsedWithUsingStatement()
     {
         var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
@@ -571,6 +659,28 @@ public sealed class DisposableCollectionTests : IDisposable
         }
 
         mockDisposable.Verify(x => x.Dispose(), Times.Once);
+    }
+
+    #endregion
+
+    #region IsDisposed Property Tests
+
+    [Fact]
+    public void IsDisposed_BeforeDispose_ReturnsFalse()
+    {
+        var collection = new DisposableCollection();
+
+        Assert.False(collection.IsDisposed);
+    }
+
+    [Fact]
+    public void IsDisposed_AfterDispose_ReturnsTrue()
+    {
+        var collection = new DisposableCollection();
+
+        collection.Dispose();
+
+        Assert.True(collection.IsDisposed);
     }
 
     #endregion

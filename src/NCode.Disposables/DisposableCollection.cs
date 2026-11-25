@@ -38,16 +38,21 @@ public interface IDisposableCollection : IDisposable, ICollection<IDisposable>
 /// allowing all items to be disposed even if some throw exceptions.
 /// </para>
 /// <para>
-/// Disposal runs at most once, even when several threads dispose the collection at once.
-/// <c>Add</c>, <c>Remove</c>, <c>Clear</c> and enumeration take no lock: synchronize them, and don't change the
-/// collection while it is being disposed.
+/// Every member is thread-safe. Disposal runs at most once, even when several threads dispose the collection at once.
+/// Enumeration walks a snapshot of the items taken when <see cref="GetEnumerator"/> is called, so changing the
+/// collection while enumerating does not throw.
+/// </para>
+/// <para>
+/// <see cref="Add"/> after the collection is disposed disposes the added item instead of storing it.
 /// </para>
 /// </remarks>
-public sealed class DisposableCollection : IDisposableCollection
+public sealed class DisposableCollection : IDisposableCollection, IDisposalStatus
 {
     private int _disposed;
     private readonly List<IDisposable> _list;
     private readonly bool _ignoreExceptions;
+
+    private Lock Gate { get; } = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DisposableCollection"/> class with an empty collection.
@@ -95,14 +100,24 @@ public sealed class DisposableCollection : IDisposableCollection
     /// </remarks>
     public void Dispose()
     {
-        if (Interlocked.CompareExchange(ref _disposed, 1, 0) != 0)
+        IDisposable[] items;
+        lock (Gate)
         {
-            return;
+            if (_disposed != 0)
+            {
+                return;
+            }
+
+            Volatile.Write(ref _disposed, 1);
+            items = [.. _list];
+            _list.Clear();
         }
 
-        _list.DisposeAll(_ignoreExceptions);
-        _list.Clear();
+        items.DisposeAll(_ignoreExceptions);
     }
+
+    /// <summary>Gets a value indicating whether <see cref="Dispose"/> has been called at least once.</summary>
+    public bool IsDisposed => Volatile.Read(ref _disposed) != 0;
 
     /// <summary>
     /// Gets a value indicating whether the collection is read-only.
@@ -114,7 +129,16 @@ public sealed class DisposableCollection : IDisposableCollection
     /// Gets the number of items contained in the collection.
     /// </summary>
     /// <value>The number of <see cref="IDisposable"/> items in the collection.</value>
-    public int Count => _list.Count;
+    public int Count
+    {
+        get
+        {
+            lock (Gate)
+            {
+                return _list.Count;
+            }
+        }
+    }
 
     /// <summary>
     /// Adds an <see cref="IDisposable"/> item to the collection.
@@ -122,11 +146,24 @@ public sealed class DisposableCollection : IDisposableCollection
     /// </summary>
     /// <param name="item">The <see cref="IDisposable"/> item to add to the collection.</param>
     /// <exception cref="ArgumentNullException"><paramref name="item"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// If the collection is already disposed, the item is disposed immediately and is not added to the collection.
+    /// </remarks>
     public void Add(IDisposable item)
     {
         ArgumentNullException.ThrowIfNull(item);
 
-        _list.Add(item);
+        // ADR-1004: an item added after disposal is disposed instead of stored.
+        lock (Gate)
+        {
+            if (_disposed == 0)
+            {
+                _list.Add(item);
+                return;
+            }
+        }
+
+        item.Dispose();
     }
 
     /// <summary>
@@ -146,7 +183,10 @@ public sealed class DisposableCollection : IDisposableCollection
     {
         ArgumentNullException.ThrowIfNull(item);
 
-        return _list.Remove(item);
+        lock (Gate)
+        {
+            return _list.Remove(item);
+        }
     }
 
     /// <summary>
@@ -158,7 +198,10 @@ public sealed class DisposableCollection : IDisposableCollection
     /// </remarks>
     public void Clear()
     {
-        _list.Clear();
+        lock (Gate)
+        {
+            _list.Clear();
+        }
     }
 
     /// <summary>
@@ -174,7 +217,10 @@ public sealed class DisposableCollection : IDisposableCollection
     {
         ArgumentNullException.ThrowIfNull(item);
 
-        return _list.Contains(item);
+        lock (Gate)
+        {
+            return _list.Contains(item);
+        }
     }
 
     /// <summary>
@@ -195,16 +241,25 @@ public sealed class DisposableCollection : IDisposableCollection
     {
         ArgumentNullException.ThrowIfNull(array);
 
-        _list.CopyTo(array, arrayIndex);
+        lock (Gate)
+        {
+            _list.CopyTo(array, arrayIndex);
+        }
     }
 
     /// <summary>
     /// Returns an enumerator that iterates through the collection.
     /// </summary>
-    /// <returns>An enumerator that can be used to iterate through the collection.</returns>
+    /// <returns>An enumerator that can be used to iterate through a snapshot of the collection.</returns>
     public IEnumerator<IDisposable> GetEnumerator()
     {
-        return _list.GetEnumerator();
+        IDisposable[] snapshot;
+        lock (Gate)
+        {
+            snapshot = [.. _list];
+        }
+
+        return ((IEnumerable<IDisposable>)snapshot).GetEnumerator();
     }
 
     /// <inheritdoc />
