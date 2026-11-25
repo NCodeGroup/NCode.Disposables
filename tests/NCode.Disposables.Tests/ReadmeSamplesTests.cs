@@ -459,6 +459,49 @@ public class ReadmeSamplesTests
 
     #endregion
 
+    #region Lock Tests
+
+    [Fact]
+    public async Task SemaphoreLockSample_Runs()
+    {
+        // begin-snippet: SemaphoreLock
+        using var semaphore = new SemaphoreSlim(1, 1);
+        var countInScope = -1;
+        using (await semaphore.LockAsync())
+        {
+            countInScope = semaphore.CurrentCount; // 0 while the scope holds it
+        }
+        // semaphore.CurrentCount == 1
+        // end-snippet
+
+        Assert.Equal(0, countInScope);
+        Assert.Equal(1, semaphore.CurrentCount);
+    }
+
+    [Fact]
+    public void ReaderWriterLockSample_Runs()
+    {
+        // begin-snippet: ReaderWriterLock
+        using var cacheLock = new ReaderWriterLockSlim();
+        var readLockHeld = false;
+        using (cacheLock.ReadLock())
+        {
+            readLockHeld = cacheLock.IsReadLockHeld; // true while the scope holds it
+        }
+        using (cacheLock.WriteLock())
+        {
+            // update the cache
+        }
+        // cacheLock.IsWriteLockHeld == false
+        // end-snippet
+
+        Assert.True(readLockHeld);
+        Assert.False(cacheLock.IsReadLockHeld);
+        Assert.False(cacheLock.IsWriteLockHeld);
+    }
+
+    #endregion
+
     #region Async Bridge Tests
 
     [Fact]

@@ -401,6 +401,38 @@ disposable.Dispose(); // Send: returns once the UI thread has disposed the contr
 ```
 <!-- endSnippet -->
 
+### Scoping a lock
+
+`semaphore.Lock()` and `LockAsync()` wait for a `SemaphoreSlim` and return a scope that releases it; `ReadLock()`, `UpgradeableReadLock()` and `WriteLock()` do the same for a `ReaderWriterLockSlim`. A scope is a struct that allocates nothing: dispose it once, through `using`:
+
+<!-- snippet: SemaphoreLock -->
+```cs
+using var semaphore = new SemaphoreSlim(1, 1);
+var countInScope = -1;
+using (await semaphore.LockAsync())
+{
+    countInScope = semaphore.CurrentCount; // 0 while the scope holds it
+}
+// semaphore.CurrentCount == 1
+```
+<!-- endSnippet -->
+
+<!-- snippet: ReaderWriterLock -->
+```cs
+using var cacheLock = new ReaderWriterLockSlim();
+var readLockHeld = false;
+using (cacheLock.ReadLock())
+{
+    readLockHeld = cacheLock.IsReadLockHeld; // true while the scope holds it
+}
+using (cacheLock.WriteLock())
+{
+    // update the cache
+}
+// cacheLock.IsWriteLockHeld == false
+```
+<!-- endSnippet -->
+
 ### Bridging sync and async disposal
 
 `AsyncDisposable.Adapt` wraps an `IDisposable` as an `IAsyncDisposable`, for code that only takes the async form. It disposes the resource once; `Adapt(disposable, idempotent: false)` disposes it on every call:
