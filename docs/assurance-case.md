@@ -1,8 +1,8 @@
 # Assurance Case
 
 This page states NCode.Disposables's security requirements, the threats it considers, and why the design and the way it
-is built meet them. [architecture.md](architecture.md) describes the components; [README.md](../README.md#thread-safety) is
-the user-facing summary.
+is built meet them. [architecture.md](architecture.md) describes the components;
+[README.md](../README.md#thread-safety) is the user-facing summary.
 
 ## Security Requirements
 
@@ -10,8 +10,8 @@ the user-facing summary.
 
 What the library is expected to do:
 
-1. **R1.** A disposable that keeps state runs its cleanup at most once, even when several threads dispose it at once;
-   only an action or adapter from `CreateRepeatable` or `AdaptRepeatable` runs it on every call.
+1. **R1.** Each disposable class runs its cleanup at most once, even when several threads dispose it at once; only an
+   action or adapter from `CreateRepeatable` or `AdaptRepeatable` runs it on every call. The structs are covered below.
 2. **R2.** A shared resource's release action runs once, on the thread that releases the last lease. Once the count
    reaches zero, `Value` and `AddReference` throw `ObjectDisposedException` and `TryAddReference` returns `false`, so a
    released resource is never handed out again.
@@ -19,10 +19,14 @@ What the library is expected to do:
    ([ADR-1004](decisions/1004-a-resource-handed-to-a-disposed-holder-is-disposed.md)); `AsyncDisposableAggregate`'s
    setter and `AsyncDisposableCollection.Add` throw `ObjectDisposedException` instead, and `SetDisposableAsync` and
    `AddAsync` dispose it.
-4. **R4.** Disposing a collection, or `DisposeAll`, disposes every item in reverse order even when one throws, then
-   rethrows the one exception or throws an `AggregateException` holding all of them.
-5. **R5.** A factory, constructor or extension rejects a `null` argument with `ArgumentNullException`
-   ([ADR-1008](decisions/1008-a-disposable-that-wraps-a-resource-rejects-a-null-resource.md)); a second assignment of a
+4. **R4.** Disposing a collection, or calling `DisposeAll`, disposes every item in reverse order even when one throws,
+   then rethrows the one exception or throws an `AggregateException` holding all of them. The
+   members named for ignoring exceptions, such as `CollectionIgnoringExceptions` and
+   `DisposeAllIgnoringExceptions`, also dispose every item, and ignore what the items throw.
+5. **R5.** A factory, constructor or extension rejects a `null` delegate, resource to wrap, collection or item with
+   `ArgumentNullException`
+   ([ADR-1008](decisions/1008-a-disposable-that-wraps-a-resource-rejects-a-null-resource.md));
+   only the aggregate and serial holders take `null`, meaning they hold nothing. A second assignment of a
    single-assignment holder throws `InvalidOperationException`, and so does `Release()` on a guard already released.
 6. **R6.** `DisposableContext` calls `OperationCompleted` for each `OperationStarted`, also when the context's `Post`
    throws, and rethrows.
