@@ -1,0 +1,120 @@
+---
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
+// The landing page's hero, after the brand's hero mockup: the eyebrow above the headline, the lead and the line on
+// what the library does not do at the same size, and beside them the drawing of a collection being disposed.
+//
+// Starlight renders the hero from the page's frontmatter (`hero.title`, `hero.tagline`, `hero.image.html`), so the
+// markup lives there, and this component holds only its styles. Render it once, at the top of docs/site/index.mdx;
+// it outputs nothing visible. The classes it styles:
+//   .landing-eyebrow   in hero.title, above the headline
+//   .landing-limit     the second paragraph of hero.tagline
+//   .landing-stack     hero.image.html: lamps, a screen of three rows, a caption
+//     .ls-row, .ls-row--cursor   a row, and the row disposed last
+//   .landing-badges    a <div> around the page's badges, which it sets in one row that wraps
+// The drawing is static: nothing moves on its own.
+---
+
+<span class="landing-hero" hidden></span>
+
+<style is:global>
+  .hero .landing-eyebrow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--nc-space-2) var(--nc-space-3);
+    margin-bottom: var(--nc-space-5);
+    color: var(--nc-color-text-secondary);
+    font-family: var(--nc-font-sans);
+    font-size: var(--sl-text-xs);
+    font-stretch: var(--nc-type-label-stretch);
+    font-weight: 600;
+    letter-spacing: var(--nc-type-label-tracking);
+    line-height: 1.4;
+    text-transform: uppercase;
+  }
+  .hero .landing-eyebrow > span + span::before {
+    content: '·';
+    margin-inline-end: var(--nc-space-3);
+    color: var(--nc-color-text-muted);
+  }
+  .hero .tagline p + p { margin-top: var(--nc-space-4); }
+  .hero .tagline .landing-limit { color: var(--nc-color-text); }
+
+  /* The toolchain keeps the hero one column until the content column beside the sidebar is 50rem wide. In one
+     column the drawing follows the copy, at the copy's width; in two it fills the hero's second column. */
+  .hero > .hero-html {
+    order: 2;
+    width: 100%;
+    max-width: 26rem;
+    margin-inline: 0;
+  }
+
+  .landing-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--nc-space-4);
+    width: 100%;
+    margin: 0;
+    padding: var(--nc-space-4);
+    border: var(--nc-border-hair) solid var(--nc-color-border);
+    border-radius: var(--nc-radius-panel);
+    background: var(--nc-color-surface-raised);
+    box-shadow: var(--nc-elevation-raised);
+  }
+  .landing-stack__lamps {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--nc-space-3) var(--nc-space-5);
+    color: var(--nc-color-text-secondary);
+    font-size: var(--sl-text-xs);
+    font-stretch: var(--nc-type-label-stretch);
+    font-weight: 600;
+    letter-spacing: var(--nc-type-label-tracking);
+    text-transform: uppercase;
+  }
+  .landing-stack__lamps .ncode-readout { margin-inline-start: auto; text-transform: none; letter-spacing: normal; }
+  .landing-stack__screen {
+    display: flex;
+    flex-direction: column;
+    gap: var(--nc-space-3);
+    padding: var(--nc-space-4);
+    border-radius: var(--nc-radius-module);
+    background: var(--nc-color-screen);
+    color: var(--nc-color-on-screen-secondary);
+    font-family: var(--nc-font-mono);
+    font-stretch: var(--nc-type-code-stretch);
+  }
+  .landing-stack__head {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--nc-space-3);
+    color: var(--nc-color-on-screen-muted);
+    font-size: var(--sl-text-2xs);
+  }
+  .landing-stack__rows { display: grid; gap: 3px; margin: 0; padding: 0; list-style: none; }
+  .ls-row {
+    display: grid;
+    grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--nc-space-3);
+    padding: var(--nc-space-2) var(--nc-space-3);
+    border-radius: var(--nc-radius-cell);
+    box-shadow: inset 0 0 0 1px var(--nc-color-screen-border);
+    font-size: var(--sl-text-xs);
+  }
+  .ls-row code { font-family: inherit; color: var(--nc-color-on-screen); }
+  .ls-row__n { color: var(--nc-color-on-screen-muted); }
+  .ls-row__log { color: var(--nc-color-screen-lit); }
+  .ls-row--cursor { box-shadow: inset 0 0 0 2px var(--nc-color-screen-lit); }
+  .landing-stack figcaption {
+    color: var(--nc-color-text-secondary);
+    font-size: var(--sl-text-xs);
+    line-height: 1.5;
+  }
+  .landing-stack figcaption code { font-size: 0.95em; }
+  .landing-badges > p { display: flex; flex-wrap: wrap; gap: var(--nc-space-2) var(--nc-space-3); margin: 0; }
+  .landing-badges a { display: inline-flex; }
+  .landing-badges img { display: block; height: 1.25rem; width: auto; }
+</style>
