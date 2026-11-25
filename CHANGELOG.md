@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [8.0.1] - 2026-11-25
+
+### Added
+
+- The documentation site at https://disposables.ncode.io/: a quick start, a picker that finds the disposable for a situation, a guide for each task with its pitfalls, the rules behind them, a behavior reference of every disposable and an API map of every public member. Every C# sample on it is a test that compiles and runs on each pull request. ([ADR-1009](docs/decisions/1009-the-documentation-site-is-narrative-guides-built-by-a-shared-toolchain-outside-this-repository.md), [ADR-1010](docs/decisions/1010-site-samples-are-compiled-tests-in-a-project-of-their-own-included-by-key-when-the-site-is-built.md))
+
+### Changed
+
+- The package's project website on nuget.org is the documentation site, and both READMEs link to it. ([ADR-1013](docs/decisions/1013-the-documentation-site-is-served-at-disposables-ncode-io.md))
+
 ## [8.0.0] - 2026-11-24
 
 ### Changed
@@ -220,7 +230,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release for .NET Framework 4.5.1: `IDisposable` implementations for common resource management patterns, such as actions, aggregates, collections and shared references.
 
-[Unreleased]: https://github.com/NCodeGroup/NCode.Disposables/compare/v8.0.0...HEAD
+[Unreleased]: https://github.com/NCodeGroup/NCode.Disposables/compare/v8.0.1...HEAD
+[8.0.1]: https://github.com/NCodeGroup/NCode.Disposables/compare/v8.0.0...v8.0.1
 [8.0.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v7.1.0...v8.0.0
 [7.1.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v7.0.0...v7.1.0
 [7.0.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v6.0.0...v7.0.0
