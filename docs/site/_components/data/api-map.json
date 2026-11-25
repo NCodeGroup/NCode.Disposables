@@ -592,6 +592,258 @@
         "static NCode.Disposables.AsyncSharedReference.Create<T>(T value, System.Func<T, System.Threading.Tasks.ValueTask>! onRelease) -> NCode.Disposables.AsyncSharedReferenceLease<T>",
         "static NCode.Disposables.AsyncSharedReference.Create<T>(T value) -> NCode.Disposables.AsyncSharedReferenceLease<T>"
       ]
+    },
+    {
+      "id": "disposableaction",
+      "group": "actions",
+      "type": "DisposableAction",
+      "member": null,
+      "signatures": [
+        "public sealed class DisposableAction(Action action) : IDisposable, IDisposalStatus",
+        "public bool IsDisposed { get; }",
+        "public void Dispose()"
+      ],
+      "summary": "The disposable `Create` and `CreateRepeatable` return: runs its action once, or on every call from `CreateRepeatable`. `IsDisposed` is true once disposal has started.",
+      "page": "/guides/run-code-on-dispose/",
+      "api": [
+        "NCode.Disposables.DisposableAction",
+        "NCode.Disposables.DisposableAction.DisposableAction(System.Action! action) -> void",
+        "NCode.Disposables.DisposableAction.Dispose() -> void",
+        "NCode.Disposables.DisposableAction.IsDisposed.get -> bool"
+      ]
+    },
+    {
+      "id": "asyncdisposableaction",
+      "group": "actions",
+      "type": "AsyncDisposableAction",
+      "member": null,
+      "signatures": [
+        "public sealed class AsyncDisposableAction(Func<ValueTask> action) : IAsyncDisposable, IDisposalStatus",
+        "public bool IsDisposed { get; }",
+        "public ValueTask DisposeAsync()"
+      ],
+      "summary": "As `DisposableAction`, for `DisposeAsync`.",
+      "page": "/guides/run-code-on-dispose/",
+      "api": [
+        "NCode.Disposables.AsyncDisposableAction",
+        "NCode.Disposables.AsyncDisposableAction.AsyncDisposableAction(System.Func<System.Threading.Tasks.ValueTask>! action) -> void",
+        "NCode.Disposables.AsyncDisposableAction.DisposeAsync() -> System.Threading.Tasks.ValueTask",
+        "NCode.Disposables.AsyncDisposableAction.IsDisposed.get -> bool"
+      ]
+    },
+    {
+      "id": "valuedisposable-tstate",
+      "group": "actions",
+      "type": "ValueDisposable<TState>",
+      "member": null,
+      "signatures": [
+        "public readonly struct ValueDisposable<TState>(Action<TState> action, TState state) : IDisposable",
+        "public void Dispose()"
+      ],
+      "summary": "A `readonly struct` that runs its action with its state on every dispose of every copy; `default` does nothing. The lock scopes are this type.",
+      "page": "/concepts/once-or-every-time/",
+      "api": [
+        "NCode.Disposables.ValueDisposable<TState>",
+        "NCode.Disposables.ValueDisposable<TState>.Dispose() -> void",
+        "NCode.Disposables.ValueDisposable<TState>.ValueDisposable() -> void",
+        "NCode.Disposables.ValueDisposable<TState>.ValueDisposable(System.Action<TState>! action, TState state) -> void"
+      ]
+    },
+    {
+      "id": "asyncvaluedisposable-tstate",
+      "group": "actions",
+      "type": "AsyncValueDisposable<TState>",
+      "member": null,
+      "signatures": [
+        "public readonly struct AsyncValueDisposable<TState>(Func<TState, ValueTask> action, TState state) : IAsyncDisposable",
+        "public ValueTask DisposeAsync()"
+      ],
+      "summary": "As `ValueDisposable<TState>`, for `DisposeAsync`.",
+      "page": "/concepts/once-or-every-time/",
+      "api": [
+        "NCode.Disposables.AsyncValueDisposable<TState>",
+        "NCode.Disposables.AsyncValueDisposable<TState>.AsyncValueDisposable() -> void",
+        "NCode.Disposables.AsyncValueDisposable<TState>.AsyncValueDisposable(System.Func<TState, System.Threading.Tasks.ValueTask>! action, TState state) -> void",
+        "NCode.Disposables.AsyncValueDisposable<TState>.DisposeAsync() -> System.Threading.Tasks.ValueTask"
+      ]
+    },
+    {
+      "id": "disposableempty",
+      "group": "actions",
+      "type": "DisposableEmpty",
+      "member": null,
+      "signatures": [
+        "public sealed class DisposableEmpty : IDisposable",
+        "public static DisposableEmpty Singleton { get; }",
+        "public void Dispose()"
+      ],
+      "summary": "Does nothing; `Singleton` is the instance `Disposable.Empty` returns.",
+      "page": "/guides/run-code-on-dispose/",
+      "api": [
+        "NCode.Disposables.DisposableEmpty",
+        "NCode.Disposables.DisposableEmpty.DisposableEmpty() -> void",
+        "NCode.Disposables.DisposableEmpty.Dispose() -> void",
+        "static NCode.Disposables.DisposableEmpty.Singleton.get -> NCode.Disposables.DisposableEmpty!"
+      ]
+    },
+    {
+      "id": "asyncdisposableempty",
+      "group": "actions",
+      "type": "AsyncDisposableEmpty",
+      "member": null,
+      "signatures": [
+        "public sealed class AsyncDisposableEmpty : IAsyncDisposable",
+        "public static AsyncDisposableEmpty Singleton { get; }",
+        "public ValueTask DisposeAsync()"
+      ],
+      "summary": "Does nothing; `Singleton` is the instance `AsyncDisposable.Empty` returns.",
+      "page": "/guides/run-code-on-dispose/",
+      "api": [
+        "NCode.Disposables.AsyncDisposableEmpty",
+        "NCode.Disposables.AsyncDisposableEmpty.AsyncDisposableEmpty() -> void",
+        "NCode.Disposables.AsyncDisposableEmpty.DisposeAsync() -> System.Threading.Tasks.ValueTask",
+        "static NCode.Disposables.AsyncDisposableEmpty.Singleton.get -> NCode.Disposables.AsyncDisposableEmpty!"
+      ]
+    },
+    {
+      "id": "disposablecancellation",
+      "group": "others",
+      "type": "DisposableCancellation",
+      "member": null,
+      "signatures": [
+        "public sealed class DisposableCancellation : IDisposable, IDisposalStatus",
+        "public CancellationToken Token { get; }",
+        "public DisposableCancellation()",
+        "public DisposableCancellation(CancellationTokenSource source)",
+        "public bool IsDisposed { get; }",
+        "public void Dispose()"
+      ],
+      "summary": "Cancels `Token` on its first `Dispose`, then disposes the source it created; a source passed to its constructor is cancelled, not disposed. A token callback that throws surfaces as `AggregateException`.",
+      "page": "/guides/cancel-on-dispose/",
+      "api": [
+        "NCode.Disposables.DisposableCancellation",
+        "NCode.Disposables.DisposableCancellation.DisposableCancellation() -> void",
+        "NCode.Disposables.DisposableCancellation.DisposableCancellation(System.Threading.CancellationTokenSource! source) -> void",
+        "NCode.Disposables.DisposableCancellation.Dispose() -> void",
+        "NCode.Disposables.DisposableCancellation.IsDisposed.get -> bool",
+        "NCode.Disposables.DisposableCancellation.Token.get -> System.Threading.CancellationToken"
+      ]
+    },
+    {
+      "id": "asyncdisposablecancellation",
+      "group": "others",
+      "type": "AsyncDisposableCancellation",
+      "member": null,
+      "signatures": [
+        "public sealed class AsyncDisposableCancellation : IAsyncDisposable, IDisposalStatus",
+        "public CancellationToken Token { get; }",
+        "public AsyncDisposableCancellation()",
+        "public AsyncDisposableCancellation(CancellationTokenSource source)",
+        "public bool IsDisposed { get; }",
+        "public ValueTask DisposeAsync()"
+      ],
+      "summary": "As `DisposableCancellation`, cancelling with `CancelAsync`.",
+      "page": "/guides/cancel-on-dispose/",
+      "api": [
+        "NCode.Disposables.AsyncDisposableCancellation",
+        "NCode.Disposables.AsyncDisposableCancellation.AsyncDisposableCancellation() -> void",
+        "NCode.Disposables.AsyncDisposableCancellation.AsyncDisposableCancellation(System.Threading.CancellationTokenSource! source) -> void",
+        "NCode.Disposables.AsyncDisposableCancellation.DisposeAsync() -> System.Threading.Tasks.ValueTask",
+        "NCode.Disposables.AsyncDisposableCancellation.IsDisposed.get -> bool",
+        "NCode.Disposables.AsyncDisposableCancellation.Token.get -> System.Threading.CancellationToken"
+      ]
+    },
+    {
+      "id": "disposablecontext",
+      "group": "others",
+      "type": "DisposableContext",
+      "member": null,
+      "signatures": [
+        "public sealed class DisposableContext(IDisposable disposable, SynchronizationContext context) : IDisposable, IDisposalStatus",
+        "public bool IsDisposed { get; }",
+        "public void Dispose()"
+      ],
+      "summary": "Disposes a resource once on a `SynchronizationContext`, through `Send`, or through `Post` from `Disposable.PostingContext`, between `OperationStarted` and `OperationCompleted`.",
+      "page": "/guides/dispose-on-a-context/",
+      "api": [
+        "NCode.Disposables.DisposableContext",
+        "NCode.Disposables.DisposableContext.DisposableContext(System.IDisposable! disposable, System.Threading.SynchronizationContext! context) -> void",
+        "NCode.Disposables.DisposableContext.Dispose() -> void",
+        "NCode.Disposables.DisposableContext.IsDisposed.get -> bool"
+      ]
+    },
+    {
+      "id": "asyncdisposablecontext",
+      "group": "others",
+      "type": "AsyncDisposableContext",
+      "member": null,
+      "signatures": [
+        "public sealed class AsyncDisposableContext(IAsyncDisposable disposable, SynchronizationContext context) : IAsyncDisposable, IDisposalStatus",
+        "public bool IsDisposed { get; }",
+        "public ValueTask DisposeAsync()"
+      ],
+      "summary": "Posts the `DisposeAsync` of a resource to a `SynchronizationContext` and completes once it has run there.",
+      "page": "/guides/dispose-on-a-context/",
+      "api": [
+        "NCode.Disposables.AsyncDisposableContext",
+        "NCode.Disposables.AsyncDisposableContext.AsyncDisposableContext(System.IAsyncDisposable! disposable, System.Threading.SynchronizationContext! context) -> void",
+        "NCode.Disposables.AsyncDisposableContext.DisposeAsync() -> System.Threading.Tasks.ValueTask",
+        "NCode.Disposables.AsyncDisposableContext.IsDisposed.get -> bool"
+      ]
+    },
+    {
+      "id": "asyncdisposableadapter",
+      "group": "others",
+      "type": "AsyncDisposableAdapter",
+      "member": null,
+      "signatures": [
+        "public sealed class AsyncDisposableAdapter(IDisposable disposable) : IAsyncDisposable, IDisposalStatus",
+        "public bool IsDisposed { get; }",
+        "public ValueTask DisposeAsync()"
+      ],
+      "summary": "An `IAsyncDisposable` over an `IDisposable`, disposing it once, or on every call from `AdaptRepeatable`.",
+      "page": "/guides/bridge-sync-and-async/",
+      "api": [
+        "NCode.Disposables.AsyncDisposableAdapter",
+        "NCode.Disposables.AsyncDisposableAdapter.AsyncDisposableAdapter(System.IDisposable! disposable) -> void",
+        "NCode.Disposables.AsyncDisposableAdapter.DisposeAsync() -> System.Threading.Tasks.ValueTask",
+        "NCode.Disposables.AsyncDisposableAdapter.IsDisposed.get -> bool"
+      ]
+    },
+    {
+      "id": "disposableflag",
+      "group": "others",
+      "type": "DisposableFlag",
+      "member": null,
+      "signatures": [
+        "public sealed class DisposableFlag : IDisposable, IDisposalStatus",
+        "public bool IsDisposed { get; }",
+        "public void Dispose()"
+      ],
+      "summary": "Records only that it was disposed.",
+      "page": "/concepts/disposal-status/",
+      "api": [
+        "NCode.Disposables.DisposableFlag",
+        "NCode.Disposables.DisposableFlag.DisposableFlag() -> void",
+        "NCode.Disposables.DisposableFlag.Dispose() -> void",
+        "NCode.Disposables.DisposableFlag.IsDisposed.get -> bool"
+      ]
+    },
+    {
+      "id": "idisposalstatus",
+      "group": "others",
+      "type": "IDisposalStatus",
+      "member": null,
+      "signatures": [
+        "public interface IDisposalStatus",
+        "bool IsDisposed { get; }"
+      ],
+      "summary": "IsDisposed: true once disposal has started. Every disposable class that keeps disposal state implements it; the structs don't.",
+      "page": "/concepts/disposal-status/",
+      "api": [
+        "NCode.Disposables.IDisposalStatus",
+        "NCode.Disposables.IDisposalStatus.IsDisposed.get -> bool"
+      ]
     }
   ]
 }
