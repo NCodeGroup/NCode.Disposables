@@ -375,7 +375,25 @@ public static class AsyncDisposable
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return new AsyncDisposableAction(action, idempotent);
+        return idempotent ? Create(action) : CreateRepeatable(action);
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="AsyncDisposableAction"/> that invokes the specified asynchronous action
+    /// on every call to <see cref="IAsyncDisposable.DisposeAsync"/>.
+    /// </summary>
+    /// <param name="action">The asynchronous action to invoke each time <see cref="IAsyncDisposable.DisposeAsync"/> is called.</param>
+    /// <returns>A new <see cref="AsyncDisposableAction"/> instance that invokes the specified action on every disposal.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// The returned instance is not idempotent: each call to <see cref="IAsyncDisposable.DisposeAsync"/> invokes the action.
+    /// Use this with caution as it deviates from the standard dispose pattern.
+    /// </remarks>
+    public static AsyncDisposableAction CreateRepeatable(Func<ValueTask> action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        return new AsyncDisposableAction(action) { IsRepeatable = true };
     }
 
     /// <summary>
@@ -417,14 +435,34 @@ public static class AsyncDisposable
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return new AsyncDisposableAction(
-            () =>
-            {
-                action();
-                return ValueTask.CompletedTask;
-            },
-            idempotent
-        );
+        return idempotent ? Create(action) : CreateRepeatable(action);
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="AsyncDisposableAction"/> that invokes the specified synchronous action
+    /// on every call to <see cref="IAsyncDisposable.DisposeAsync"/>.
+    /// </summary>
+    /// <param name="action">The synchronous action to invoke each time <see cref="IAsyncDisposable.DisposeAsync"/> is called.</param>
+    /// <returns>A new <see cref="AsyncDisposableAction"/> instance that invokes the specified action on every disposal.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// The returned instance is not idempotent: each call to <see cref="IAsyncDisposable.DisposeAsync"/> invokes the action.
+    /// Use this with caution as it deviates from the standard dispose pattern.
+    /// </para>
+    /// <para>
+    /// The synchronous action is wrapped to complete synchronously via <see cref="ValueTask.CompletedTask"/>.
+    /// </para>
+    /// </remarks>
+    public static AsyncDisposableAction CreateRepeatable(Action action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        return CreateRepeatable(() =>
+        {
+            action();
+            return ValueTask.CompletedTask;
+        });
     }
 
     // ADR-1005: no Action<…> overloads; they would drop a Task-returning lambda's Task.

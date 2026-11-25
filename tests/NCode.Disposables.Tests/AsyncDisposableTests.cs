@@ -222,6 +222,56 @@ public class AsyncDisposableTests
 
     #endregion
 
+    #region CreateRepeatable Tests
+
+    [Fact]
+    public async Task CreateRepeatable_WithFunc_WhenDisposedThreeTimes_InvokesActionEachTime()
+    {
+        var count = 0;
+        var disposable = AsyncDisposable.CreateRepeatable(() =>
+        {
+            count++;
+            return ValueTask.CompletedTask;
+        });
+
+        await disposable.DisposeAsync();
+        await disposable.DisposeAsync();
+        await disposable.DisposeAsync();
+
+        Assert.Equal(3, count);
+        Assert.True(disposable.IsDisposed);
+    }
+
+    [Fact]
+    public async Task CreateRepeatable_WithAction_WhenDisposedThreeTimes_InvokesActionEachTime()
+    {
+        var count = 0;
+        var disposable = AsyncDisposable.CreateRepeatable((Action)(() => count++));
+
+        await disposable.DisposeAsync();
+        await disposable.DisposeAsync();
+        await disposable.DisposeAsync();
+
+        Assert.Equal(3, count);
+        Assert.True(disposable.IsDisposed);
+    }
+
+    [Fact]
+    public void CreateRepeatable_NullAction_ThrowsArgumentNullException()
+    {
+        var funcException = Assert.Throws<ArgumentNullException>(() =>
+            AsyncDisposable.CreateRepeatable((Func<ValueTask>)null!)
+        );
+        var actionException = Assert.Throws<ArgumentNullException>(() =>
+            AsyncDisposable.CreateRepeatable((Action)null!)
+        );
+
+        Assert.Equal("action", funcException.ParamName);
+        Assert.Equal("action", actionException.ParamName);
+    }
+
+    #endregion
+
     #region CreateValue Tests
 
     [Fact]
