@@ -100,6 +100,23 @@ await using (AsyncDisposable.Create(async () => await writer.FlushAsync()))
 ```
 <!-- endSnippet -->
 
+### Running an action without allocating
+
+`Disposable.CreateValue` and `AsyncDisposable.CreateValue` return a struct that runs a static delegate with a state value. It allocates nothing, but every dispose of every copy runs the action again, so dispose it once, through `using`:
+
+<!-- snippet: ValueDisposable -->
+```cs
+var stopwatch = Stopwatch.StartNew();
+
+using (Disposable.CreateValue(static watch => watch.Stop(), stopwatch))
+{
+    // timed work; the struct allocates nothing
+}
+
+// stopwatch.IsRunning == false
+```
+<!-- endSnippet -->
+
 ### The empty disposable
 
 `Disposable.Empty` and `AsyncDisposable.Empty` are singletons whose dispose does nothing, for a method that must return a disposable when there is nothing to clean up:
@@ -352,6 +369,20 @@ using var cancellation = Disposable.Cancellation();
 var work = Task.Delay(Timeout.Infinite, cancellation.Token);
 cancellation.Dispose(); // cancels the token, then disposes the source it created
 // work.IsCanceled == true
+```
+<!-- endSnippet -->
+
+### Checking whether a disposable is disposed
+
+Every disposable that keeps state implements `IDisposalStatus`, whose `IsDisposed` is `true` once disposal has started. `Disposable.Flag()` does nothing else:
+
+<!-- snippet: DisposalStatus -->
+```cs
+var flag = Disposable.Flag();
+var cleanup = Disposable.Create(() => { });
+flag.Dispose();
+IDisposalStatus status = cleanup; // every disposable that keeps state reports it
+// flag.IsDisposed == true, status.IsDisposed == false
 ```
 <!-- endSnippet -->
 

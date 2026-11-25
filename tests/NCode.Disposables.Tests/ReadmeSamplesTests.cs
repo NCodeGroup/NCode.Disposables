@@ -107,6 +107,27 @@ public class ReadmeSamplesTests
 
     #endregion
 
+    #region Value Tests
+
+    [Fact]
+    public void ValueDisposableSample_Runs()
+    {
+        // begin-snippet: ValueDisposable
+        var stopwatch = Stopwatch.StartNew();
+
+        using (Disposable.CreateValue(static watch => watch.Stop(), stopwatch))
+        {
+            // timed work; the struct allocates nothing
+        }
+
+        // stopwatch.IsRunning == false
+        // end-snippet
+
+        Assert.False(stopwatch.IsRunning);
+    }
+
+    #endregion
+
     #region Aggregate Tests
 
     [Fact]
@@ -393,6 +414,25 @@ public class ReadmeSamplesTests
         // end-snippet
 
         Assert.True(work.IsCanceled);
+    }
+
+    #endregion
+
+    #region Status Tests
+
+    [Fact]
+    public void DisposalStatusSample_Runs()
+    {
+        // begin-snippet: DisposalStatus
+        var flag = Disposable.Flag();
+        var cleanup = Disposable.Create(() => { });
+        flag.Dispose();
+        IDisposalStatus status = cleanup; // every disposable that keeps state reports it
+        // flag.IsDisposed == true, status.IsDisposed == false
+        // end-snippet
+
+        Assert.True(flag.IsDisposed);
+        Assert.False(status.IsDisposed);
     }
 
     #endregion
