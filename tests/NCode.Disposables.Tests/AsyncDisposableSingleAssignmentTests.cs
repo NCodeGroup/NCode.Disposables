@@ -3,7 +3,7 @@
 
 namespace NCode.Disposables.Tests;
 
-public class AsyncDisposableSingleAssignmentTests
+public class AsyncDisposableSingleAssignmentTests : UnitTestBase
 {
     private const string AlreadyAssignedMessage =
         "The disposable is already assigned; a single-assignment disposable takes one resource.";
@@ -21,7 +21,7 @@ public class AsyncDisposableSingleAssignmentTests
     [Fact]
     public async Task IsAssigned_AfterAssignment_ReturnsTrue()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
         var holder = new AsyncDisposableSingleAssignment();
 
         await holder.SetDisposableAsync(mockDisposable.Object);
@@ -58,7 +58,7 @@ public class AsyncDisposableSingleAssignmentTests
     [Fact]
     public async Task SetDisposableAsync_Set_HoldsValue()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
         var holder = new AsyncDisposableSingleAssignment();
 
         await holder.SetDisposableAsync(mockDisposable.Object);
@@ -69,8 +69,8 @@ public class AsyncDisposableSingleAssignmentTests
     [Fact]
     public async Task SetDisposableAsync_SetTwice_ThrowsInvalidOperationException()
     {
-        var mockFirst = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        var mockSecond = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var mockFirst = CreateStrictMock<IAsyncDisposable>();
+        var mockSecond = CreateStrictMock<IAsyncDisposable>();
         var holder = new AsyncDisposableSingleAssignment();
         await holder.SetDisposableAsync(mockFirst.Object);
 
@@ -98,8 +98,11 @@ public class AsyncDisposableSingleAssignmentTests
     [Fact]
     public async Task SetDisposableAsync_SetAfterDispose_DisposesValue()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
+        mockDisposable
+            .Setup(x => x.DisposeAsync())
+            .Returns(ValueTask.CompletedTask)
+            .Verifiable(Times.Once());
         var holder = new AsyncDisposableSingleAssignment();
         await holder.DisposeAsync();
 
@@ -107,15 +110,14 @@ public class AsyncDisposableSingleAssignmentTests
 
         Assert.Null(holder.Disposable);
         Assert.True(holder.IsAssigned);
-        mockDisposable.Verify(x => x.DisposeAsync(), Times.Once);
     }
 
     [Fact]
     public async Task SetDisposableAsync_SetTwiceAfterDispose_ThrowsInvalidOperationException()
     {
-        var mockFirst = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        mockFirst.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
-        var mockSecond = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var mockFirst = CreateStrictMock<IAsyncDisposable>();
+        mockFirst.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask).Verifiable();
+        var mockSecond = CreateStrictMock<IAsyncDisposable>();
         var holder = new AsyncDisposableSingleAssignment();
         await holder.SetDisposableAsync(mockFirst.Object);
         await holder.DisposeAsync();
@@ -134,14 +136,16 @@ public class AsyncDisposableSingleAssignmentTests
     [Fact]
     public async Task DisposeAsync_WhenAssigned_DisposesValue()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
+        mockDisposable
+            .Setup(x => x.DisposeAsync())
+            .Returns(ValueTask.CompletedTask)
+            .Verifiable(Times.Once());
         var holder = new AsyncDisposableSingleAssignment();
         await holder.SetDisposableAsync(mockDisposable.Object);
 
         await holder.DisposeAsync();
 
-        mockDisposable.Verify(x => x.DisposeAsync(), Times.Once);
         Assert.Null(holder.Disposable);
     }
 
@@ -159,15 +163,16 @@ public class AsyncDisposableSingleAssignmentTests
     [Fact]
     public async Task DisposeAsync_Twice_DisposesOnce()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
+        mockDisposable
+            .Setup(x => x.DisposeAsync())
+            .Returns(ValueTask.CompletedTask)
+            .Verifiable(Times.Once());
         var holder = new AsyncDisposableSingleAssignment();
         await holder.SetDisposableAsync(mockDisposable.Object);
 
         await holder.DisposeAsync();
         await holder.DisposeAsync();
-
-        mockDisposable.Verify(x => x.DisposeAsync(), Times.Once);
     }
 
     [Fact]
@@ -177,8 +182,11 @@ public class AsyncDisposableSingleAssignmentTests
 
         for (var iteration = 0; iteration < iterations; iteration++)
         {
-            var mockValue = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-            mockValue.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+            var mockValue = CreateStrictMock<IAsyncDisposable>();
+            mockValue
+                .Setup(x => x.DisposeAsync())
+                .Returns(ValueTask.CompletedTask)
+                .Verifiable(Times.Once());
             var holder = new AsyncDisposableSingleAssignment();
 
             var setTask = Task.Run(async () => await holder.SetDisposableAsync(mockValue.Object));
@@ -190,7 +198,6 @@ public class AsyncDisposableSingleAssignmentTests
             Assert.True(holder.IsDisposed);
             Assert.True(holder.IsAssigned);
             Assert.Null(holder.Disposable);
-            mockValue.Verify(x => x.DisposeAsync(), Times.Once);
         }
     }
 

@@ -3,7 +3,7 @@
 
 namespace NCode.Disposables.Tests;
 
-public class DisposableSingleAssignmentTests
+public class DisposableSingleAssignmentTests : UnitTestBase
 {
     private const string AlreadyAssignedMessage =
         "The disposable is already assigned; a single-assignment disposable takes one resource.";
@@ -21,7 +21,7 @@ public class DisposableSingleAssignmentTests
     [Fact]
     public void IsAssigned_AfterAssignment_ReturnsTrue()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
         var holder = new DisposableSingleAssignment();
 
         holder.Disposable = mockDisposable.Object;
@@ -58,7 +58,7 @@ public class DisposableSingleAssignmentTests
     [Fact]
     public void Disposable_Set_HoldsValue()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
         var holder = new DisposableSingleAssignment();
 
         holder.Disposable = mockDisposable.Object;
@@ -69,8 +69,8 @@ public class DisposableSingleAssignmentTests
     [Fact]
     public void Disposable_SetTwice_ThrowsInvalidOperationException()
     {
-        var mockFirst = new Mock<IDisposable>(MockBehavior.Strict);
-        var mockSecond = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockFirst = CreateStrictMock<IDisposable>();
+        var mockSecond = CreateStrictMock<IDisposable>();
         var holder = new DisposableSingleAssignment { Disposable = mockFirst.Object };
 
         var exception = Assert.Throws<InvalidOperationException>(() =>
@@ -95,8 +95,8 @@ public class DisposableSingleAssignmentTests
     [Fact]
     public void Disposable_SetAfterDispose_DisposesValue()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
         var holder = new DisposableSingleAssignment();
         holder.Dispose();
 
@@ -104,15 +104,14 @@ public class DisposableSingleAssignmentTests
 
         Assert.Null(holder.Disposable);
         Assert.True(holder.IsAssigned);
-        mockDisposable.Verify(x => x.Dispose(), Times.Once);
     }
 
     [Fact]
     public void Disposable_SetTwiceAfterDispose_ThrowsInvalidOperationException()
     {
-        var mockFirst = new Mock<IDisposable>(MockBehavior.Strict);
-        mockFirst.Setup(x => x.Dispose());
-        var mockSecond = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockFirst = CreateStrictMock<IDisposable>();
+        mockFirst.Setup(x => x.Dispose()).Verifiable();
+        var mockSecond = CreateStrictMock<IDisposable>();
         var holder = new DisposableSingleAssignment { Disposable = mockFirst.Object };
         holder.Dispose();
 
@@ -130,13 +129,12 @@ public class DisposableSingleAssignmentTests
     [Fact]
     public void Dispose_WhenAssigned_DisposesValue()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
         var holder = new DisposableSingleAssignment { Disposable = mockDisposable.Object };
 
         holder.Dispose();
 
-        mockDisposable.Verify(x => x.Dispose(), Times.Once);
         Assert.Null(holder.Disposable);
     }
 
@@ -154,14 +152,12 @@ public class DisposableSingleAssignmentTests
     [Fact]
     public void Dispose_Twice_DisposesOnce()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
         var holder = new DisposableSingleAssignment { Disposable = mockDisposable.Object };
 
         holder.Dispose();
         holder.Dispose();
-
-        mockDisposable.Verify(x => x.Dispose(), Times.Once);
     }
 
     [Fact]
@@ -171,8 +167,8 @@ public class DisposableSingleAssignmentTests
 
         for (var iteration = 0; iteration < iterations; iteration++)
         {
-            var mockValue = new Mock<IDisposable>(MockBehavior.Strict);
-            mockValue.Setup(x => x.Dispose());
+            var mockValue = CreateStrictMock<IDisposable>();
+            mockValue.Setup(x => x.Dispose()).Verifiable(Times.Once());
             var holder = new DisposableSingleAssignment();
 
             var setTask = Task.Run(() => holder.Disposable = mockValue.Object);
@@ -184,7 +180,6 @@ public class DisposableSingleAssignmentTests
             Assert.True(holder.IsDisposed);
             Assert.True(holder.IsAssigned);
             Assert.Null(holder.Disposable);
-            mockValue.Verify(x => x.Dispose(), Times.Once);
         }
     }
 
