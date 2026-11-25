@@ -137,7 +137,10 @@ static NCode.Disposables.AsyncDisposable.Create(System.Action! action) -> NCode.
 static NCode.Disposables.AsyncDisposable.Create(System.Func<System.Threading.Tasks.ValueTask>! action, bool idempotent) -> NCode.Disposables.AsyncDisposableAction!
 static NCode.Disposables.AsyncDisposable.Create(System.Func<System.Threading.Tasks.ValueTask>! action) -> NCode.Disposables.AsyncDisposableAction!
 static NCode.Disposables.AsyncDisposable.Empty.get -> NCode.Disposables.AsyncDisposableEmpty!
+static NCode.Disposables.Disposable.Aggregate() -> NCode.Disposables.DisposableAggregate!
 static NCode.Disposables.Disposable.Aggregate(System.IDisposable? disposable) -> NCode.Disposables.DisposableAggregate!
+static NCode.Disposables.Disposable.Cancellation() -> NCode.Disposables.DisposableCancellation!
+static NCode.Disposables.Disposable.Cancellation(System.Threading.CancellationTokenSource! source) -> NCode.Disposables.DisposableCancellation!
 static NCode.Disposables.Disposable.Collection(bool ignoreExceptions, params System.IDisposable![]! collection) -> NCode.Disposables.DisposableCollection!
 static NCode.Disposables.Disposable.Collection(params System.IDisposable![]! collection) -> NCode.Disposables.DisposableCollection!
 static NCode.Disposables.Disposable.Collection(System.Collections.Generic.IEnumerable<System.IDisposable!>! collection, bool ignoreExceptions = false) -> NCode.Disposables.DisposableCollection!
@@ -161,7 +164,13 @@ static NCode.Disposables.Disposable.Create<T1, T2, T3>(System.Action<T1, T2, T3>
 static NCode.Disposables.Disposable.Create<T1, T2, TResult>(System.Func<T1, T2, TResult>! action, T1 arg1, T2 arg2) -> NCode.Disposables.DisposableAction!
 static NCode.Disposables.Disposable.Create<T1, T2>(System.Action<T1, T2>! action, T1 arg1, T2 arg2) -> NCode.Disposables.DisposableAction!
 static NCode.Disposables.Disposable.Create<TResult>(System.Func<TResult>! action) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.CreateValue<TState>(System.Action<TState>! action, TState state) -> NCode.Disposables.ValueDisposable<TState>
 static NCode.Disposables.Disposable.Empty.get -> NCode.Disposables.DisposableEmpty!
+static NCode.Disposables.Disposable.Flag() -> NCode.Disposables.DisposableFlag!
+static NCode.Disposables.Disposable.Guard<T>(T value) -> NCode.Disposables.DisposableGuard<T>!
+static NCode.Disposables.Disposable.Serial() -> NCode.Disposables.DisposableSerial!
+static NCode.Disposables.Disposable.Serial(System.IDisposable? disposable) -> NCode.Disposables.DisposableSerial!
+static NCode.Disposables.Disposable.SingleAssignment() -> NCode.Disposables.DisposableSingleAssignment!
 static NCode.Disposables.ReaderWriterLockSlimExtensions.ReadLock(this System.Threading.ReaderWriterLockSlim! readerWriterLock) -> NCode.Disposables.ValueDisposable<System.Threading.ReaderWriterLockSlim!>
 static NCode.Disposables.ReaderWriterLockSlimExtensions.UpgradeableReadLock(this System.Threading.ReaderWriterLockSlim! readerWriterLock) -> NCode.Disposables.ValueDisposable<System.Threading.ReaderWriterLockSlim!>
 static NCode.Disposables.ReaderWriterLockSlimExtensions.WriteLock(this System.Threading.ReaderWriterLockSlim! readerWriterLock) -> NCode.Disposables.ValueDisposable<System.Threading.ReaderWriterLockSlim!>
