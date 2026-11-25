@@ -24,12 +24,14 @@ What the library is expected to do:
    members named for ignoring exceptions, such as `CollectionIgnoringExceptions` and
    `DisposeAllIgnoringExceptions`, also dispose every item, and ignore what the items throw.
 5. **R5.** A factory, constructor or extension rejects a `null` delegate, resource to wrap, collection or item with
-   `ArgumentNullException`
-   ([ADR-1008](decisions/1008-a-disposable-that-wraps-a-resource-rejects-a-null-resource.md));
-   only the aggregate and serial holders take `null`, meaning they hold nothing, and the `SharedReferenceOwner<T>` and
-   `AsyncSharedReferenceOwner<T>` constructors take a `null` value, which they hand to their release callback. A second
-   assignment of a single-assignment holder throws `InvalidOperationException`, and so does `Release()` on a guard
-   already released.
+   `ArgumentNullException` ([ADR-1008](decisions/1008-a-disposable-that-wraps-a-resource-rejects-a-null-resource.md));
+   only these take `null`: the aggregate and serial holders, meaning they hold nothing; the `SharedReferenceOwner<T>`
+   and `AsyncSharedReferenceOwner<T>` constructors, a `null` value, which they hand to their release callback; the
+   `SharedReferenceLease<T>` and `AsyncSharedReferenceLease<T>` constructors, a `null` owner, which makes an inactive
+   lease, as `default` does; `DisposeAsyncIfAvailable()`, which does nothing for a `null` instance; and `DisposeAll()`,
+   `DisposeAllIgnoringExceptions()`, `DisposeAllAsync()` and `DisposeAllIgnoringExceptionsAsync()`, which skip a `null`
+   item. A second assignment of a single-assignment holder throws `InvalidOperationException`, and so does `Release()`
+   on a guard already released.
 6. **R6.** `DisposableContext` calls `OperationCompleted` for each `OperationStarted`, also when the context's `Post`
    throws, and rethrows.
 7. **R7.** The package consumers install is built from this repository's reviewed code, and they can check that.
