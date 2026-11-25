@@ -113,6 +113,10 @@ NCode.Disposables.DisposableSingleAssignment.IsAssigned.get -> bool
 NCode.Disposables.DisposableSingleAssignment.IsDisposed.get -> bool
 NCode.Disposables.IDisposalStatus
 NCode.Disposables.IDisposalStatus.IsDisposed.get -> bool
+NCode.Disposables.SemaphoreSlimExtensions
+NCode.Disposables.SemaphoreSlimExtensions.extension(System.Threading.SemaphoreSlim!)
+NCode.Disposables.SemaphoreSlimExtensions.extension(System.Threading.SemaphoreSlim!).Lock(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> NCode.Disposables.ValueDisposable<System.Threading.SemaphoreSlim!>
+NCode.Disposables.SemaphoreSlimExtensions.extension(System.Threading.SemaphoreSlim!).LockAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<NCode.Disposables.ValueDisposable<System.Threading.SemaphoreSlim!>>
 NCode.Disposables.ValueDisposable<TState>
 NCode.Disposables.ValueDisposable<TState>.Dispose() -> void
 NCode.Disposables.ValueDisposable<TState>.ValueDisposable() -> void
@@ -153,3 +157,5 @@ static NCode.Disposables.Disposable.Create<T1, T2, TResult>(System.Func<T1, T2, 
 static NCode.Disposables.Disposable.Create<T1, T2>(System.Action<T1, T2>! action, T1 arg1, T2 arg2) -> NCode.Disposables.DisposableAction!
 static NCode.Disposables.Disposable.Create<TResult>(System.Func<TResult>! action) -> NCode.Disposables.DisposableAction!
 static NCode.Disposables.Disposable.Empty.get -> NCode.Disposables.DisposableEmpty!
+static NCode.Disposables.SemaphoreSlimExtensions.Lock(this System.Threading.SemaphoreSlim! semaphore, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> NCode.Disposables.ValueDisposable<System.Threading.SemaphoreSlim!>
+static NCode.Disposables.SemaphoreSlimExtensions.LockAsync(this System.Threading.SemaphoreSlim! semaphore, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<NCode.Disposables.ValueDisposable<System.Threading.SemaphoreSlim!>>
