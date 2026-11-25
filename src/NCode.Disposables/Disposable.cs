@@ -320,6 +320,84 @@ public static class Disposable
     /// <summary>
     /// Creates and returns a new instance of <see cref="DisposableCollection"/>
     /// which contains other <see cref="IDisposable"/> items that will be
+    /// disposed when the collection itself is disposed. The collection is
+    /// initialized from an enumeration of <see cref="IDisposable"/> items.
+    /// </summary>
+    /// <param name="collection">The collection whose elements are copied to the new <see cref="DisposableCollection"/>.</param>
+    /// <returns>A new <see cref="DisposableCollection"/> containing copies of the elements from the specified collection.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// The elements from <paramref name="collection"/> are enumerated and copied during construction.
+    /// Items are disposed in LIFO (last-in, first-out) order when the collection is disposed.
+    /// </para>
+    /// <para>
+    /// When the collection is disposed, every item is still disposed; then the one exception is
+    /// rethrown, or an <see cref="AggregateException"/> holding every exception is thrown when several items throw.
+    /// Use <c>CollectionIgnoringExceptions</c> to ignore the exceptions items throw.
+    /// </para>
+    /// </remarks>
+    public static DisposableCollection Collection(IEnumerable<IDisposable> collection)
+    {
+        ArgumentNullException.ThrowIfNull(collection);
+
+        return new DisposableCollection(collection);
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="DisposableCollection"/>
+    /// which contains other <see cref="IDisposable"/> items that will be
+    /// disposed when the collection itself is disposed, ignoring the exceptions that items throw.
+    /// The collection is initialized from a variable argument array of <see cref="IDisposable"/> items.
+    /// </summary>
+    /// <param name="collection">The collection whose elements are copied to the new <see cref="DisposableCollection"/>.</param>
+    /// <returns>A new <see cref="DisposableCollection"/> containing the specified disposables.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// Items are disposed in LIFO (last-in, first-out) order when the collection is disposed.
+    /// </para>
+    /// <para>
+    /// Disposal continues for all items even if some throw exceptions, and the exceptions are ignored.
+    /// </para>
+    /// </remarks>
+    public static DisposableCollection CollectionIgnoringExceptions(params IDisposable[] collection)
+    {
+        ArgumentNullException.ThrowIfNull(collection);
+
+        return CollectionIgnoringExceptions(collection.AsEnumerable());
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="DisposableCollection"/>
+    /// which contains other <see cref="IDisposable"/> items that will be
+    /// disposed when the collection itself is disposed, ignoring the exceptions that items throw.
+    /// The collection is initialized from an enumeration of <see cref="IDisposable"/> items.
+    /// </summary>
+    /// <param name="collection">The collection whose elements are copied to the new <see cref="DisposableCollection"/>.</param>
+    /// <returns>A new <see cref="DisposableCollection"/> containing copies of the elements from the specified collection.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// The elements from <paramref name="collection"/> are enumerated and copied during construction.
+    /// Items are disposed in LIFO (last-in, first-out) order when the collection is disposed.
+    /// </para>
+    /// <para>
+    /// Disposal continues for all items even if some throw exceptions, and the exceptions are ignored.
+    /// </para>
+    /// </remarks>
+    public static DisposableCollection CollectionIgnoringExceptions(
+        IEnumerable<IDisposable> collection
+    )
+    {
+        ArgumentNullException.ThrowIfNull(collection);
+
+        return new DisposableCollection(collection) { IgnoresExceptions = true };
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="DisposableCollection"/>
+    /// which contains other <see cref="IDisposable"/> items that will be
     /// disposed when the collection itself is disposed, with an option to ignore exceptions.
     /// </summary>
     /// <param name="ignoreExceptions"><see langword="true"/> to ignore any exceptions thrown while disposing individual items; otherwise, <see langword="false"/> to allow exceptions to propagate.</param>
@@ -343,7 +421,9 @@ public static class Disposable
     {
         ArgumentNullException.ThrowIfNull(collection);
 
-        return Collection(collection.AsEnumerable(), ignoreExceptions);
+        return ignoreExceptions
+            ? CollectionIgnoringExceptions(collection.AsEnumerable())
+            : Collection(collection.AsEnumerable());
     }
 
     /// <summary>
@@ -377,7 +457,7 @@ public static class Disposable
     {
         ArgumentNullException.ThrowIfNull(collection);
 
-        return new DisposableCollection(collection, ignoreExceptions);
+        return ignoreExceptions ? CollectionIgnoringExceptions(collection) : Collection(collection);
     }
 
     /// <summary>

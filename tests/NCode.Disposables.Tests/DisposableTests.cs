@@ -134,4 +134,75 @@ public class DisposableTests
     }
 
     #endregion
+
+    #region Collection Tests
+
+    [Fact]
+    public void Collection_WithEnumerable_WhenItemThrows_DisposesEveryItemAndRethrows()
+    {
+        var log = new List<string>();
+        IEnumerable<IDisposable> items =
+        [
+            Disposable.Create(() => log.Add("first")),
+            Disposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
+            Disposable.Create(() => log.Add("third")),
+        ];
+        var collection = Disposable.Collection(items);
+
+        Assert.Throws<InvalidOperationException>(collection.Dispose);
+
+        Assert.Equal(["third", "first"], log);
+    }
+
+    #endregion
+
+    #region CollectionIgnoringExceptions Tests
+
+    [Fact]
+    public void CollectionIgnoringExceptions_WhenItemThrows_DisposesEveryItemWithoutThrowing()
+    {
+        var log = new List<string>();
+        var collection = Disposable.CollectionIgnoringExceptions(
+            Disposable.Create(() => log.Add("first")),
+            Disposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
+            Disposable.Create(() => log.Add("third"))
+        );
+
+        collection.Dispose();
+
+        Assert.Equal(["third", "first"], log);
+    }
+
+    [Fact]
+    public void CollectionIgnoringExceptions_WithEnumerable_WhenItemThrows_DisposesEveryItemWithoutThrowing()
+    {
+        var log = new List<string>();
+        IEnumerable<IDisposable> items =
+        [
+            Disposable.Create(() => log.Add("first")),
+            Disposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
+            Disposable.Create(() => log.Add("third")),
+        ];
+        var collection = Disposable.CollectionIgnoringExceptions(items);
+
+        collection.Dispose();
+
+        Assert.Equal(["third", "first"], log);
+    }
+
+    [Fact]
+    public void CollectionIgnoringExceptions_NullCollection_ThrowsArgumentNullException()
+    {
+        var arrayException = Assert.Throws<ArgumentNullException>(() =>
+            Disposable.CollectionIgnoringExceptions((IDisposable[])null!)
+        );
+        var enumerableException = Assert.Throws<ArgumentNullException>(() =>
+            Disposable.CollectionIgnoringExceptions((IEnumerable<IDisposable>)null!)
+        );
+
+        Assert.Equal("collection", arrayException.ParamName);
+        Assert.Equal("collection", enumerableException.ParamName);
+    }
+
+    #endregion
 }
