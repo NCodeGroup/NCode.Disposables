@@ -1,0 +1,138 @@
+---
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+//
+// One outcome of "Which disposable?": the disposable, its call, three badges (safe to dispose twice, reports
+// IsDisposed, allocation-free), what to watch for, its async form, and a link to its guide, from
+// docs/site/_components/data/disposables.json. Put the compiled call inside it as a sample include. `id` is the
+// card's anchor there, written as a literal so the link check sees it.
+// Usage:
+//   <DisposableCard id="assign-once" outcome="single-assignment">
+//   ```cs snippet=SiteAnswerSingleAssignment
+//   ```
+//   </DisposableCard>
+import { Status } from '@ncodegroup/docs/components';
+import disposables from '@site/components/data/disposables.json';
+import { inline, sitePath } from '@site/components/lib/text';
+
+interface Props {
+  id: string;
+  outcome: string;
+}
+const { id, outcome } = Astro.props;
+type Outcome = (typeof disposables.outcomes)[number] & { guide?: string };
+const card = disposables.outcomes.find((o) => o.id === outcome) as Outcome | undefined;
+if (!card) throw new Error(`[which disposable] no outcome "${outcome}" in docs/site/_components/data/disposables.json`);
+if (card.anchor !== id) throw new Error(`[which disposable] <DisposableCard outcome="${outcome}"> needs id="${card.anchor}"`);
+const b = card.behavior;
+const badges = [
+  { label: 'Safe to dispose twice', on: b.safeTwice },
+  { label: 'Reports IsDisposed', on: b.reportsStatus },
+  { label: 'Allocation-free', on: b.allocationFree },
+];
+---
+
+<article class:list={['dcard']} id={id} data-outcome={card.id} aria-labelledby={`${id}-title`}>
+  <header class="dcard__head">
+    <span class="dcard__group">{card.kind}</span>
+    <h3 class="dcard__title" id={`${id}-title`} set:html={inline(card.name)} />
+    <p class="dcard__use" set:html={inline(card.use)} />
+  </header>
+  <ul class="dcard__badges" aria-label="Behavior">
+    {badges.map((badge) => (
+      <li>
+        <Status state={badge.on ? 'success' : 'off'}>
+          {badge.label}: {badge.on ? 'yes' : 'no'}
+        </Status>
+      </li>
+    ))}
+  </ul>
+  <div class="dcard__code">
+    <slot />
+  </div>
+  <dl class="dcard__facts">
+    <div>
+      <dt>Watch for</dt>
+      <dd set:html={inline(card.watchFor)} />
+    </div>
+    <div>
+      <dt>Async form</dt>
+      <dd set:html={inline(card.asyncName)} />
+    </div>
+  </dl>
+  <p class="dcard__links">
+    {card.guide && <a class="dcard__guide" href={sitePath(card.guide)}>The guide</a>}
+  </p>
+</article>
+
+<style>
+  .dcard {
+    scroll-margin-top: calc(var(--sl-nav-height) + var(--nc-space-5));
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--nc-space-4);
+    margin-block: var(--nc-space-5);
+    padding: var(--nc-space-5);
+    border: var(--nc-border-hair) solid var(--nc-color-border);
+    border-radius: var(--nc-radius-panel);
+    background: var(--nc-color-surface);
+    box-shadow: var(--nc-elevation-flush);
+  }
+  .dcard:target,
+  .dcard.is-chosen {
+    border-color: var(--nc-color-primary-text);
+    box-shadow: 0 0 0 1px var(--nc-color-primary-text);
+  }
+  .dcard__head { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--nc-space-2); }
+  .dcard__group {
+    font-size: 0.6875rem;
+    font-stretch: var(--nc-type-label-stretch);
+    font-weight: 600;
+    letter-spacing: var(--nc-type-label-tracking);
+    text-transform: uppercase;
+    color: var(--nc-color-text-muted);
+  }
+  .dcard__title {
+    margin: 0;
+    color: var(--nc-color-text);
+    font-size: var(--sl-text-xl);
+    font-stretch: var(--nc-type-heading-stretch);
+    font-weight: 600;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+  .dcard__title :global(code) { font-family: var(--nc-font-mono); font-stretch: var(--nc-type-code-stretch); font-size: 0.82em; overflow-wrap: anywhere; }
+  .dcard__use { margin: 0; color: var(--nc-color-text-secondary); }
+  .dcard__badges { display: flex; flex-wrap: wrap; gap: var(--nc-space-2) var(--nc-space-5); margin: 0; padding: 0; list-style: none; font-size: var(--sl-text-sm); }
+  .dcard__badges li { margin: 0; }
+  .dcard__code :global(.expressive-code) { margin: 0; }
+  .dcard__facts { display: grid; gap: var(--nc-space-3); margin: 0; }
+  .dcard__facts > div { display: grid; grid-template-columns: 9rem minmax(0, 1fr); gap: var(--nc-space-4); }
+  .dcard__facts dt {
+    padding-top: 0.1875rem;
+    font-size: 0.6875rem;
+    font-stretch: var(--nc-type-label-stretch);
+    font-weight: 600;
+    letter-spacing: var(--nc-type-label-tracking);
+    text-transform: uppercase;
+    color: var(--nc-color-text-muted);
+  }
+  .dcard__facts dd { margin: 0; font-size: var(--sl-text-sm); line-height: 1.5; }
+  .dcard :global(code) { font-family: var(--nc-font-mono); font-stretch: var(--nc-type-code-stretch); }
+  .dcard__facts :global(code),
+  .dcard__use :global(code) {
+    padding: 0.06em 0.3em;
+    border: var(--nc-border-hair) solid var(--nc-color-border);
+    border-radius: var(--nc-radius-plate);
+    background: var(--nc-color-surface-sunken);
+    font-size: 0.88em;
+  }
+  .dcard__links { display: flex; flex-wrap: wrap; gap: var(--nc-space-2) var(--nc-space-5); margin: 0; font-size: var(--sl-text-xs); }
+  .dcard__links a { color: var(--nc-color-primary-text); text-underline-offset: 0.2em; overflow-wrap: anywhere; }
+  .dcard__guide { font-weight: 600; }
+  .dcard__guide::after { content: ' \2192'; }
+  @media (max-width: 40rem) {
+    .dcard { padding: var(--nc-space-4); }
+    .dcard__facts > div { grid-template-columns: minmax(0, 1fr); gap: var(--nc-space-1); }
+  }
+</style>
