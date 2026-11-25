@@ -6,25 +6,6 @@ using System.Collections;
 namespace NCode.Disposables;
 
 /// <summary>
-/// Represents a collection of <see cref="IAsyncDisposable"/> items that are automatically disposed
-/// when the collection itself is disposed. Items are disposed in reverse order of their addition.
-/// </summary>
-/// <remarks>
-/// <para>
-/// This interface combines <see cref="IAsyncDisposable"/> and <see cref="ICollection{T}"/> to provide
-/// a managed collection of disposable resources with automatic cleanup.
-/// </para>
-/// <para>
-/// When the collection is disposed, all contained items are disposed in LIFO (last-in, first-out) order,
-/// which is typically appropriate for resource cleanup scenarios where resources may have dependencies.
-/// </para>
-/// </remarks>
-public interface IAsyncDisposableCollection : IAsyncDisposable, ICollection<IAsyncDisposable>
-{
-    // nothing
-}
-
-/// <summary>
 /// Provides an implementation of <see cref="IAsyncDisposableCollection"/> that manages
 /// a collection of <see cref="IAsyncDisposable"/> items with automatic disposal support.
 /// </summary>
@@ -47,7 +28,9 @@ public interface IAsyncDisposableCollection : IAsyncDisposable, ICollection<IAsy
 /// <see cref="AddAsync"/> after the collection is disposed disposes the added item instead of storing it.
 /// </para>
 /// </remarks>
+#pragma warning disable NCDISP002 // implements the deprecated interface until it is deleted
 public sealed class AsyncDisposableCollection : IAsyncDisposableCollection, IDisposalStatus
+#pragma warning restore NCDISP002
 {
     private int _disposed;
     private readonly List<IAsyncDisposable> _list;

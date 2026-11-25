@@ -682,6 +682,7 @@ public class AsyncDisposableCollectionTests
 
     #region Interface Tests
 
+#pragma warning disable NCDISP002 // implements the deprecated interface until it is deleted
     [Fact]
     public void ImplementsIAsyncDisposableCollection()
     {
@@ -689,6 +690,7 @@ public class AsyncDisposableCollectionTests
 
         Assert.IsAssignableFrom<IAsyncDisposableCollection>(collection);
     }
+#pragma warning restore NCDISP002
 
     [Fact]
     public void ImplementsIAsyncDisposable()
