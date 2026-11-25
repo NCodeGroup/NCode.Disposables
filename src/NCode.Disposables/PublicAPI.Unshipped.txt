@@ -113,6 +113,11 @@ NCode.Disposables.DisposableSingleAssignment.IsAssigned.get -> bool
 NCode.Disposables.DisposableSingleAssignment.IsDisposed.get -> bool
 NCode.Disposables.IDisposalStatus
 NCode.Disposables.IDisposalStatus.IsDisposed.get -> bool
+NCode.Disposables.ReaderWriterLockSlimExtensions
+NCode.Disposables.ReaderWriterLockSlimExtensions.extension(System.Threading.ReaderWriterLockSlim!)
+NCode.Disposables.ReaderWriterLockSlimExtensions.extension(System.Threading.ReaderWriterLockSlim!).ReadLock() -> NCode.Disposables.ValueDisposable<System.Threading.ReaderWriterLockSlim!>
+NCode.Disposables.ReaderWriterLockSlimExtensions.extension(System.Threading.ReaderWriterLockSlim!).UpgradeableReadLock() -> NCode.Disposables.ValueDisposable<System.Threading.ReaderWriterLockSlim!>
+NCode.Disposables.ReaderWriterLockSlimExtensions.extension(System.Threading.ReaderWriterLockSlim!).WriteLock() -> NCode.Disposables.ValueDisposable<System.Threading.ReaderWriterLockSlim!>
 NCode.Disposables.SemaphoreSlimExtensions
 NCode.Disposables.SemaphoreSlimExtensions.extension(System.Threading.SemaphoreSlim!)
 NCode.Disposables.SemaphoreSlimExtensions.extension(System.Threading.SemaphoreSlim!).Lock(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> NCode.Disposables.ValueDisposable<System.Threading.SemaphoreSlim!>
@@ -157,5 +162,8 @@ static NCode.Disposables.Disposable.Create<T1, T2, TResult>(System.Func<T1, T2, 
 static NCode.Disposables.Disposable.Create<T1, T2>(System.Action<T1, T2>! action, T1 arg1, T2 arg2) -> NCode.Disposables.DisposableAction!
 static NCode.Disposables.Disposable.Create<TResult>(System.Func<TResult>! action) -> NCode.Disposables.DisposableAction!
 static NCode.Disposables.Disposable.Empty.get -> NCode.Disposables.DisposableEmpty!
+static NCode.Disposables.ReaderWriterLockSlimExtensions.ReadLock(this System.Threading.ReaderWriterLockSlim! readerWriterLock) -> NCode.Disposables.ValueDisposable<System.Threading.ReaderWriterLockSlim!>
+static NCode.Disposables.ReaderWriterLockSlimExtensions.UpgradeableReadLock(this System.Threading.ReaderWriterLockSlim! readerWriterLock) -> NCode.Disposables.ValueDisposable<System.Threading.ReaderWriterLockSlim!>
+static NCode.Disposables.ReaderWriterLockSlimExtensions.WriteLock(this System.Threading.ReaderWriterLockSlim! readerWriterLock) -> NCode.Disposables.ValueDisposable<System.Threading.ReaderWriterLockSlim!>
 static NCode.Disposables.SemaphoreSlimExtensions.Lock(this System.Threading.SemaphoreSlim! semaphore, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> NCode.Disposables.ValueDisposable<System.Threading.SemaphoreSlim!>
 static NCode.Disposables.SemaphoreSlimExtensions.LockAsync(this System.Threading.SemaphoreSlim! semaphore, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<NCode.Disposables.ValueDisposable<System.Threading.SemaphoreSlim!>>
