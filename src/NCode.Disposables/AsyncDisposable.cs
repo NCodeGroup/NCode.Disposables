@@ -22,8 +22,11 @@ public static class AsyncDisposable
     /// </summary>
     /// <param name="disposable">The underlying <see cref="IDisposable"/> instance to adapt.</param>
     /// <returns>A new <see cref="AsyncDisposableAdapter"/> instance that wraps the specified disposable.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="disposable"/> is <see langword="null"/>.</exception>
     public static AsyncDisposableAdapter Adapt(IDisposable disposable)
     {
+        ArgumentNullException.ThrowIfNull(disposable);
+
         return new AsyncDisposableAdapter(disposable);
     }
 
@@ -33,12 +36,15 @@ public static class AsyncDisposable
     /// </summary>
     /// <param name="disposable">The underlying <see cref="IDisposable"/> instance to adapt.</param>
     /// <returns>A new <see cref="AsyncDisposableAdapter"/> instance that disposes the specified disposable on every disposal.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="disposable"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// The returned instance is not idempotent: each call to <see cref="IAsyncDisposable.DisposeAsync"/> disposes the underlying instance.
     /// Use this with caution as it deviates from the standard dispose pattern.
     /// </remarks>
     public static AsyncDisposableAdapter AdaptRepeatable(IDisposable disposable)
     {
+        ArgumentNullException.ThrowIfNull(disposable);
+
         return new AsyncDisposableAdapter(disposable) { IsRepeatable = true };
     }
 
