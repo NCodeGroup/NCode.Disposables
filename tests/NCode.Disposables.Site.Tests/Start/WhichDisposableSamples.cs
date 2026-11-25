@@ -64,11 +64,13 @@ public class WhichDisposableSamples
     {
         // begin-snippet: SiteAnswerCollection
         List<string> log = [];
+        var first = Disposable.Create(() => log.Add("first"));
+        var second = Disposable.Create(() => log.Add("second"));
 
         using (var resources = Disposable.Collection())
         {
-            resources.Add(Disposable.Create(() => log.Add("first")));
-            resources.Add(Disposable.Create(() => log.Add("second")));
+            resources.Add(first);
+            resources.Add(second);
         }
 
         // log: "second", "first"
@@ -82,10 +84,9 @@ public class WhichDisposableSamples
     {
         // begin-snippet: SiteAnswerAggregate
         List<string> log = [];
+        var old = Disposable.Create(() => log.Add("old"));
 
-        using (
-            var current = Disposable.Aggregate(Disposable.Create(() => log.Add("old")))
-        )
+        using (var current = Disposable.Aggregate(old))
         {
             // "old" is not disposed
             current.Disposable = Disposable.Create(() => log.Add("new"));
@@ -102,8 +103,9 @@ public class WhichDisposableSamples
     {
         // begin-snippet: SiteAnswerSerial
         List<string> log = [];
+        var old = Disposable.Create(() => log.Add("old"));
 
-        using (var current = Disposable.Serial(Disposable.Create(() => log.Add("old"))))
+        using (var current = Disposable.Serial(old))
         {
             current.Disposable = Disposable.Create(() => log.Add("new")); // disposes "old"
         }
@@ -136,9 +138,10 @@ public class WhichDisposableSamples
     {
         // begin-snippet: SiteAnswerGuard
         List<string> log = [];
+        var opened = Disposable.Create(() => log.Add("closed"));
         DisposableAction connection;
 
-        using (var guard = Disposable.Guard(Disposable.Create(() => log.Add("closed"))))
+        using (var guard = Disposable.Guard(opened))
         {
             // a step that may throw
             connection = guard.Release(); // the caller owns it now
@@ -158,13 +161,11 @@ public class WhichDisposableSamples
 
         // begin-snippet: SiteAnswerContext
         List<string> log = [];
+        var control = Disposable.Create(() => log.Add("disposed"));
 
         // uiContext is the SynchronizationContext captured on the UI thread.
-        var control = Disposable.Context(
-            Disposable.Create(() => log.Add("disposed")),
-            uiContext
-        );
-        control.Dispose(); // Send: returns once the context has disposed it
+        var disposable = Disposable.Context(control, uiContext);
+        disposable.Dispose(); // Send: returns once the context has disposed it
         // end-snippet
 
         Assert.Equal(["disposed"], log);
@@ -179,8 +180,9 @@ public class WhichDisposableSamples
     {
         // begin-snippet: SiteAnswerShared
         List<string> log = [];
+        var connection = Disposable.Create(() => log.Add("closed"));
 
-        var first = Disposable.Shared(Disposable.Create(() => log.Add("closed")));
+        var first = Disposable.Shared(connection);
         var second = first.AddReference();
         first.Dispose();
         second.Dispose(); // log: "closed": the last lease disposes it
