@@ -3,13 +3,17 @@
   "isRoot": true,
   "tools": {
     "csharpier": {
-      "version": "1.4.0",
-      "commands": ["csharpier"],
+      "version": "1.4.1",
+      "commands": [
+        "csharpier"
+      ],
       "rollForward": false
     },
     "markdownsnippets.tool": {
       "version": "30.0.1",
-      "commands": ["mdsnippets"],
+      "commands": [
+        "mdsnippets"
+      ],
       "rollForward": false
     }
   }
