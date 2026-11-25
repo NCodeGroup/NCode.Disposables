@@ -25,12 +25,15 @@ public interface IDisposableAggregate : IDisposable
     /// <value>
     /// The current underlying <see cref="IDisposable"/> instance, or <see langword="null"/> if no instance is set.
     /// </value>
-    /// <exception cref="ObjectDisposedException">
-    /// The current <see cref="IDisposableAggregate"/> instance has already been disposed.
-    /// </exception>
     /// <remarks>
+    /// <para>
     /// Setting this property does not dispose the previous instance. If disposal of the previous
     /// instance is required, it must be done explicitly before setting a new value.
+    /// </para>
+    /// <para>
+    /// After the aggregate has been disposed, the getter returns <see langword="null"/>
+    /// and the setter disposes the value it is given.
+    /// </para>
     /// </remarks>
     IDisposable? Disposable { get; set; }
 }
@@ -46,17 +49,20 @@ public interface IDisposableAggregate : IDisposable
 /// </para>
 /// <para>
 /// When <see cref="Dispose"/> is called, the currently held underlying instance is disposed.
-/// The aggregate becomes disposed and any subsequent access to the <see cref="Disposable"/> property
-/// will throw an <see cref="ObjectDisposedException"/>.
+/// The aggregate becomes disposed, after which the <see cref="Disposable"/> getter returns
+/// <see langword="null"/> and the setter disposes the value it is given.
 /// </para>
 /// <para>
 /// Setting the <see cref="Disposable"/> property does not automatically dispose the previous instance.
 /// </para>
 /// </remarks>
-public sealed class DisposableAggregate : IDisposableAggregate
+public sealed class DisposableAggregate : IDisposableAggregate, IDisposalStatus
 {
     private static readonly IDisposable Sentinel = new DisposableEmpty();
     private IDisposable? _disposable;
+
+    /// <summary>Gets a value indicating whether <see cref="Dispose"/> has been called at least once.</summary>
+    public bool IsDisposed => ReferenceEquals(Volatile.Read(ref _disposable), Sentinel);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DisposableAggregate"/> class
@@ -87,21 +93,14 @@ public sealed class DisposableAggregate : IDisposableAggregate
     /// This method is idempotent; subsequent calls will have no effect.
     /// </para>
     /// <para>
-    /// After disposal, any access to the <see cref="Disposable"/> property will throw
-    /// an <see cref="ObjectDisposedException"/>.
+    /// After disposal, the <see cref="Disposable"/> getter returns <see langword="null"/>
+    /// and the setter disposes the value it is given.
     /// </para>
     /// </remarks>
     public void Dispose()
     {
         var disposable = Interlocked.Exchange(ref _disposable, Sentinel);
         disposable?.Dispose();
-    }
-
-    private IDisposable? ThrowIfDisposed(IDisposable? disposable)
-    {
-        var isDisposed = ReferenceEquals(disposable, Sentinel);
-        ObjectDisposedException.ThrowIf(isDisposed, this);
-        return disposable;
     }
 
     /// <inheritdoc />
@@ -113,6 +112,9 @@ public sealed class DisposableAggregate : IDisposableAggregate
     /// The setter uses a lock-free spin-wait pattern to atomically replace the underlying instance.
     /// Note that setting a new value does not dispose the previous instance.
     /// </para>
+    /// <para>
+    /// After disposal, the getter returns <see langword="null"/> and the setter disposes the value it is given.
+    /// </para>
     /// </remarks>
     public IDisposable? Disposable
     {
@@ -123,14 +125,21 @@ public sealed class DisposableAggregate : IDisposableAggregate
         get
         {
             var current = Volatile.Read(ref _disposable);
-            return ThrowIfDisposed(current);
+            return ReferenceEquals(current, Sentinel) ? null : current;
         }
         set
         {
             var spinWait = new SpinWait();
             while (true)
             {
-                var current = ThrowIfDisposed(Volatile.Read(ref _disposable));
+                var current = Volatile.Read(ref _disposable);
+                if (ReferenceEquals(current, Sentinel))
+                {
+                    // ADR-1004
+                    value?.Dispose();
+                    return;
+                }
+
                 var snapshot = Interlocked.CompareExchange(ref _disposable, value, current);
                 if (ReferenceEquals(current, snapshot))
                     return;
