@@ -264,6 +264,11 @@ public static class AsyncDisposable
     /// <param name="collection">The <see cref="IAsyncDisposable"/> items to add to the collection.</param>
     /// <returns>A new <see cref="AsyncDisposableCollection"/> containing the specified items.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
+    // ADR-1007: deleted in the next major version.
+    [Obsolete(
+        "Use AsyncDisposable.Collection, or AsyncDisposable.CollectionIgnoringExceptions to ignore the exceptions items throw. This overload is deleted in the next major version.",
+        DiagnosticId = "NCDISP003"
+    )]
     public static AsyncDisposableCollection Collection(
         bool ignoreExceptions,
         params IAsyncDisposable[] collection
@@ -349,6 +354,11 @@ public static class AsyncDisposable
     /// <returns>A new <see cref="AsyncDisposableCollection"/> containing the specified items.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
     // Callers that pass only the collection bind to this overload, so it keeps its optional parameter.
+    // ADR-1007: deleted in the next major version.
+    [Obsolete(
+        "Use AsyncDisposable.Collection, or AsyncDisposable.CollectionIgnoringExceptions to ignore the exceptions items throw. This overload is deleted in the next major version.",
+        DiagnosticId = "NCDISP003"
+    )]
 #pragma warning disable RS0027 // optional parameter on an overload with fewer parameters than another
     public static AsyncDisposableCollection Collection(
 #pragma warning restore RS0027
