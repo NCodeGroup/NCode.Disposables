@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Package validation compares each package with the published 8.0.1 package.
+- `docs/assurance-case.md` states the library's security requirements, its threat model and trust boundary, the secure design principles it applies and the weaknesses it counters, with the tests behind them.
 
 ## [8.0.1] - 2026-11-25
 
