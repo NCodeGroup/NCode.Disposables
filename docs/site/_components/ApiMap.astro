@@ -1,0 +1,101 @@
+---
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
+// One group of the API map on /reference/api-map/: the entries of api-map.json that name the group, in file order, as one
+// table whose rows are drawn as cards, so no field is hidden at any width. Each row has the entry's id as its anchor.
+// The text fields take `code` and links. Usage:
+// <ApiMap group="factories" />
+import apiMap from '@site/components/data/api-map.json';
+import { inline, sitePath } from '@site/components/lib/text';
+
+interface Props {
+  /** A group id of api-map.json. */
+  group: string;
+}
+
+const { group } = Astro.props;
+const known = apiMap.groups.find((g) => g.id === group);
+if (!known) {
+  throw new Error(`[api map] no group "${group}" in docs/site/_components/data/api-map.json`);
+}
+const rows = apiMap.entries
+  .filter((entry) => entry.group === group)
+  .map((entry) => ({
+    id: entry.id,
+    type: entry.type,
+    member: entry.member as string | null,
+    signatures: entry.signatures as string[],
+    summary: entry.summary,
+    page: entry.page,
+    href: sitePath(entry.page),
+  }));
+const headings = ['Member', 'Signature', 'What it does', 'Explained on'];
+---
+
+<div class="api-map not-content">
+  <table class="api-map__table" aria-label={`API map: ${known.title.replace(/`/g, '')}`}>
+    <thead>
+      <tr>
+        {headings.map((heading) => (
+          <th scope="col" set:html={inline(heading)} />
+        ))}
+      </tr>
+    </thead>
+    <tbody>
+      {rows.map((row) => (
+        <tr id={row.id} class="api-map__row">
+          <th scope="row" data-label="Member">
+            <code>{row.member ? `${row.type}.${row.member}` : row.type}</code>
+          </th>
+          <td data-label="Signature">
+            {row.signatures.map((signature) => (
+              <code class="api-map__signature">{signature}</code>
+            ))}
+          </td>
+          <td data-label="What it does" set:html={inline(row.summary)} />
+          <td data-label="Explained on">
+            <a href={row.href}>{row.page}</a>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
+<style>
+  .api-map { margin-block: var(--nc-space-5); color: var(--nc-color-text); }
+  .api-map__table { display: block; width: 100%; font-size: var(--sl-text-sm); line-height: 1.45; }
+  .api-map__table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .api-map__table tbody { display: grid; gap: var(--nc-space-4); }
+  .api-map__row {
+    scroll-margin-top: calc(var(--sl-nav-height) + var(--nc-space-5));
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+    gap: var(--nc-space-3) var(--nc-space-5);
+    padding: var(--nc-space-4) var(--nc-space-5);
+    border: var(--nc-border-hair) solid var(--nc-color-border);
+    border-radius: var(--nc-radius-panel);
+    background: var(--nc-color-surface);
+  }
+  .api-map__row:target { border-color: var(--nc-color-primary-text); box-shadow: 0 0 0 1px var(--nc-color-primary-text); }
+  .api-map__row > :is(th, td) { display: block; padding: 0; border: 0; text-align: start; }
+  .api-map__row > :is(th, [data-label='Signature'], [data-label='What it does']) { grid-column: 1 / -1; }
+  .api-map__row > th { font-size: var(--sl-text-base); font-weight: 600; }
+  .api-map__row > td::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: var(--nc-space-1);
+    font-size: 0.6875rem;
+    font-stretch: var(--nc-type-label-stretch);
+    font-weight: 600;
+    letter-spacing: var(--nc-type-label-tracking);
+    text-transform: uppercase;
+    color: var(--nc-color-text-muted);
+  }
+  .api-map__table a { color: var(--nc-color-text); text-decoration-color: var(--nc-color-border-strong); text-underline-offset: 0.2em; overflow-wrap: anywhere; }
+  .api-map__table a:hover { color: var(--nc-color-primary-text); }
+  .api-map__table a:focus-visible { outline: var(--nc-focus-width) solid var(--nc-color-focus); outline-offset: var(--nc-focus-gap); }
+  .api-map :global(code) { font-family: var(--nc-font-mono); font-stretch: var(--nc-type-code-stretch); font-size: 0.88em; overflow-wrap: break-word; }
+  .api-map__signature { display: block; margin-bottom: var(--nc-space-1); }
+</style>
