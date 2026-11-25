@@ -231,6 +231,46 @@ public class AsyncDisposableAdapterTests
 
     #endregion
 
+    #region IsDisposed Property Tests
+
+    [Fact]
+    public void IsDisposed_BeforeDispose_ReturnsFalse()
+    {
+        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+
+        var adapter = new AsyncDisposableAdapter(mockDisposable.Object);
+
+        Assert.False(adapter.IsDisposed);
+    }
+
+    [Fact]
+    public async Task IsDisposed_AfterDispose_ReturnsTrue()
+    {
+        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        mockDisposable.Setup(x => x.Dispose());
+
+        var adapter = new AsyncDisposableAdapter(mockDisposable.Object);
+
+        await adapter.DisposeAsync();
+
+        Assert.True(adapter.IsDisposed);
+    }
+
+    [Fact]
+    public async Task IsDisposed_NonIdempotentAfterDispose_ReturnsTrue()
+    {
+        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        mockDisposable.Setup(x => x.Dispose());
+
+        var adapter = new AsyncDisposableAdapter(mockDisposable.Object, idempotent: false);
+
+        await adapter.DisposeAsync();
+
+        Assert.True(adapter.IsDisposed);
+    }
+
+    #endregion
+
     #region Helper Classes
 
     private sealed class TestDisposable(Action disposeAction) : IDisposable

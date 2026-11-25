@@ -27,10 +27,17 @@ namespace NCode.Disposables;
 /// will only dispose the underlying instance once; <see langword="false"/> to allow multiple disposals.
 /// </param>
 public sealed class AsyncDisposableAdapter(IDisposable disposable, bool idempotent = true)
-    : IAsyncDisposable
+    : IAsyncDisposable,
+        IDisposalStatus
 {
     private IDisposable? _disposable = disposable;
     private readonly bool _idempotent = idempotent;
+    private int _disposed;
+
+    /// <summary>
+    /// Gets a value indicating whether <see cref="DisposeAsync"/> has been called at least once.
+    /// </summary>
+    public bool IsDisposed => Volatile.Read(ref _disposed) != 0;
 
     /// <inheritdoc />
     /// <remarks>
@@ -40,6 +47,8 @@ public sealed class AsyncDisposableAdapter(IDisposable disposable, bool idempote
     /// </remarks>
     public ValueTask DisposeAsync()
     {
+        Volatile.Write(ref _disposed, 1);
+
         var disposable = _idempotent ? Interlocked.Exchange(ref _disposable, null) : _disposable;
         disposable?.Dispose();
         return ValueTask.CompletedTask;
