@@ -26,9 +26,7 @@ namespace NCode.Disposables;
 /// <see cref="Add"/> after the collection is disposed disposes the added item instead of storing it.
 /// </para>
 /// </remarks>
-#pragma warning disable NCDISP002 // implements the deprecated interface until it is deleted
-public sealed class DisposableCollection : IDisposableCollection, IDisposalStatus
-#pragma warning restore NCDISP002
+public sealed class DisposableCollection : IDisposable, ICollection<IDisposable>, IDisposalStatus
 {
     private int _disposed;
     private readonly List<IDisposable> _list;
