@@ -68,6 +68,12 @@ NCode.Disposables.AsyncValueDisposable<TState>.AsyncValueDisposable(System.Func<
 NCode.Disposables.AsyncValueDisposable<TState>.DisposeAsync() -> System.Threading.Tasks.ValueTask
 NCode.Disposables.DisposableAction.IsDisposed.get -> bool
 NCode.Disposables.DisposableAggregate.IsDisposed.get -> bool
+NCode.Disposables.DisposableCancellation
+NCode.Disposables.DisposableCancellation.DisposableCancellation() -> void
+NCode.Disposables.DisposableCancellation.DisposableCancellation(System.Threading.CancellationTokenSource! source) -> void
+NCode.Disposables.DisposableCancellation.Dispose() -> void
+NCode.Disposables.DisposableCancellation.IsDisposed.get -> bool
+NCode.Disposables.DisposableCancellation.Token.get -> System.Threading.CancellationToken
 NCode.Disposables.DisposableCollection.IsDisposed.get -> bool
 NCode.Disposables.DisposableContext.IsDisposed.get -> bool
 NCode.Disposables.DisposableFlag
