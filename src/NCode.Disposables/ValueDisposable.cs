@@ -22,9 +22,15 @@ namespace NCode.Disposables;
 // ADR-1006: a value disposable is a non-idempotent struct that trades idempotency for zero allocation.
 public readonly struct ValueDisposable<TState>(Action<TState> action, TState state) : IDisposable
 {
-    private Action<TState>? Action { get; } =
+    /// <summary>
+    /// Gets the action that runs with <see cref="State"/> when the value is disposed, or <see langword="null"/> for the <see langword="default"/> value.
+    /// </summary>
+    private Action<TState>? Callback { get; } =
         action ?? throw new ArgumentNullException(nameof(action));
 
+    /// <summary>
+    /// Gets the state value that is passed to <see cref="Callback"/>.
+    /// </summary>
     private TState State { get; } = state;
 
     /// <summary>
@@ -33,5 +39,5 @@ public readonly struct ValueDisposable<TState>(Action<TState> action, TState sta
     /// <remarks>
     /// This method does nothing for the <see langword="default"/> value.
     /// </remarks>
-    public void Dispose() => Action?.Invoke(State);
+    public void Dispose() => Callback?.Invoke(State);
 }

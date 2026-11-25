@@ -23,9 +23,15 @@ namespace NCode.Disposables;
 public readonly struct AsyncValueDisposable<TState>(Func<TState, ValueTask> action, TState state)
     : IAsyncDisposable
 {
-    private Func<TState, ValueTask>? Action { get; } =
+    /// <summary>
+    /// Gets the action that runs with <see cref="State"/> when the value is disposed, or <see langword="null"/> for the <see langword="default"/> value.
+    /// </summary>
+    private Func<TState, ValueTask>? Callback { get; } =
         action ?? throw new ArgumentNullException(nameof(action));
 
+    /// <summary>
+    /// Gets the state value that is passed to <see cref="Callback"/>.
+    /// </summary>
     private TState State { get; } = state;
 
     /// <summary>
@@ -35,5 +41,5 @@ public readonly struct AsyncValueDisposable<TState>(Func<TState, ValueTask> acti
     /// This method does nothing for the <see langword="default"/> value.
     /// </remarks>
     /// <returns>A task that represents the asynchronous dispose operation.</returns>
-    public ValueTask DisposeAsync() => Action is null ? ValueTask.CompletedTask : Action(State);
+    public ValueTask DisposeAsync() => Callback is null ? ValueTask.CompletedTask : Callback(State);
 }
