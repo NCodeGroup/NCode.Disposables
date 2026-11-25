@@ -17,7 +17,7 @@ public class HandOnOwnershipSamples
         // begin-snippet: SiteHandOnOwnershipAsync
         List<string> log = [];
 
-        async Task<AsyncDisposableAction> OpenAsync(bool handshakeFails)
+        async ValueTask<AsyncDisposableAction> OpenAsync(bool handshakeFails)
         {
             var connection = AsyncDisposable.Create(() => log.Add("connection closed"));
             await using var guard = AsyncDisposable.Guard(connection);
@@ -25,7 +25,10 @@ public class HandOnOwnershipSamples
             await Task.Yield();
 
             if (handshakeFails)
-                throw new InvalidOperationException("Handshake failed."); // the guard closes the connection
+            {
+                // the guard closes the connection
+                throw new InvalidOperationException("Handshake failed.");
+            }
 
             return guard.Release(); // the caller owns the connection now
         }

@@ -87,7 +87,8 @@ public class WhichDisposableSamples
             var current = Disposable.Aggregate(Disposable.Create(() => log.Add("old")))
         )
         {
-            current.Disposable = Disposable.Create(() => log.Add("new")); // "old" is not disposed
+            // "old" is not disposed
+            current.Disposable = Disposable.Create(() => log.Add("new"));
         }
 
         // log: "new"

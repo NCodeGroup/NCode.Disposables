@@ -18,7 +18,8 @@ public class DisposalStatusSamples
         List<string> log = [];
         var current = Disposable.Aggregate();
         current.Dispose();
-        current.Disposable = Disposable.Create(() => log.Add("late resource closed")); // disposed at once
+        // disposed at once
+        current.Disposable = Disposable.Create(() => log.Add("late resource closed"));
 
         // log: "late resource closed"; current.Disposable == null
         // end-snippet
