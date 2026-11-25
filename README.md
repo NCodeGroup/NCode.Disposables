@@ -21,6 +21,8 @@ Cleanup in .NET often needs more than one `using` statement: undoing a registrat
 
 This page is the full guide; nuget.org shows the shorter [package readme](src/NCode.Disposables/README.md).
 
+The [documentation site](https://disposables.ncode.io/) has a quick start, a picker that finds the type for your situation, a guide for each task, the rules behind them, a behavior reference of every disposable and an API map of every public member.
+
 ## Installation
 
 ```shell
@@ -589,6 +591,7 @@ Every class runs its cleanup at most once, even when several threads dispose it 
 
 ## Project
 
+- [Documentation site](https://disposables.ncode.io/): the quick start, the guides, the concepts, the behavior reference and the API map.
 - [CONTRIBUTING.md](CONTRIBUTING.md): how to set up, build, test and propose a change.
 - [Issues](https://github.com/NCodeGroup/NCode.Disposables/issues): report a bug or ask for a feature.
 - [SECURITY.md](SECURITY.md): report a vulnerability privately, never in a public issue, and verify a package's provenance.
