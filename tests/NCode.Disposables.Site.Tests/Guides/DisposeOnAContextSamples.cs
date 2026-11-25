@@ -46,7 +46,8 @@ public class DisposeOnAContextSamples
         // uiContext is the SynchronizationContext captured on the UI thread.
         var disposable = Disposable.PostingContext(control, uiContext);
 
-        disposable.Dispose(); // Post: returns at once; the UI thread disposes the control later
+        // Post: returns at once; the UI thread disposes the control later
+        disposable.Dispose();
         // end-snippet
 
         Assert.Empty(log);

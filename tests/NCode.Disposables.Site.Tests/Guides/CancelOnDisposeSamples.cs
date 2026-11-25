@@ -20,7 +20,8 @@ public class CancelOnDisposeSamples
 
         cancellation.Dispose(); // cancels the source and leaves it to you to dispose
 
-        var cancelled = source.Token.IsCancellationRequested; // true: Token still works, so the source is not disposed
+        // true: Token still works, so the source is not disposed
+        var cancelled = source.Token.IsCancellationRequested;
         // end-snippet
 
         Assert.True(cancelled);

@@ -20,7 +20,8 @@ public class ShareAResourceSamples
 
         using (var lease = connection.AsSharedReference())
         {
-            using var worker = lease.AddReference(); // a second owner, such as a background task
+            // a second owner, such as a background task
+            using var worker = lease.AddReference();
         }
 
         // log: "connection closed": both leases were released
