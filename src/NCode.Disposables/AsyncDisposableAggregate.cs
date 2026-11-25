@@ -25,9 +25,7 @@ namespace NCode.Disposables;
 /// aggregate has been disposed it disposes the value it is given instead of throwing.
 /// </para>
 /// </remarks>
-#pragma warning disable NCDISP002 // implements the deprecated interface until it is deleted
-public sealed class AsyncDisposableAggregate : IAsyncDisposableAggregate, IDisposalStatus
-#pragma warning restore NCDISP002
+public sealed class AsyncDisposableAggregate : IAsyncDisposable, IDisposalStatus
 {
     private static readonly IAsyncDisposable Sentinel = new AsyncDisposableEmpty();
     private IAsyncDisposable? _disposable;
@@ -91,7 +89,13 @@ public sealed class AsyncDisposableAggregate : IAsyncDisposableAggregate, IDispo
         return disposable;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets or sets the underlying <see cref="IAsyncDisposable"/> instance that this aggregate holds.
+    /// </summary>
+    /// <value>
+    /// The underlying <see cref="IAsyncDisposable"/> instance, or <see langword="null"/> when none is set or the aggregate is disposed.
+    /// </value>
+    /// <exception cref="ObjectDisposedException">The setter is called after the aggregate is disposed.</exception>
     /// <remarks>
     /// <para>
     /// The getter returns the current underlying instance using a volatile read for thread-safety.
