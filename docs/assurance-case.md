@@ -28,10 +28,13 @@ What the library is expected to do:
    only these take `null`: the aggregate and serial holders, meaning they hold nothing; the `SharedReferenceOwner<T>`
    and `AsyncSharedReferenceOwner<T>` constructors, a `null` value, which they hand to their release callback; the
    `SharedReferenceLease<T>` and `AsyncSharedReferenceLease<T>` constructors, a `null` owner, which makes an inactive
-   lease, as `default` does; `DisposeAsyncIfAvailable()`, which does nothing for a `null` instance; and `DisposeAll()`,
+   lease, as `default` does; the `Create` overloads that take arguments, the `CreateValue` factories and the
+   `ValueDisposable<TState>` and `AsyncValueDisposable<TState>` constructors, a `null` argument or state, which they
+   pass to the action; `DisposeAsyncIfAvailable()`, which does nothing for a `null` instance; and `DisposeAll()`,
    `DisposeAllIgnoringExceptions()`, `DisposeAllAsync()` and `DisposeAllIgnoringExceptionsAsync()`, which skip a `null`
-   item. A second assignment of a single-assignment holder throws `InvalidOperationException`, and so does `Release()`
-   on a guard already released.
+   item. A collection's constructor, and so its `Collection` and `CollectionIgnoringExceptions` factories, rejects an
+   initial collection that holds a `null` item with `ArgumentException`. A second assignment of a single-assignment
+   holder throws `InvalidOperationException`, and so does `Release()` on a guard already released.
 6. **R6.** `DisposableContext` calls `OperationCompleted` for each `OperationStarted`, also when the context's `Post`
    throws, and rethrows.
 7. **R7.** The package consumers install is built from this repository's reviewed code, and they can check that.
@@ -100,7 +103,7 @@ privilege and open design."
 
 [//]: # "Maintainers: add the tests and the coverage the project keeps."
 
-- **Tests (R1–R6):** xUnit tests of every type, 687 in all, cover a second dispose (such as
+- **Tests (R1–R6):** xUnit tests of every type, 689 in all, cover a second dispose (such as
   `Dispose_Twice_DisposesOnce`), concurrent disposal and assignment from several threads (such as
   `Dispose_ConcurrentCalls_DisposesOnlyOnce` and `Dispose_ConcurrentWithAdd_DisposesEveryItemOnce`), `null` arguments,
   a resource handed to a disposed holder, and a context whose `Post` throws
