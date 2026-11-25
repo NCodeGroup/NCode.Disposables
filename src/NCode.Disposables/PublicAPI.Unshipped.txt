@@ -11,3 +11,53 @@ NCode.Disposables.DisposableCollection.IsDisposed.get -> bool
 NCode.Disposables.DisposableContext.IsDisposed.get -> bool
 NCode.Disposables.IDisposalStatus
 NCode.Disposables.IDisposalStatus.IsDisposed.get -> bool
+static NCode.Disposables.Disposable.Aggregate(System.IDisposable? disposable) -> NCode.Disposables.DisposableAggregate!
+static NCode.Disposables.Disposable.Collection(bool ignoreExceptions, params System.IDisposable![]! collection) -> NCode.Disposables.DisposableCollection!
+static NCode.Disposables.Disposable.Collection(params System.IDisposable![]! collection) -> NCode.Disposables.DisposableCollection!
+static NCode.Disposables.Disposable.Collection(System.Collections.Generic.IEnumerable<System.IDisposable!>! collection, bool ignoreExceptions = false) -> NCode.Disposables.DisposableCollection!
+static NCode.Disposables.Disposable.Context(System.IDisposable! disposable, System.Threading.SynchronizationContext! context, bool async = false) -> NCode.Disposables.DisposableContext!
+static NCode.Disposables.Disposable.Create(System.Action! action, bool idempotent) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create(System.Action! action) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T, TResult>(System.Func<T, TResult>! action, T arg) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T>(System.Action<T>! action, T arg) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6, T7, T8, TResult>(System.Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6, T7, T8>(System.Action<T1, T2, T3, T4, T5, T6, T7, T8>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6, T7, TResult>(System.Func<T1, T2, T3, T4, T5, T6, T7, TResult>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6, T7>(System.Action<T1, T2, T3, T4, T5, T6, T7>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6, TResult>(System.Func<T1, T2, T3, T4, T5, T6, TResult>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6>(System.Action<T1, T2, T3, T4, T5, T6>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, TResult>(System.Func<T1, T2, T3, T4, T5, TResult>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5>(System.Action<T1, T2, T3, T4, T5>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, TResult>(System.Func<T1, T2, T3, T4, TResult>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T1, T2, T3, T4>(System.Action<T1, T2, T3, T4>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T1, T2, T3, TResult>(System.Func<T1, T2, T3, TResult>! action, T1 arg1, T2 arg2, T3 arg3) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T1, T2, T3>(System.Action<T1, T2, T3>! action, T1 arg1, T2 arg2, T3 arg3) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T1, T2, TResult>(System.Func<T1, T2, TResult>! action, T1 arg1, T2 arg2) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T1, T2>(System.Action<T1, T2>! action, T1 arg1, T2 arg2) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<TResult>(System.Func<TResult>! action) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Empty.get -> NCode.Disposables.DisposableEmpty!
+*REMOVED*static NCode.Disposables.Disposable.Aggregate(System.IDisposable? disposable) -> NCode.Disposables.IDisposableAggregate!
+*REMOVED*static NCode.Disposables.Disposable.Collection(bool ignoreExceptions, params System.IDisposable![]! collection) -> NCode.Disposables.IDisposableCollection!
+*REMOVED*static NCode.Disposables.Disposable.Collection(params System.IDisposable![]! collection) -> NCode.Disposables.IDisposableCollection!
+*REMOVED*static NCode.Disposables.Disposable.Collection(System.Collections.Generic.IEnumerable<System.IDisposable!>! collection, bool ignoreExceptions = false) -> NCode.Disposables.IDisposableCollection!
+*REMOVED*static NCode.Disposables.Disposable.Context(System.IDisposable! disposable, System.Threading.SynchronizationContext! context, bool async = false) -> System.IDisposable!
+*REMOVED*static NCode.Disposables.Disposable.Create(System.Action! action, bool idempotent) -> System.IDisposable!
+*REMOVED*static NCode.Disposables.Disposable.Create(System.Action! action) -> System.IDisposable!
+*REMOVED*static NCode.Disposables.Disposable.Create<T, TResult>(System.Func<T, TResult>! action, T arg) -> System.IDisposable!
+*REMOVED*static NCode.Disposables.Disposable.Create<T>(System.Action<T>! action, T arg) -> System.IDisposable!
+*REMOVED*static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6, T7, T8, TResult>(System.Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8) -> System.IDisposable!
+*REMOVED*static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6, T7, T8>(System.Action<T1, T2, T3, T4, T5, T6, T7, T8>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8) -> System.IDisposable!
+*REMOVED*static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6, T7, TResult>(System.Func<T1, T2, T3, T4, T5, T6, T7, TResult>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7) -> System.IDisposable!
+*REMOVED*static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6, T7>(System.Action<T1, T2, T3, T4, T5, T6, T7>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7) -> System.IDisposable!
+*REMOVED*static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6, TResult>(System.Func<T1, T2, T3, T4, T5, T6, TResult>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6) -> System.IDisposable!
+*REMOVED*static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6>(System.Action<T1, T2, T3, T4, T5, T6>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6) -> System.IDisposable!
+*REMOVED*static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, TResult>(System.Func<T1, T2, T3, T4, T5, TResult>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5) -> System.IDisposable!
+*REMOVED*static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5>(System.Action<T1, T2, T3, T4, T5>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5) -> System.IDisposable!
+*REMOVED*static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, TResult>(System.Func<T1, T2, T3, T4, TResult>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4) -> System.IDisposable!
+*REMOVED*static NCode.Disposables.Disposable.Create<T1, T2, T3, T4>(System.Action<T1, T2, T3, T4>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4) -> System.IDisposable!
+*REMOVED*static NCode.Disposables.Disposable.Create<T1, T2, T3, TResult>(System.Func<T1, T2, T3, TResult>! action, T1 arg1, T2 arg2, T3 arg3) -> System.IDisposable!
+*REMOVED*static NCode.Disposables.Disposable.Create<T1, T2, T3>(System.Action<T1, T2, T3>! action, T1 arg1, T2 arg2, T3 arg3) -> System.IDisposable!
+*REMOVED*static NCode.Disposables.Disposable.Create<T1, T2, TResult>(System.Func<T1, T2, TResult>! action, T1 arg1, T2 arg2) -> System.IDisposable!
+*REMOVED*static NCode.Disposables.Disposable.Create<T1, T2>(System.Action<T1, T2>! action, T1 arg1, T2 arg2) -> System.IDisposable!
+*REMOVED*static NCode.Disposables.Disposable.Create<TResult>(System.Func<TResult>! action) -> System.IDisposable!
+*REMOVED*static NCode.Disposables.Disposable.Empty.get -> System.IDisposable!
