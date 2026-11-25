@@ -239,7 +239,27 @@ public class ReadmeSamplesTests
         var log = new List<string>();
         var resources = Disposable.Collection();
         resources.Dispose();
-        resources.Add(Disposable.Create(() => log.Add("late item closed"))); // disposed at once, not kept
+        var lateItem = Disposable.Create(() => log.Add("late item closed"));
+
+        resources.Add(lateItem); // disposed at once, not kept
+
+        // log: "late item closed"; resources.Count == 0
+        // end-snippet
+
+        Assert.Equal(["late item closed"], log);
+        Assert.Empty(resources);
+    }
+
+    [Fact]
+    public async Task CollectionLateAddAsyncSample_Runs()
+    {
+        // begin-snippet: CollectionLateAddAsync
+        var log = new List<string>();
+        var resources = AsyncDisposable.Collection();
+        await resources.DisposeAsync();
+        var lateItem = AsyncDisposable.Create(() => log.Add("late item closed"));
+
+        await resources.AddAsync(lateItem); // disposed at once, not kept; Add would throw ObjectDisposedException
 
         // log: "late item closed"; resources.Count == 0
         // end-snippet
@@ -390,9 +410,8 @@ public class ReadmeSamplesTests
 
         DisposableAction Connect(bool handshakeFails)
         {
-            using var guard = Disposable.Guard(
-                Disposable.Create(() => log.Add("connection closed"))
-            );
+            var connection = Disposable.Create(() => log.Add("connection closed"));
+            using var guard = Disposable.Guard(connection);
 
             if (handshakeFails)
                 throw new InvalidOperationException("Handshake failed."); // the guard closes the connection
@@ -485,7 +504,8 @@ public class ReadmeSamplesTests
         var viewModel = AsyncDisposable.Create(() => log.Add("view model disposed"));
 
         // uiContext is the SynchronizationContext captured on the UI thread.
-        await AsyncDisposable.Context(viewModel, uiContext).DisposeAsync(); // Post: completes once the UI thread has disposed it
+        var disposable = AsyncDisposable.Context(viewModel, uiContext);
+        await disposable.DisposeAsync(); // Post: completes once the UI thread has disposed it
         // end-snippet
 
         Assert.Equal(["view model disposed"], log);
