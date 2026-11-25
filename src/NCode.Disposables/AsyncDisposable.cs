@@ -281,9 +281,9 @@ public static class AsyncDisposable
     {
         ArgumentNullException.ThrowIfNull(collection);
 
-        return ignoreExceptions
-            ? CollectionIgnoringExceptions(collection.AsEnumerable())
-            : Collection(collection.AsEnumerable());
+        var items = collection.AsEnumerable();
+
+        return ignoreExceptions ? CollectionIgnoringExceptions(items) : Collection(items);
     }
 
     /// <summary>
@@ -323,7 +323,9 @@ public static class AsyncDisposable
     {
         ArgumentNullException.ThrowIfNull(collection);
 
-        return CollectionIgnoringExceptions(collection.AsEnumerable());
+        var items = collection.AsEnumerable();
+
+        return CollectionIgnoringExceptions(items);
     }
 
     /// <summary>

@@ -431,7 +431,9 @@ public static class Disposable
     {
         ArgumentNullException.ThrowIfNull(collection);
 
-        return CollectionIgnoringExceptions(collection.AsEnumerable());
+        var items = collection.AsEnumerable();
+
+        return CollectionIgnoringExceptions(items);
     }
 
     /// <summary>
@@ -492,9 +494,9 @@ public static class Disposable
     {
         ArgumentNullException.ThrowIfNull(collection);
 
-        return ignoreExceptions
-            ? CollectionIgnoringExceptions(collection.AsEnumerable())
-            : Collection(collection.AsEnumerable());
+        var items = collection.AsEnumerable();
+
+        return ignoreExceptions ? CollectionIgnoringExceptions(items) : Collection(items);
     }
 
     /// <summary>
