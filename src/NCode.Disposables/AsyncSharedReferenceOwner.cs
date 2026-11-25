@@ -84,6 +84,7 @@ public interface IAsyncSharedReferenceOwner<T>
 /// <param name="onRelease">
 /// The asynchronous callback to invoke when the reference count reaches zero to release the underlying resource.
 /// </param>
+/// <exception cref="ArgumentNullException"><paramref name="onRelease"/> is <see langword="null"/>.</exception>
 /// <remarks>
 /// <para>
 /// This class is the composition root for shared reference management with async disposal. The initial
@@ -96,6 +97,9 @@ public interface IAsyncSharedReferenceOwner<T>
 public sealed class AsyncSharedReferenceOwner<T>(T value, Func<T, ValueTask> onRelease)
     : IAsyncSharedReferenceOwner<T>
 {
+    private readonly Func<T, ValueTask> _onRelease = onRelease
+        ?? throw new ArgumentNullException(nameof(onRelease));
+
     private int _count = 1;
 
     /// <inheritdoc />
@@ -166,7 +170,7 @@ public sealed class AsyncSharedReferenceOwner<T>(T value, Func<T, ValueTask> onR
             {
                 if (newCount == 0)
                 {
-                    await onRelease(value).ConfigureAwait(false);
+                    await _onRelease(value).ConfigureAwait(false);
                 }
 
                 return newCount;

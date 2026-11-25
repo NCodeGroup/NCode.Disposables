@@ -31,8 +31,11 @@ public static class AsyncDisposableExtensions
         /// A type that also implements <see cref="IDisposable"/>, such as a <see cref="System.IO.Stream"/>, gets an
         /// asynchronous lease too; its <c>AsSharedReference()</c> returns a synchronous lease.
         /// </remarks>
+        /// <exception cref="ArgumentNullException">The resource is <see langword="null"/>.</exception>
         public AsyncSharedReferenceLease<T> AsAsyncSharedReference()
         {
+            ArgumentNullException.ThrowIfNull(value);
+
             return AsyncSharedReference.Create(value);
         }
     }
