@@ -23,14 +23,27 @@ namespace NCode.Disposables;
 /// </remarks>
 public sealed class AsyncDisposableSerial : IAsyncDisposable, IDisposalStatus
 {
+    /// <summary>
+    /// Gets the marker stored in place of the held instance once the serial is disposed.
+    /// </summary>
     private static IAsyncDisposable Sentinel { get; } = new AsyncDisposableEmpty();
 
+    /// <summary>
+    /// The held instance, <see langword="null"/> when none is held, or <see cref="Sentinel"/> once the serial is disposed.
+    /// </summary>
     private IAsyncDisposable? _disposable;
 
     /// <summary>
     /// Gets a value indicating whether <see cref="DisposeAsync"/> has been called at least once.
     /// </summary>
-    public bool IsDisposed => ReferenceEquals(Volatile.Read(ref _disposable), Sentinel);
+    public bool IsDisposed
+    {
+        get
+        {
+            var current = Volatile.Read(ref _disposable);
+            return ReferenceEquals(current, Sentinel);
+        }
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AsyncDisposableSerial"/> class
@@ -111,9 +124,7 @@ public sealed class AsyncDisposableSerial : IAsyncDisposable, IDisposalStatus
     /// </remarks>
     public async ValueTask SetDisposableAsync(IAsyncDisposable? disposable)
     {
-        // Uses SpinLock pattern:
-        // http://www.albahari.com/threading/part5.aspx#_SpinLock_and_SpinWait
-        // http://www.adammil.net/blog/v111_Creating_High-Performance_Locks_and_Lock-free_Code_for_NET_.html
+        // Lock-free: retry the CompareExchange, backing off with SpinWait, until no other thread changed the field in between.
 
         var spinWait = new SpinWait();
         while (true)
