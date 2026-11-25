@@ -365,6 +365,282 @@ public static class AsyncDisposable
         );
     }
 
+    // ADR-1005: no Action<…> overloads; they would drop a Task-returning lambda's Task.
+    /// <summary>
+    /// Creates a new <see cref="AsyncDisposableAction"/> that invokes a
+    /// <see cref="Func{T, ValueTask}"/> with a captured argument when
+    /// <see cref="IAsyncDisposable.DisposeAsync"/> is called.
+    /// </summary>
+    /// <typeparam name="T">The type of the argument to pass to the action.</typeparam>
+    /// <param name="action">The asynchronous action to invoke when <see cref="IAsyncDisposable.DisposeAsync"/> is called.</param>
+    /// <param name="arg">The argument to pass to the action on disposal.</param>
+    /// <returns>A new <see cref="AsyncDisposableAction"/> instance that invokes the specified action with the captured argument on disposal.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// The argument is captured at creation time, allowing type-safe disposal patterns.
+    /// The returned instance is idempotent by default.
+    /// </remarks>
+    public static AsyncDisposableAction Create<T>(Func<T, ValueTask> action, T arg)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        return new AsyncDisposableAction(() => action(arg));
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="AsyncDisposableAction"/> that invokes a
+    /// <see cref="Func{T1, T2, ValueTask}"/> with captured arguments when
+    /// <see cref="IAsyncDisposable.DisposeAsync"/> is called.
+    /// </summary>
+    /// <typeparam name="T1">The type of the first argument to pass to the action.</typeparam>
+    /// <typeparam name="T2">The type of the second argument to pass to the action.</typeparam>
+    /// <param name="action">The asynchronous action to invoke when <see cref="IAsyncDisposable.DisposeAsync"/> is called.</param>
+    /// <param name="arg1">The first argument to pass to the action on disposal.</param>
+    /// <param name="arg2">The second argument to pass to the action on disposal.</param>
+    /// <returns>A new <see cref="AsyncDisposableAction"/> instance that invokes the specified action with the captured arguments on disposal.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// The arguments are captured at creation time, allowing type-safe disposal patterns.
+    /// The returned instance is idempotent by default.
+    /// </remarks>
+    public static AsyncDisposableAction Create<T1, T2>(
+        Func<T1, T2, ValueTask> action,
+        T1 arg1,
+        T2 arg2
+    )
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        return new AsyncDisposableAction(() => action(arg1, arg2));
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="AsyncDisposableAction"/> that invokes a
+    /// <see cref="Func{T1, T2, T3, ValueTask}"/> with captured arguments when
+    /// <see cref="IAsyncDisposable.DisposeAsync"/> is called.
+    /// </summary>
+    /// <typeparam name="T1">The type of the first argument to pass to the action.</typeparam>
+    /// <typeparam name="T2">The type of the second argument to pass to the action.</typeparam>
+    /// <typeparam name="T3">The type of the third argument to pass to the action.</typeparam>
+    /// <param name="action">The asynchronous action to invoke when <see cref="IAsyncDisposable.DisposeAsync"/> is called.</param>
+    /// <param name="arg1">The first argument to pass to the action on disposal.</param>
+    /// <param name="arg2">The second argument to pass to the action on disposal.</param>
+    /// <param name="arg3">The third argument to pass to the action on disposal.</param>
+    /// <returns>A new <see cref="AsyncDisposableAction"/> instance that invokes the specified action with the captured arguments on disposal.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// The arguments are captured at creation time, allowing type-safe disposal patterns.
+    /// The returned instance is idempotent by default.
+    /// </remarks>
+    public static AsyncDisposableAction Create<T1, T2, T3>(
+        Func<T1, T2, T3, ValueTask> action,
+        T1 arg1,
+        T2 arg2,
+        T3 arg3
+    )
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        return new AsyncDisposableAction(() => action(arg1, arg2, arg3));
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="AsyncDisposableAction"/> that invokes a
+    /// <see cref="Func{T1, T2, T3, T4, ValueTask}"/> with captured arguments when
+    /// <see cref="IAsyncDisposable.DisposeAsync"/> is called.
+    /// </summary>
+    /// <typeparam name="T1">The type of the first argument to pass to the action.</typeparam>
+    /// <typeparam name="T2">The type of the second argument to pass to the action.</typeparam>
+    /// <typeparam name="T3">The type of the third argument to pass to the action.</typeparam>
+    /// <typeparam name="T4">The type of the fourth argument to pass to the action.</typeparam>
+    /// <param name="action">The asynchronous action to invoke when <see cref="IAsyncDisposable.DisposeAsync"/> is called.</param>
+    /// <param name="arg1">The first argument to pass to the action on disposal.</param>
+    /// <param name="arg2">The second argument to pass to the action on disposal.</param>
+    /// <param name="arg3">The third argument to pass to the action on disposal.</param>
+    /// <param name="arg4">The fourth argument to pass to the action on disposal.</param>
+    /// <returns>A new <see cref="AsyncDisposableAction"/> instance that invokes the specified action with the captured arguments on disposal.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// The arguments are captured at creation time, allowing type-safe disposal patterns.
+    /// The returned instance is idempotent by default.
+    /// </remarks>
+    public static AsyncDisposableAction Create<T1, T2, T3, T4>(
+        Func<T1, T2, T3, T4, ValueTask> action,
+        T1 arg1,
+        T2 arg2,
+        T3 arg3,
+        T4 arg4
+    )
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        return new AsyncDisposableAction(() => action(arg1, arg2, arg3, arg4));
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="AsyncDisposableAction"/> that invokes a
+    /// <see cref="Func{T1, T2, T3, T4, T5, ValueTask}"/> with captured arguments when
+    /// <see cref="IAsyncDisposable.DisposeAsync"/> is called.
+    /// </summary>
+    /// <typeparam name="T1">The type of the first argument to pass to the action.</typeparam>
+    /// <typeparam name="T2">The type of the second argument to pass to the action.</typeparam>
+    /// <typeparam name="T3">The type of the third argument to pass to the action.</typeparam>
+    /// <typeparam name="T4">The type of the fourth argument to pass to the action.</typeparam>
+    /// <typeparam name="T5">The type of the fifth argument to pass to the action.</typeparam>
+    /// <param name="action">The asynchronous action to invoke when <see cref="IAsyncDisposable.DisposeAsync"/> is called.</param>
+    /// <param name="arg1">The first argument to pass to the action on disposal.</param>
+    /// <param name="arg2">The second argument to pass to the action on disposal.</param>
+    /// <param name="arg3">The third argument to pass to the action on disposal.</param>
+    /// <param name="arg4">The fourth argument to pass to the action on disposal.</param>
+    /// <param name="arg5">The fifth argument to pass to the action on disposal.</param>
+    /// <returns>A new <see cref="AsyncDisposableAction"/> instance that invokes the specified action with the captured arguments on disposal.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// The arguments are captured at creation time, allowing type-safe disposal patterns.
+    /// The returned instance is idempotent by default.
+    /// </remarks>
+    public static AsyncDisposableAction Create<T1, T2, T3, T4, T5>(
+        Func<T1, T2, T3, T4, T5, ValueTask> action,
+        T1 arg1,
+        T2 arg2,
+        T3 arg3,
+        T4 arg4,
+        T5 arg5
+    )
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        return new AsyncDisposableAction(() => action(arg1, arg2, arg3, arg4, arg5));
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="AsyncDisposableAction"/> that invokes a
+    /// <see cref="Func{T1, T2, T3, T4, T5, T6, ValueTask}"/> with captured arguments when
+    /// <see cref="IAsyncDisposable.DisposeAsync"/> is called.
+    /// </summary>
+    /// <typeparam name="T1">The type of the first argument to pass to the action.</typeparam>
+    /// <typeparam name="T2">The type of the second argument to pass to the action.</typeparam>
+    /// <typeparam name="T3">The type of the third argument to pass to the action.</typeparam>
+    /// <typeparam name="T4">The type of the fourth argument to pass to the action.</typeparam>
+    /// <typeparam name="T5">The type of the fifth argument to pass to the action.</typeparam>
+    /// <typeparam name="T6">The type of the sixth argument to pass to the action.</typeparam>
+    /// <param name="action">The asynchronous action to invoke when <see cref="IAsyncDisposable.DisposeAsync"/> is called.</param>
+    /// <param name="arg1">The first argument to pass to the action on disposal.</param>
+    /// <param name="arg2">The second argument to pass to the action on disposal.</param>
+    /// <param name="arg3">The third argument to pass to the action on disposal.</param>
+    /// <param name="arg4">The fourth argument to pass to the action on disposal.</param>
+    /// <param name="arg5">The fifth argument to pass to the action on disposal.</param>
+    /// <param name="arg6">The sixth argument to pass to the action on disposal.</param>
+    /// <returns>A new <see cref="AsyncDisposableAction"/> instance that invokes the specified action with the captured arguments on disposal.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// The arguments are captured at creation time, allowing type-safe disposal patterns.
+    /// The returned instance is idempotent by default.
+    /// </remarks>
+    public static AsyncDisposableAction Create<T1, T2, T3, T4, T5, T6>(
+        Func<T1, T2, T3, T4, T5, T6, ValueTask> action,
+        T1 arg1,
+        T2 arg2,
+        T3 arg3,
+        T4 arg4,
+        T5 arg5,
+        T6 arg6
+    )
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        return new AsyncDisposableAction(() => action(arg1, arg2, arg3, arg4, arg5, arg6));
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="AsyncDisposableAction"/> that invokes a
+    /// <see cref="Func{T1, T2, T3, T4, T5, T6, T7, ValueTask}"/> with captured arguments when
+    /// <see cref="IAsyncDisposable.DisposeAsync"/> is called.
+    /// </summary>
+    /// <typeparam name="T1">The type of the first argument to pass to the action.</typeparam>
+    /// <typeparam name="T2">The type of the second argument to pass to the action.</typeparam>
+    /// <typeparam name="T3">The type of the third argument to pass to the action.</typeparam>
+    /// <typeparam name="T4">The type of the fourth argument to pass to the action.</typeparam>
+    /// <typeparam name="T5">The type of the fifth argument to pass to the action.</typeparam>
+    /// <typeparam name="T6">The type of the sixth argument to pass to the action.</typeparam>
+    /// <typeparam name="T7">The type of the seventh argument to pass to the action.</typeparam>
+    /// <param name="action">The asynchronous action to invoke when <see cref="IAsyncDisposable.DisposeAsync"/> is called.</param>
+    /// <param name="arg1">The first argument to pass to the action on disposal.</param>
+    /// <param name="arg2">The second argument to pass to the action on disposal.</param>
+    /// <param name="arg3">The third argument to pass to the action on disposal.</param>
+    /// <param name="arg4">The fourth argument to pass to the action on disposal.</param>
+    /// <param name="arg5">The fifth argument to pass to the action on disposal.</param>
+    /// <param name="arg6">The sixth argument to pass to the action on disposal.</param>
+    /// <param name="arg7">The seventh argument to pass to the action on disposal.</param>
+    /// <returns>A new <see cref="AsyncDisposableAction"/> instance that invokes the specified action with the captured arguments on disposal.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// The arguments are captured at creation time, allowing type-safe disposal patterns.
+    /// The returned instance is idempotent by default.
+    /// </remarks>
+    public static AsyncDisposableAction Create<T1, T2, T3, T4, T5, T6, T7>(
+        Func<T1, T2, T3, T4, T5, T6, T7, ValueTask> action,
+        T1 arg1,
+        T2 arg2,
+        T3 arg3,
+        T4 arg4,
+        T5 arg5,
+        T6 arg6,
+        T7 arg7
+    )
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        return new AsyncDisposableAction(() => action(arg1, arg2, arg3, arg4, arg5, arg6, arg7));
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="AsyncDisposableAction"/> that invokes a
+    /// <see cref="Func{T1, T2, T3, T4, T5, T6, T7, T8, ValueTask}"/> with captured arguments when
+    /// <see cref="IAsyncDisposable.DisposeAsync"/> is called.
+    /// </summary>
+    /// <typeparam name="T1">The type of the first argument to pass to the action.</typeparam>
+    /// <typeparam name="T2">The type of the second argument to pass to the action.</typeparam>
+    /// <typeparam name="T3">The type of the third argument to pass to the action.</typeparam>
+    /// <typeparam name="T4">The type of the fourth argument to pass to the action.</typeparam>
+    /// <typeparam name="T5">The type of the fifth argument to pass to the action.</typeparam>
+    /// <typeparam name="T6">The type of the sixth argument to pass to the action.</typeparam>
+    /// <typeparam name="T7">The type of the seventh argument to pass to the action.</typeparam>
+    /// <typeparam name="T8">The type of the eighth argument to pass to the action.</typeparam>
+    /// <param name="action">The asynchronous action to invoke when <see cref="IAsyncDisposable.DisposeAsync"/> is called.</param>
+    /// <param name="arg1">The first argument to pass to the action on disposal.</param>
+    /// <param name="arg2">The second argument to pass to the action on disposal.</param>
+    /// <param name="arg3">The third argument to pass to the action on disposal.</param>
+    /// <param name="arg4">The fourth argument to pass to the action on disposal.</param>
+    /// <param name="arg5">The fifth argument to pass to the action on disposal.</param>
+    /// <param name="arg6">The sixth argument to pass to the action on disposal.</param>
+    /// <param name="arg7">The seventh argument to pass to the action on disposal.</param>
+    /// <param name="arg8">The eighth argument to pass to the action on disposal.</param>
+    /// <returns>A new <see cref="AsyncDisposableAction"/> instance that invokes the specified action with the captured arguments on disposal.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// The arguments are captured at creation time, allowing type-safe disposal patterns.
+    /// The returned instance is idempotent by default.
+    /// </remarks>
+    public static AsyncDisposableAction Create<T1, T2, T3, T4, T5, T6, T7, T8>(
+        Func<T1, T2, T3, T4, T5, T6, T7, T8, ValueTask> action,
+        T1 arg1,
+        T2 arg2,
+        T3 arg3,
+        T4 arg4,
+        T5 arg5,
+        T6 arg6,
+        T7 arg7,
+        T8 arg8
+    )
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        return new AsyncDisposableAction(() =>
+            action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+        );
+    }
+
     /// <summary>
     /// Creates and returns a new instance of <see cref="AsyncValueDisposable{TState}"/>
     /// that invokes an asynchronous action with a state value when it is disposed.

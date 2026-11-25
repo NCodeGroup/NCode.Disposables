@@ -140,6 +140,14 @@ static NCode.Disposables.AsyncDisposable.Create(System.Action! action, bool idem
 static NCode.Disposables.AsyncDisposable.Create(System.Action! action) -> NCode.Disposables.AsyncDisposableAction!
 static NCode.Disposables.AsyncDisposable.Create(System.Func<System.Threading.Tasks.ValueTask>! action, bool idempotent) -> NCode.Disposables.AsyncDisposableAction!
 static NCode.Disposables.AsyncDisposable.Create(System.Func<System.Threading.Tasks.ValueTask>! action) -> NCode.Disposables.AsyncDisposableAction!
+static NCode.Disposables.AsyncDisposable.Create<T>(System.Func<T, System.Threading.Tasks.ValueTask>! action, T arg) -> NCode.Disposables.AsyncDisposableAction!
+static NCode.Disposables.AsyncDisposable.Create<T1, T2, T3, T4, T5, T6, T7, T8>(System.Func<T1, T2, T3, T4, T5, T6, T7, T8, System.Threading.Tasks.ValueTask>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8) -> NCode.Disposables.AsyncDisposableAction!
+static NCode.Disposables.AsyncDisposable.Create<T1, T2, T3, T4, T5, T6, T7>(System.Func<T1, T2, T3, T4, T5, T6, T7, System.Threading.Tasks.ValueTask>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7) -> NCode.Disposables.AsyncDisposableAction!
+static NCode.Disposables.AsyncDisposable.Create<T1, T2, T3, T4, T5, T6>(System.Func<T1, T2, T3, T4, T5, T6, System.Threading.Tasks.ValueTask>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6) -> NCode.Disposables.AsyncDisposableAction!
+static NCode.Disposables.AsyncDisposable.Create<T1, T2, T3, T4, T5>(System.Func<T1, T2, T3, T4, T5, System.Threading.Tasks.ValueTask>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5) -> NCode.Disposables.AsyncDisposableAction!
+static NCode.Disposables.AsyncDisposable.Create<T1, T2, T3, T4>(System.Func<T1, T2, T3, T4, System.Threading.Tasks.ValueTask>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4) -> NCode.Disposables.AsyncDisposableAction!
+static NCode.Disposables.AsyncDisposable.Create<T1, T2, T3>(System.Func<T1, T2, T3, System.Threading.Tasks.ValueTask>! action, T1 arg1, T2 arg2, T3 arg3) -> NCode.Disposables.AsyncDisposableAction!
+static NCode.Disposables.AsyncDisposable.Create<T1, T2>(System.Func<T1, T2, System.Threading.Tasks.ValueTask>! action, T1 arg1, T2 arg2) -> NCode.Disposables.AsyncDisposableAction!
 static NCode.Disposables.AsyncDisposable.CreateValue<TState>(System.Func<TState, System.Threading.Tasks.ValueTask>! action, TState state) -> NCode.Disposables.AsyncValueDisposable<TState>
 static NCode.Disposables.AsyncDisposable.Empty.get -> NCode.Disposables.AsyncDisposableEmpty!
 static NCode.Disposables.AsyncDisposable.Guard<T>(T value) -> NCode.Disposables.AsyncDisposableGuard<T>!

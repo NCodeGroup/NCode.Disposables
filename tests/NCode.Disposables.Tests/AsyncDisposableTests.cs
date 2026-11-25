@@ -135,6 +135,79 @@ public class AsyncDisposableTests
 
     #endregion
 
+    #region Create Tests
+
+    [Fact]
+    public async Task Create_OneArgument_PassesArgument()
+    {
+        const int expectedArg = 42;
+        var actualArg = 0;
+
+        var disposable = AsyncDisposable.Create(
+            (int arg) =>
+            {
+                actualArg = arg;
+                return ValueTask.CompletedTask;
+            },
+            expectedArg
+        );
+        await disposable.DisposeAsync();
+
+        Assert.Equal(expectedArg, actualArg);
+    }
+
+    [Fact]
+    public async Task Create_EightArguments_PassesArguments()
+    {
+        var actual = new List<int>();
+
+        var disposable = AsyncDisposable.Create(
+            (int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8) =>
+            {
+                actual.AddRange([a1, a2, a3, a4, a5, a6, a7, a8]);
+                return ValueTask.CompletedTask;
+            },
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8
+        );
+        await disposable.DisposeAsync();
+
+        Assert.Equal([1, 2, 3, 4, 5, 6, 7, 8], actual);
+    }
+
+    [Fact]
+    public void Create_OneArgumentNullAction_ThrowsArgumentNullException()
+    {
+        Assert.Throws<ArgumentNullException>(() => AsyncDisposable.Create<int>(null!, 0));
+    }
+
+    [Fact]
+    public async Task Create_OneArgument_IsIdempotent()
+    {
+        var count = 0;
+
+        var disposable = AsyncDisposable.Create(
+            (int _) =>
+            {
+                count++;
+                return ValueTask.CompletedTask;
+            },
+            0
+        );
+        await disposable.DisposeAsync();
+        await disposable.DisposeAsync();
+
+        Assert.Equal(1, count);
+    }
+
+    #endregion
+
     #region CreateValue Tests
 
     [Fact]
