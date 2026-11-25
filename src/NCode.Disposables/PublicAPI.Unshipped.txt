@@ -27,3 +27,6 @@ static NCode.Disposables.Disposable.CreateRepeatable(System.Action! action) -> N
 static NCode.Disposables.Disposable.PostingContext(System.IDisposable! disposable, System.Threading.SynchronizationContext! context) -> NCode.Disposables.DisposableContext!
 static NCode.Disposables.DisposableExtensions.DisposeAll(this System.Collections.Generic.IEnumerable<object?>! collection) -> void
 static NCode.Disposables.DisposableExtensions.DisposeAllIgnoringExceptions(this System.Collections.Generic.IEnumerable<object?>! collection) -> void
+*REMOVED*NCode.Disposables.IDisposableAggregate
+*REMOVED*NCode.Disposables.IDisposableAggregate.Disposable.get -> System.IDisposable?
+*REMOVED*NCode.Disposables.IDisposableAggregate.Disposable.set -> void

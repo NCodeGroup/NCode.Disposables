@@ -21,9 +21,7 @@ namespace NCode.Disposables;
 /// Setting the <see cref="Disposable"/> property does not automatically dispose the previous instance.
 /// </para>
 /// </remarks>
-#pragma warning disable NCDISP002 // implements the deprecated interface until it is deleted
-public sealed class DisposableAggregate : IDisposableAggregate, IDisposalStatus
-#pragma warning restore NCDISP002
+public sealed class DisposableAggregate : IDisposable, IDisposalStatus
 {
     private static readonly IDisposable Sentinel = new DisposableEmpty();
     private IDisposable? _disposable;
@@ -79,7 +77,12 @@ public sealed class DisposableAggregate : IDisposableAggregate, IDisposalStatus
         disposable?.Dispose();
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets or sets the underlying <see cref="IDisposable"/> instance that this aggregate holds.
+    /// </summary>
+    /// <value>
+    /// The underlying <see cref="IDisposable"/> instance, or <see langword="null"/> when none is set or the aggregate is disposed.
+    /// </value>
     /// <remarks>
     /// <para>
     /// The getter returns the current underlying instance using a volatile read for thread-safety.
