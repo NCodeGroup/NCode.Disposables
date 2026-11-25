@@ -32,7 +32,7 @@ using (var resources = Disposable.Collection())
 ```
 <!-- endSnippet -->
 
-By default the action runs on the first `Dispose` only; pass `idempotent: false` to run it on every call:
+By default the action runs on the first `Dispose` only; `Disposable.CreateRepeatable` runs it on every call:
 
 <!-- snippet: ActionDisposable -->
 ```cs
@@ -42,7 +42,7 @@ var once = Disposable.Create(() => count++);
 once.Dispose();
 once.Dispose(); // count == 1: the action runs on the first call only
 
-var everyTime = Disposable.Create(() => count++, idempotent: false);
+var everyTime = Disposable.CreateRepeatable(() => count++);
 everyTime.Dispose();
 everyTime.Dispose(); // count == 3: the action runs on every call
 ```

@@ -53,7 +53,7 @@ using (var resources = Disposable.Collection())
 
 ### Running an action on dispose
 
-`Disposable.Create` wraps an `Action`. By default the action runs on the first `Dispose` only, even when several threads dispose at once; pass `idempotent: false` to run it on every call:
+`Disposable.Create` wraps an `Action`. By default the action runs on the first `Dispose` only, even when several threads dispose at once; `Disposable.CreateRepeatable` runs it on every call:
 
 <!-- snippet: ActionDisposable -->
 ```cs
@@ -63,7 +63,7 @@ var once = Disposable.Create(() => count++);
 once.Dispose();
 once.Dispose(); // count == 1: the action runs on the first call only
 
-var everyTime = Disposable.Create(() => count++, idempotent: false);
+var everyTime = Disposable.CreateRepeatable(() => count++);
 everyTime.Dispose();
 everyTime.Dispose(); // count == 3: the action runs on every call
 ```
@@ -248,7 +248,7 @@ await resources.AddAsync(lateItem); // disposed at once, not kept; Add would thr
 ```
 <!-- endSnippet -->
 
-Every item is disposed even when one throws. A single failure is rethrown as it is, several are thrown together as one `AggregateException`, and `ignoreExceptions: true` ignores them:
+Every item is disposed even when one throws. A single failure is rethrown as it is, several are thrown together as one `AggregateException`, and `Disposable.CollectionIgnoringExceptions` ignores them:
 
 <!-- snippet: CollectionErrors -->
 ```cs
@@ -258,7 +258,7 @@ var failing = Disposable.Create(() =>
     throw new InvalidOperationException("Failed to close.")
 );
 var third = Disposable.Create(() => log.Add("third"));
-var resources = Disposable.Collection(ignoreExceptions: true, first, failing, third);
+var resources = Disposable.CollectionIgnoringExceptions(first, failing, third);
 
 resources.Dispose(); // log: "third", "first": the failure is ignored
 ```
@@ -420,7 +420,7 @@ IDisposalStatus status = cleanup; // every disposable that keeps state reports i
 
 ### Disposing on a synchronization context
 
-`Disposable.Context` and `AsyncDisposable.Context` dispose a resource on a `SynchronizationContext`, such as a UI thread's. By default `Dispose` calls the context's `Send` and returns once the resource is disposed; with `async: true` it calls `Post` and returns at once, telling the context through `OperationStarted` and `OperationCompleted`. The resource is disposed once, however often `Dispose` is called:
+`Disposable.Context` and `AsyncDisposable.Context` dispose a resource on a `SynchronizationContext`, such as a UI thread's. By default `Dispose` calls the context's `Send` and returns once the resource is disposed; `Disposable.PostingContext` calls `Post` instead and returns at once, telling the context through `OperationStarted` and `OperationCompleted`. The resource is disposed once, however often `Dispose` is called:
 
 <!-- snippet: ContextDisposable -->
 ```cs
@@ -482,7 +482,7 @@ using (cacheLock.WriteLock())
 
 ### Bridging sync and async disposal
 
-`AsyncDisposable.Adapt` wraps an `IDisposable` as an `IAsyncDisposable`, for code that only takes the async form. It disposes the resource once; `Adapt(disposable, idempotent: false)` disposes it on every call:
+`AsyncDisposable.Adapt` wraps an `IDisposable` as an `IAsyncDisposable`, for code that only takes the async form. It disposes the resource once; `AsyncDisposable.AdaptRepeatable` disposes it on every call:
 
 <!-- snippet: Adapt -->
 ```cs
@@ -513,7 +513,7 @@ await resource.DisposeAsyncIfAvailable(); // null: nothing happens
 
 ### Disposing every item in a list
 
-`DisposeAll()` disposes each `IDisposable` in an `IEnumerable<object?>` in reverse order, also one that implements `IAsyncDisposable`, such as a `Stream`, and skips `null` and every other item. Its errors and `ignoreExceptions` work as a collection's do. An item that implements only `IAsyncDisposable` isn't disposed: once the other items are disposed, `DisposeAll()` throws `InvalidOperationException` for it, which `ignoreExceptions: true` doesn't ignore:
+`DisposeAll()` disposes each `IDisposable` in an `IEnumerable<object?>` in reverse order, also one that implements `IAsyncDisposable`, such as a `Stream`, and skips `null` and every other item. Its errors work as a collection's do, and `DisposeAllIgnoringExceptions()` ignores them. An item that implements only `IAsyncDisposable` isn't disposed: once the other items are disposed, `DisposeAll()` throws `InvalidOperationException` for it, which `DisposeAllIgnoringExceptions()` doesn't ignore:
 
 <!-- snippet: DisposeAll -->
 ```cs
@@ -548,8 +548,8 @@ await items.DisposeAllAsync(); // DisposeAsync for the stream, then Dispose for 
 
 | Type | Members |
 | --- | --- |
-| `Disposable` | `Empty`, `Create`, `CreateValue`, `Aggregate`, `Serial`, `SingleAssignment`, `Guard`, `Cancellation`, `Flag`, `Collection`, `Context` and `Shared` |
-| `AsyncDisposable` | `Empty`, `Create`, `CreateValue`, `Adapt`, `Aggregate`, `Serial`, `SingleAssignment`, `Guard`, `Cancellation`, `Collection`, `Context` and `Shared` |
+| `Disposable` | `Empty`, `Create`, `CreateRepeatable`, `CreateValue`, `Aggregate`, `Serial`, `SingleAssignment`, `Guard`, `Cancellation`, `Flag`, `Collection`, `CollectionIgnoringExceptions`, `Context`, `PostingContext` and `Shared` |
+| `AsyncDisposable` | `Empty`, `Create`, `CreateRepeatable`, `CreateValue`, `Adapt`, `AdaptRepeatable`, `Aggregate`, `Serial`, `SingleAssignment`, `Guard`, `Cancellation`, `Collection`, `CollectionIgnoringExceptions`, `Context` and `Shared` |
 | `SharedReference` | `Create(value)` for an `IDisposable`, and `Create(value, onRelease)` for any value |
 | `AsyncSharedReference` | `Create(value)` for an `IAsyncDisposable`, and `Create(value, onRelease)` for any value |
 
@@ -558,7 +558,7 @@ await items.DisposeAllAsync(); // DisposeAsync for the stream, then Dispose for 
 | Type | Role |
 | --- | --- |
 | `DisposableEmpty`, `AsyncDisposableEmpty` | Do nothing; `Singleton` is the instance `Empty` returns |
-| `DisposableAction`, `AsyncDisposableAction` | Run a delegate on dispose, once unless `idempotent` is `false` |
+| `DisposableAction`, `AsyncDisposableAction` | Run a delegate on dispose, once, or on every dispose from `CreateRepeatable` |
 | `DisposableAggregate`, `AsyncDisposableAggregate` | Hold one replaceable resource; the obsolete `IDisposableAggregate` and `IAsyncDisposableAggregate` |
 | `DisposableSerial`, `AsyncDisposableSerial` | Hold one resource and dispose the previous one when it is replaced |
 | `DisposableSingleAssignment`, `AsyncDisposableSingleAssignment` | Take one resource, once |
@@ -578,14 +578,16 @@ await items.DisposeAllAsync(); // DisposeAsync for the stream, then Dispose for 
 
 | Type | Members |
 | --- | --- |
-| `DisposableExtensions` | `DisposeAsyncIfAvailable()`, `AsSharedReference()` and `DisposeAll()` |
-| `AsyncDisposableExtensions` | `AsAsyncSharedReference()` and `DisposeAllAsync()` |
+| `DisposableExtensions` | `DisposeAsyncIfAvailable()`, `AsSharedReference()`, `DisposeAll()` and `DisposeAllIgnoringExceptions()` |
+| `AsyncDisposableExtensions` | `AsAsyncSharedReference()`, `DisposeAllAsync()` and `DisposeAllIgnoringExceptionsAsync()` |
 | `SemaphoreSlimExtensions` | `Lock()` and `LockAsync()` |
 | `ReaderWriterLockSlimExtensions` | `ReadLock()`, `UpgradeableReadLock()` and `WriteLock()` |
 
+The `bool` overloads that pick a behavior (`idempotent`, `async`, `ignoreExceptions`) are obsolete (`NCDISP003`) and are deleted in the next major version.
+
 ## Thread safety
 
-Every class runs its cleanup at most once, even when several threads dispose it at once, unless an action or adapter is created with `idempotent: false`. The aggregate, serial and single-assignment holders swap their resource atomically, and a collection's members all take one lock, its enumeration walking a snapshot. A resource handed to a holder after it is disposed is disposed at once. A lease's `AddReference`, `TryAddReference` and `Dispose` are safe from any thread, and the release action runs once, on the thread that releases the last lease. The structs (`ValueDisposable<TState>`, `AsyncValueDisposable<TState>` and the lock scopes) run their action on every dispose: dispose them once.
+Every class runs its cleanup at most once, even when several threads dispose it at once, except an action or adapter from `CreateRepeatable` or `AdaptRepeatable`. The aggregate, serial and single-assignment holders swap their resource atomically, and a collection's members all take one lock, its enumeration walking a snapshot. A resource handed to a holder after it is disposed is disposed at once. A lease's `AddReference`, `TryAddReference` and `Dispose` are safe from any thread, and the release action runs once, on the thread that releases the last lease. The structs (`ValueDisposable<TState>`, `AsyncValueDisposable<TState>` and the lock scopes) run their action on every dispose: dispose them once.
 
 ## Project
 
