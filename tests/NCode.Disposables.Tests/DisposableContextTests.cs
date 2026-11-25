@@ -19,28 +19,6 @@ public class DisposableContextTests
     }
 
     [Fact]
-    public void Constructor_WithAsyncFalse_CreatesInstance()
-    {
-        var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
-        var disposable = new Mock<IDisposable>(MockBehavior.Strict);
-
-        var result = new DisposableContext(disposable.Object, context.Object, async: false);
-
-        Assert.NotNull(result);
-    }
-
-    [Fact]
-    public void Constructor_WithAsyncTrue_CreatesInstance()
-    {
-        var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
-        var disposable = new Mock<IDisposable>(MockBehavior.Strict);
-
-        var result = new DisposableContext(disposable.Object, context.Object, async: true);
-
-        Assert.NotNull(result);
-    }
-
-    [Fact]
     public void Constructor_WithNullDisposable_ThrowsArgumentNullException()
     {
         var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
@@ -88,25 +66,6 @@ public class DisposableContextTests
     }
 
     [Fact]
-    public void Dispose_Sync_DefaultParameter_UsesSendMethod()
-    {
-        var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
-        context
-            .Setup(x => x.Send(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
-            .Callback((SendOrPostCallback c, object s) => c(s));
-
-        var item = new Mock<IDisposable>(MockBehavior.Strict);
-        item.Setup(x => x.Dispose());
-
-        var disposable = new DisposableContext(item.Object, context.Object, async: false);
-
-        disposable.Dispose();
-
-        context.Verify(x => x.Send(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()), Times.Once);
-        item.Verify(x => x.Dispose(), Times.Once);
-    }
-
-    [Fact]
     public void Dispose_Sync_DoesNotCallOperationStartedOrCompleted()
     {
         var operationStartedCalled = false;
@@ -122,7 +81,7 @@ public class DisposableContextTests
         var item = new Mock<IDisposable>(MockBehavior.Strict);
         item.Setup(x => x.Dispose());
 
-        var disposable = new DisposableContext(item.Object, context.Object, async: false);
+        var disposable = new DisposableContext(item.Object, context.Object);
 
         disposable.Dispose();
 
@@ -147,7 +106,7 @@ public class DisposableContextTests
         var item = new Mock<IDisposable>(MockBehavior.Strict);
         item.Setup(x => x.Dispose());
 
-        var disposable = new DisposableContext(item.Object, context.Object, async: true);
+        var disposable = Disposable.PostingContext(item.Object, context.Object);
 
         disposable.Dispose();
 
@@ -178,7 +137,7 @@ public class DisposableContextTests
         var item = new Mock<IDisposable>(MockBehavior.Strict);
         item.Setup(x => x.Dispose()).Callback(() => callOrder.Add("Dispose"));
 
-        var disposable = new DisposableContext(item.Object, context.Object, async: true);
+        var disposable = Disposable.PostingContext(item.Object, context.Object);
 
         disposable.Dispose();
 
@@ -198,7 +157,7 @@ public class DisposableContextTests
         var item = new Mock<IDisposable>(MockBehavior.Strict);
         item.Setup(x => x.Dispose());
 
-        var disposable = new DisposableContext(item.Object, context.Object, async: true);
+        var disposable = Disposable.PostingContext(item.Object, context.Object);
 
         disposable.Dispose();
 
@@ -219,7 +178,7 @@ public class DisposableContextTests
         var item = new Mock<IDisposable>(MockBehavior.Strict);
         item.Setup(x => x.Dispose()).Throws(new InvalidOperationException("Test exception"));
 
-        var disposable = new DisposableContext(item.Object, context.Object, async: true);
+        var disposable = Disposable.PostingContext(item.Object, context.Object);
 
         Assert.Throws<InvalidOperationException>(() => disposable.Dispose());
 
@@ -293,7 +252,7 @@ public class DisposableContextTests
         var item = new Mock<IDisposable>(MockBehavior.Strict);
         item.Setup(x => x.Dispose());
 
-        var disposable = new DisposableContext(item.Object, context.Object, async: true);
+        var disposable = Disposable.PostingContext(item.Object, context.Object);
 
         disposable.Dispose();
         disposable.Dispose();
@@ -340,7 +299,7 @@ public class DisposableContextTests
         var item = new Mock<IDisposable>(MockBehavior.Strict);
         item.Setup(x => x.Dispose()).Throws(new InvalidOperationException("Test exception"));
 
-        var disposable = new DisposableContext(item.Object, context.Object, async: true);
+        var disposable = Disposable.PostingContext(item.Object, context.Object);
 
         var exception = Assert.Throws<InvalidOperationException>(() => disposable.Dispose());
 
@@ -417,6 +376,97 @@ public class DisposableContextTests
 
         Assert.IsAssignableFrom<IDisposable>(disposable);
     }
+
+    #endregion
+
+    #region Deprecated Overload Tests
+
+#pragma warning disable NCDISP003 // tests the deprecated overloads until they are deleted
+
+    [Fact]
+    public void Constructor_WithAsyncFalse_CreatesInstance()
+    {
+        var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
+        var disposable = new Mock<IDisposable>(MockBehavior.Strict);
+
+        var result = new DisposableContext(disposable.Object, context.Object, async: false);
+
+        Assert.NotNull(result);
+    }
+
+    [Fact]
+    public void Constructor_WithAsyncTrue_CreatesInstance()
+    {
+        var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
+        var disposable = new Mock<IDisposable>(MockBehavior.Strict);
+
+        var result = new DisposableContext(disposable.Object, context.Object, async: true);
+
+        Assert.NotNull(result);
+    }
+
+    [Fact]
+    public void Dispose_Sync_DefaultParameter_UsesSendMethod()
+    {
+        var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
+        context
+            .Setup(x => x.Send(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
+            .Callback((SendOrPostCallback c, object s) => c(s));
+
+        var item = new Mock<IDisposable>(MockBehavior.Strict);
+        item.Setup(x => x.Dispose());
+
+        var disposable = new DisposableContext(item.Object, context.Object, async: false);
+
+        disposable.Dispose();
+
+        context.Verify(x => x.Send(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()), Times.Once);
+        item.Verify(x => x.Dispose(), Times.Once);
+    }
+
+    [Fact]
+    public void Constructor_WithAsyncTrue_PostsDisposal()
+    {
+        var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
+        context.Setup(x => x.OperationStarted());
+        context
+            .Setup(x => x.Post(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
+            .Callback((SendOrPostCallback c, object s) => c(s));
+        context.Setup(x => x.OperationCompleted());
+
+        var item = new Mock<IDisposable>(MockBehavior.Strict);
+        item.Setup(x => x.Dispose());
+
+        var disposable = new DisposableContext(item.Object, context.Object, async: true);
+
+        disposable.Dispose();
+
+        context.Verify(x => x.Post(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()), Times.Once);
+        item.Verify(x => x.Dispose(), Times.Once);
+    }
+
+    [Fact]
+    public void Context_WithAsyncTrue_PostsDisposal()
+    {
+        var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
+        context.Setup(x => x.OperationStarted());
+        context
+            .Setup(x => x.Post(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
+            .Callback((SendOrPostCallback c, object s) => c(s));
+        context.Setup(x => x.OperationCompleted());
+
+        var item = new Mock<IDisposable>(MockBehavior.Strict);
+        item.Setup(x => x.Dispose());
+
+        var disposable = Disposable.Context(item.Object, context.Object, async: true);
+
+        disposable.Dispose();
+
+        context.Verify(x => x.Post(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()), Times.Once);
+        item.Verify(x => x.Dispose(), Times.Once);
+    }
+
+#pragma warning restore NCDISP003
 
     #endregion
 }

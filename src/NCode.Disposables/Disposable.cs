@@ -281,6 +281,11 @@ public static class Disposable
     /// </para>
     /// </remarks>
     // Callers that pass only the disposable and the context bind to the overload without the flag, so this one keeps its default until it is deleted.
+    // ADR-1007: deleted in the next major version.
+    [Obsolete(
+        "Use Disposable.Context(disposable, context) to dispose through Send, or Disposable.PostingContext to dispose through Post. This overload is deleted in the next major version.",
+        DiagnosticId = "NCDISP003"
+    )]
     public static DisposableContext Context(
         IDisposable disposable,
         SynchronizationContext context,

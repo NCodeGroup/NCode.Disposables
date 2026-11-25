@@ -72,6 +72,11 @@ public sealed class DisposableContext : IDisposable, IDisposalStatus
     /// <see cref="SynchronizationContext.OperationStarted"/> and <see cref="SynchronizationContext.OperationCompleted"/>
     /// to properly track the asynchronous operation.
     /// </remarks>
+    // ADR-1007: deleted in the next major version.
+    [Obsolete(
+        "Use new DisposableContext(disposable, context) to dispose through Send, or Disposable.PostingContext to dispose through Post. This constructor is deleted in the next major version.",
+        DiagnosticId = "NCDISP003"
+    )]
     public DisposableContext(
         IDisposable disposable,
         SynchronizationContext context,
