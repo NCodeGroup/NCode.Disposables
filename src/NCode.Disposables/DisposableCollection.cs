@@ -6,8 +6,7 @@ using System.Collections;
 namespace NCode.Disposables;
 
 /// <summary>
-/// Provides an implementation of <see cref="IDisposableCollection"/> that manages
-/// a collection of <see cref="IDisposable"/> items with automatic disposal support.
+/// Provides a thread-safe collection of <see cref="IDisposable"/> items that disposes them when it is disposed.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -35,6 +34,9 @@ public sealed class DisposableCollection : IDisposableCollection, IDisposalStatu
     private readonly List<IDisposable> _list;
     private readonly bool _ignoreExceptions;
 
+    /// <summary>
+    /// Gets the lock that guards the item list and the disposed flag.
+    /// </summary>
     private Lock Gate { get; } = new();
 
     /// <summary>
@@ -236,6 +238,9 @@ public sealed class DisposableCollection : IDisposableCollection, IDisposalStatu
     /// Returns an enumerator that iterates through the collection.
     /// </summary>
     /// <returns>An enumerator that can be used to iterate through a snapshot of the collection.</returns>
+    /// <remarks>
+    /// Each call copies the items into a new array under the lock, so enumeration costs one allocation and a copy of every item.
+    /// </remarks>
     public IEnumerator<IDisposable> GetEnumerator()
     {
         IDisposable[] snapshot;
