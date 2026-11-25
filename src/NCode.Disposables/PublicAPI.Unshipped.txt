@@ -2,5 +2,6 @@
 NCode.Disposables.AsyncDisposableAction.IsDisposed.get -> bool
 NCode.Disposables.AsyncDisposableAdapter.IsDisposed.get -> bool
 NCode.Disposables.DisposableAction.IsDisposed.get -> bool
+NCode.Disposables.DisposableContext.IsDisposed.get -> bool
 NCode.Disposables.IDisposalStatus
 NCode.Disposables.IDisposalStatus.IsDisposed.get -> bool

@@ -372,6 +372,39 @@ public class DisposableContextTests
 
     #endregion
 
+    #region IsDisposed Property Tests
+
+    [Fact]
+    public void IsDisposed_BeforeDispose_ReturnsFalse()
+    {
+        var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
+        var item = new Mock<IDisposable>(MockBehavior.Strict);
+
+        var disposable = new DisposableContext(item.Object, context.Object);
+
+        Assert.False(disposable.IsDisposed);
+    }
+
+    [Fact]
+    public void IsDisposed_AfterDispose_ReturnsTrue()
+    {
+        var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
+        context
+            .Setup(x => x.Send(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
+            .Callback((SendOrPostCallback c, object s) => c(s));
+
+        var item = new Mock<IDisposable>(MockBehavior.Strict);
+        item.Setup(x => x.Dispose());
+
+        var disposable = new DisposableContext(item.Object, context.Object);
+
+        disposable.Dispose();
+
+        Assert.True(disposable.IsDisposed);
+    }
+
+    #endregion
+
     #region Interface Tests
 
     [Fact]

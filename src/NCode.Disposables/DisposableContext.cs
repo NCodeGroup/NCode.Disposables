@@ -21,11 +21,16 @@ namespace NCode.Disposables;
 /// Thread-safety: Concurrent calls to <see cref="Dispose"/> are handled safely using atomic operations.
 /// </para>
 /// </remarks>
-public sealed class DisposableContext : IDisposable
+public sealed class DisposableContext : IDisposable, IDisposalStatus
 {
     private IDisposable? _disposable;
     private readonly SynchronizationContext _context;
     private readonly bool _async;
+
+    /// <summary>
+    /// Gets a value indicating whether <see cref="Dispose"/> has been called at least once.
+    /// </summary>
+    public bool IsDisposed => Volatile.Read(ref _disposable) is null;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DisposableContext"/> class that wraps an
