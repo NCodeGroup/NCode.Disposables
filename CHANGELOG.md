@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [9.0.0] - 2026-11-25
+
 ### Changed
 
+- **Breaking:** `SharedReference.Create(value, onRelease)`, `AsyncSharedReference.Create(value, onRelease)` and the `SharedReferenceOwner<T>` and `AsyncSharedReferenceOwner<T>` constructors throw `ArgumentNullException` for a `null` release callback, and `SharedReference.Create(value)`, `AsyncSharedReference.Create(value)`, `AsSharedReference()` and `AsAsyncSharedReference()` for a `null` resource, instead of throwing `NullReferenceException` when the last lease is released; pass the release callback and the resource to share. ([#89](https://github.com/NCodeGroup/NCode.Disposables/issues/89), [ADR-1008](docs/decisions/1008-a-disposable-that-wraps-a-resource-rejects-a-null-resource.md))
 - Package validation compares each package with the published 8.0.1 package.
 - `docs/assurance-case.md` states the library's security requirements, its threat model and trust boundary, the secure design principles it applies and the weaknesses it counters, with the tests behind them.
 
@@ -236,7 +239,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release for .NET Framework 4.5.1: `IDisposable` implementations for common resource management patterns, such as actions, aggregates, collections and shared references.
 
-[Unreleased]: https://github.com/NCodeGroup/NCode.Disposables/compare/v8.0.1...HEAD
+[Unreleased]: https://github.com/NCodeGroup/NCode.Disposables/compare/v9.0.0...HEAD
+[9.0.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v8.0.1...v9.0.0
 [8.0.1]: https://github.com/NCodeGroup/NCode.Disposables/compare/v8.0.0...v8.0.1
 [8.0.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v7.1.0...v8.0.0
 [7.1.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v7.0.0...v7.1.0
