@@ -3,7 +3,7 @@
 
 namespace NCode.Disposables.Tests;
 
-public class AsyncDisposableCollectionTests
+public class AsyncDisposableCollectionTests : UnitTestBase
 {
     #region Constructor Tests
 
@@ -18,8 +18,8 @@ public class AsyncDisposableCollectionTests
     [Fact]
     public void Constructor_WithCollection_CopiesElements()
     {
-        var disposable1 = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        var disposable2 = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var disposable1 = CreateStrictMock<IAsyncDisposable>();
+        var disposable2 = CreateStrictMock<IAsyncDisposable>();
         IAsyncDisposable[] items = [disposable1.Object, disposable2.Object];
 
         var collection = new AsyncDisposableCollection(items);
@@ -53,7 +53,7 @@ public class AsyncDisposableCollectionTests
     public void Add_WithValidItem_AddsToCollection()
     {
         var collection = new AsyncDisposableCollection();
-        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var disposable = CreateStrictMock<IAsyncDisposable>();
 
         collection.Add(disposable.Object);
 
@@ -65,9 +65,9 @@ public class AsyncDisposableCollectionTests
     public void Add_MultipleItems_AddsAllToCollection()
     {
         var collection = new AsyncDisposableCollection();
-        var disposable1 = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        var disposable2 = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        var disposable3 = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var disposable1 = CreateStrictMock<IAsyncDisposable>();
+        var disposable2 = CreateStrictMock<IAsyncDisposable>();
+        var disposable3 = CreateStrictMock<IAsyncDisposable>();
 
         collection.Add(disposable1.Object);
         collection.Add(disposable2.Object);
@@ -88,7 +88,7 @@ public class AsyncDisposableCollectionTests
     public void Add_SameItemTwice_AddsBothInstances()
     {
         var collection = new AsyncDisposableCollection();
-        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var disposable = CreateStrictMock<IAsyncDisposable>();
 
         collection.Add(disposable.Object);
         collection.Add(disposable.Object);
@@ -100,7 +100,7 @@ public class AsyncDisposableCollectionTests
     public async Task Add_AfterDispose_ThrowsObjectDisposedException()
     {
         var collection = new AsyncDisposableCollection();
-        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var disposable = CreateStrictMock<IAsyncDisposable>();
         await collection.DisposeAsync();
 
         Assert.Throws<ObjectDisposedException>(() => collection.Add(disposable.Object));
@@ -110,7 +110,7 @@ public class AsyncDisposableCollectionTests
     public async Task Add_AfterDispose_DoesNotDisposeItem()
     {
         var collection = new AsyncDisposableCollection();
-        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var disposable = CreateStrictMock<IAsyncDisposable>();
         await collection.DisposeAsync();
 
         Assert.Throws<ObjectDisposedException>(() => collection.Add(disposable.Object));
@@ -128,7 +128,7 @@ public class AsyncDisposableCollectionTests
 
         for (var i = 0; i < concurrentCalls; i++)
         {
-            var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+            var disposable = CreateStrictMock<IAsyncDisposable>();
             tasks[i] = Task.Run(() => collection.Add(disposable.Object));
         }
 
@@ -145,7 +145,7 @@ public class AsyncDisposableCollectionTests
     public async Task AddAsync_BeforeDispose_AddsItem()
     {
         var collection = new AsyncDisposableCollection();
-        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var disposable = CreateStrictMock<IAsyncDisposable>();
 
         await collection.AddAsync(disposable.Object);
 
@@ -157,13 +157,15 @@ public class AsyncDisposableCollectionTests
     public async Task AddAsync_AfterDispose_DisposesItem()
     {
         var collection = new AsyncDisposableCollection();
-        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        disposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var disposable = CreateStrictMock<IAsyncDisposable>();
+        disposable
+            .Setup(x => x.DisposeAsync())
+            .Returns(ValueTask.CompletedTask)
+            .Verifiable(Times.Once());
         await collection.DisposeAsync();
 
         await collection.AddAsync(disposable.Object);
 
-        disposable.Verify(x => x.DisposeAsync(), Times.Once);
         Assert.Empty(collection);
     }
 
@@ -171,10 +173,13 @@ public class AsyncDisposableCollectionTests
     public async Task AddAsync_WhileDisposeAsyncRuns_DisposesItemAtOnce()
     {
         var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var mockFirst = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        mockFirst.Setup(x => x.DisposeAsync()).Returns(() => new ValueTask(gate.Task));
-        var mockLate = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        mockLate.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var mockFirst = CreateStrictMock<IAsyncDisposable>();
+        mockFirst.Setup(x => x.DisposeAsync()).Returns(() => new ValueTask(gate.Task)).Verifiable();
+        var mockLate = CreateStrictMock<IAsyncDisposable>();
+        mockLate
+            .Setup(x => x.DisposeAsync())
+            .Returns(ValueTask.CompletedTask)
+            .Verifiable(Times.Once());
         var collection = new AsyncDisposableCollection([mockFirst.Object]);
 
         var disposeTask = collection.DisposeAsync().AsTask();
@@ -182,7 +187,6 @@ public class AsyncDisposableCollectionTests
 
         await collection.AddAsync(mockLate.Object);
 
-        mockLate.Verify(x => x.DisposeAsync(), Times.Once);
         Assert.Empty(collection);
 
         gate.SetResult();
@@ -209,7 +213,7 @@ public class AsyncDisposableCollectionTests
     public void Remove_ExistingItem_RemovesAndReturnsTrue()
     {
         var collection = new AsyncDisposableCollection();
-        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var disposable = CreateStrictMock<IAsyncDisposable>();
         collection.Add(disposable.Object);
 
         var result = collection.Remove(disposable.Object);
@@ -222,7 +226,7 @@ public class AsyncDisposableCollectionTests
     public void Remove_NonExistingItem_ReturnsFalse()
     {
         var collection = new AsyncDisposableCollection();
-        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var disposable = CreateStrictMock<IAsyncDisposable>();
 
         var result = collection.Remove(disposable.Object);
 
@@ -241,7 +245,7 @@ public class AsyncDisposableCollectionTests
     public async Task Remove_DoesNotDisposeRemovedItem()
     {
         var collection = new AsyncDisposableCollection();
-        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var disposable = CreateStrictMock<IAsyncDisposable>();
         collection.Add(disposable.Object);
 
         collection.Remove(disposable.Object);
@@ -254,7 +258,7 @@ public class AsyncDisposableCollectionTests
     public void Remove_DuplicateItem_RemovesOnlyFirst()
     {
         var collection = new AsyncDisposableCollection();
-        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var disposable = CreateStrictMock<IAsyncDisposable>();
         collection.Add(disposable.Object);
         collection.Add(disposable.Object);
 
@@ -272,8 +276,8 @@ public class AsyncDisposableCollectionTests
     public void Clear_WithItems_RemovesAllItems()
     {
         var collection = new AsyncDisposableCollection();
-        var disposable1 = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        var disposable2 = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var disposable1 = CreateStrictMock<IAsyncDisposable>();
+        var disposable2 = CreateStrictMock<IAsyncDisposable>();
         collection.Add(disposable1.Object);
         collection.Add(disposable2.Object);
 
@@ -296,7 +300,7 @@ public class AsyncDisposableCollectionTests
     public async Task Clear_DoesNotDisposeItems()
     {
         var collection = new AsyncDisposableCollection();
-        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var disposable = CreateStrictMock<IAsyncDisposable>();
         collection.Add(disposable.Object);
 
         collection.Clear();
@@ -313,7 +317,7 @@ public class AsyncDisposableCollectionTests
     public void Contains_ExistingItem_ReturnsTrue()
     {
         var collection = new AsyncDisposableCollection();
-        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var disposable = CreateStrictMock<IAsyncDisposable>();
         collection.Add(disposable.Object);
 
         var result = collection.Contains(disposable.Object);
@@ -325,7 +329,7 @@ public class AsyncDisposableCollectionTests
     public void Contains_NonExistingItem_ReturnsFalse()
     {
         var collection = new AsyncDisposableCollection();
-        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var disposable = CreateStrictMock<IAsyncDisposable>();
 
         var result = collection.Contains(disposable.Object);
 
@@ -356,8 +360,8 @@ public class AsyncDisposableCollectionTests
     public void Count_WithItems_ReturnsCorrectCount()
     {
         var collection = new AsyncDisposableCollection();
-        var disposable1 = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        var disposable2 = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var disposable1 = CreateStrictMock<IAsyncDisposable>();
+        var disposable2 = CreateStrictMock<IAsyncDisposable>();
         collection.Add(disposable1.Object);
         collection.Add(disposable2.Object);
 
@@ -368,8 +372,8 @@ public class AsyncDisposableCollectionTests
     public async Task Count_AfterDispose_ReturnsZero()
     {
         var collection = new AsyncDisposableCollection();
-        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        disposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var disposable = CreateStrictMock<IAsyncDisposable>();
+        disposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask).Verifiable();
         collection.Add(disposable.Object);
 
         await collection.DisposeAsync();
@@ -397,8 +401,8 @@ public class AsyncDisposableCollectionTests
     public void CopyTo_WithValidArray_CopiesElements()
     {
         var collection = new AsyncDisposableCollection();
-        var disposable1 = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        var disposable2 = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var disposable1 = CreateStrictMock<IAsyncDisposable>();
+        var disposable2 = CreateStrictMock<IAsyncDisposable>();
         collection.Add(disposable1.Object);
         collection.Add(disposable2.Object);
         var array = new IAsyncDisposable[2];
@@ -413,7 +417,7 @@ public class AsyncDisposableCollectionTests
     public void CopyTo_WithOffset_CopiesAtCorrectPosition()
     {
         var collection = new AsyncDisposableCollection();
-        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var disposable = CreateStrictMock<IAsyncDisposable>();
         collection.Add(disposable.Object);
         var array = new IAsyncDisposable[3];
 
@@ -450,8 +454,8 @@ public class AsyncDisposableCollectionTests
     public void GetEnumerator_WithItems_EnumeratesAllItems()
     {
         var collection = new AsyncDisposableCollection();
-        var disposable1 = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        var disposable2 = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var disposable1 = CreateStrictMock<IAsyncDisposable>();
+        var disposable2 = CreateStrictMock<IAsyncDisposable>();
         collection.Add(disposable1.Object);
         collection.Add(disposable2.Object);
 
@@ -466,7 +470,7 @@ public class AsyncDisposableCollectionTests
     public void GetEnumerator_NonGeneric_EnumeratesAllItems()
     {
         var collection = new AsyncDisposableCollection();
-        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var disposable = CreateStrictMock<IAsyncDisposable>();
         collection.Add(disposable.Object);
 
         var enumerable = (System.Collections.IEnumerable)collection;
@@ -480,8 +484,8 @@ public class AsyncDisposableCollectionTests
     public void GetEnumerator_AddWhileEnumerating_DoesNotThrow()
     {
         var collection = new AsyncDisposableCollection();
-        var disposable1 = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        var disposable2 = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var disposable1 = CreateStrictMock<IAsyncDisposable>();
+        var disposable2 = CreateStrictMock<IAsyncDisposable>();
         collection.Add(disposable1.Object);
 
         var count = 0;
@@ -513,17 +517,20 @@ public class AsyncDisposableCollectionTests
     public async Task DisposeAsync_WithItems_DisposesAllItems()
     {
         var collection = new AsyncDisposableCollection();
-        var disposable1 = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        var disposable2 = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        disposable1.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
-        disposable2.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var disposable1 = CreateStrictMock<IAsyncDisposable>();
+        var disposable2 = CreateStrictMock<IAsyncDisposable>();
+        disposable1
+            .Setup(x => x.DisposeAsync())
+            .Returns(ValueTask.CompletedTask)
+            .Verifiable(Times.Once());
+        disposable2
+            .Setup(x => x.DisposeAsync())
+            .Returns(ValueTask.CompletedTask)
+            .Verifiable(Times.Once());
         collection.Add(disposable1.Object);
         collection.Add(disposable2.Object);
 
         await collection.DisposeAsync();
-
-        disposable1.Verify(x => x.DisposeAsync(), Times.Once);
-        disposable2.Verify(x => x.DisposeAsync(), Times.Once);
     }
 
     [Fact]
@@ -536,11 +543,12 @@ public class AsyncDisposableCollectionTests
         for (var i = 1; i <= count; ++i)
         {
             var local = i;
-            var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+            var disposable = CreateStrictMock<IAsyncDisposable>();
             disposable
                 .Setup(x => x.DisposeAsync())
                 .Callback(() => order += local)
-                .Returns(ValueTask.CompletedTask);
+                .Returns(ValueTask.CompletedTask)
+                .Verifiable();
             collection.Add(disposable.Object);
         }
 
@@ -553,8 +561,8 @@ public class AsyncDisposableCollectionTests
     public async Task DisposeAsync_ClearsCollectionAfterDispose()
     {
         var collection = new AsyncDisposableCollection();
-        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        disposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var disposable = CreateStrictMock<IAsyncDisposable>();
+        disposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask).Verifiable();
         collection.Add(disposable.Object);
 
         await collection.DisposeAsync();
@@ -566,25 +574,27 @@ public class AsyncDisposableCollectionTests
     public async Task DisposeAsync_CalledMultipleTimes_DisposesOnlyOnce()
     {
         var collection = new AsyncDisposableCollection();
-        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        disposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var disposable = CreateStrictMock<IAsyncDisposable>();
+        disposable
+            .Setup(x => x.DisposeAsync())
+            .Returns(ValueTask.CompletedTask)
+            .Verifiable(Times.Once());
         collection.Add(disposable.Object);
 
         await collection.DisposeAsync();
         await collection.DisposeAsync();
         await collection.DisposeAsync();
-
-        disposable.Verify(x => x.DisposeAsync(), Times.Once);
     }
 
     [Fact]
     public async Task DisposeAsync_WhenItemThrows_PropagatesException()
     {
         var collection = new AsyncDisposableCollection();
-        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var disposable = CreateStrictMock<IAsyncDisposable>();
         disposable
             .Setup(x => x.DisposeAsync())
-            .ThrowsAsync(new InvalidOperationException("Test exception"));
+            .ThrowsAsync(new InvalidOperationException("Test exception"))
+            .Verifiable();
         collection.Add(disposable.Object);
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
