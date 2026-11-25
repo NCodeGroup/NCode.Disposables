@@ -1,0 +1,75 @@
+---
+title: Share a resource through leases
+description: Give one resource to several owners through reference-counted leases, and dispose it when the last lease is released.
+---
+
+import { Pitfalls } from '@ncodegroup/docs/components';
+import LifecycleTimeline from '@site/components/LifecycleTimeline.astro';
+
+When several owners use one resource, none of them can dispose it alone: the last one to finish has to. A shared reference counts its leases and disposes the resource when the last lease is released. This page shows how to create the first lease, add an owner, what happens after the last lease, how to share a value that is not disposable, how to share an asynchronous resource, and what to watch for.
+
+## Create the first lease
+
+`SharedReference.Create` wraps a resource in its first lease. Each lease is a `SharedReferenceLease<T>` that you dispose exactly once, and the resource is disposed when the last one is released.
+
+```cs snippet=SharedReference
+```
+
+<LifecycleTimeline figure="leases" />
+
+## Add an owner
+
+`AddReference()` on a lease returns a new lease on the same resource, for a second owner such as a background task. `Disposable.Shared(value)` and the `AsSharedReference()` extension both call `SharedReference.Create`.
+
+```cs snippet=SiteShareAResourceExtension
+```
+
+## After the last lease
+
+Once the last lease is released, the resource is disposed and no lease can be added. `AddReference` and `Value` throw `ObjectDisposedException`, and `TryAddReference` returns `false`.
+
+```cs snippet=SharedReferenceTryAdd
+```
+
+## Share a value that is not disposable
+
+Pass a release action to share a value that is not disposable, such as a rented buffer. The action runs once, on the thread that releases the last lease.
+
+```cs snippet=SharedReferenceRelease
+```
+
+## Share an asynchronous resource
+
+`AsyncSharedReference.Create` shares a resource through asynchronous leases, which you dispose with `await using`. The last release awaits the resource's `DisposeAsync`.
+
+```cs snippet=AsyncSharedReference
+```
+
+`AsSharedReference()` and `AsAsyncSharedReference()` are two names for two interfaces, as [ADR-1002](https://github.com/NCodeGroup/NCode.Disposables/blob/main/docs/decisions/1002-the-async-shared-reference-extension-is-asasyncsharedreference.md) records.
+
+```cs snippet=AsAsyncSharedReference
+```
+
+## Pitfalls
+
+Disposing a lease twice releases two references:
+
+```cs snippet=SiteShareAResourceDoubleDispose
+```
+
+<Pitfalls>
+
+- **Disposing a lease twice.**
+  - *You write* `lease.Dispose()` twice, or dispose a lease and a copy of it.
+  - *What happens:* each call releases a reference, so the resource can be disposed while another owner still uses it.
+  - *Write instead:* dispose each lease exactly once, through `using`.
+- **Copying a lease.**
+  - *You write* `var copy = lease;`, then dispose both.
+  - *What happens:* a copy is the same lease, so two references are released.
+  - *Write instead:* pass the lease, and dispose it in one place.
+- **Using a `default` lease.**
+  - *You write* `SharedReferenceLease<T> lease = default;` then `lease.Value`.
+  - *What happens:* `InvalidOperationException`, because `IsActive` is false.
+  - *Write instead:* take a lease from `SharedReference.Create` or `AddReference`.
+
+</Pitfalls>
