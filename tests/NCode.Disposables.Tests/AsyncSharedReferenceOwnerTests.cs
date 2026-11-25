@@ -41,6 +41,16 @@ public class AsyncSharedReferenceOwnerTests : UnitTestBase
         Assert.Null(owner.Value);
     }
 
+    [Fact]
+    public void Constructor_WithNullOnRelease_ThrowsArgumentNullException()
+    {
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            new AsyncSharedReferenceOwner<object>(new object(), null!)
+        );
+
+        Assert.Equal("onRelease", exception.ParamName);
+    }
+
     #endregion
 
     #region Value Tests
