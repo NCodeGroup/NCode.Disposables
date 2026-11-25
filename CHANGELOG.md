@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Package validation compares each package with the published 9.0.0 package.
 - `README.md` shows the OpenSSF Best Practices badge of [project 17114](https://www.bestpractices.dev/projects/17114), which has earned the passing level; `GOVERNANCE.md` names the maintainer and the owners, and `ROADMAP.md` states the plans for the next twelve months.
 - The tests cover every `Create` overload that takes arguments, `Disposable.Shared`, `AsyncDisposable.Shared` and `AsyncDisposable.Aggregate(disposable)`, 97.9% of the statements in all, and `docs/assurance-case.md` names the property tests and the coverage among its evidence.
 
