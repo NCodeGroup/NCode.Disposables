@@ -1,0 +1,58 @@
+---
+title: Scope a lock
+description: Take a SemaphoreSlim or ReaderWriterLockSlim lock in a using statement, in a struct that allocates nothing.
+---
+
+import { Pitfalls } from '@ncodegroup/docs/components';
+
+A lock you take by hand has to be released on every path out of the code that holds it. A scope takes the lock and releases it when the `using` statement ends, even when the code throws. This page shows how to scope a semaphore, cancel the wait, scope a reader-writer lock, why a scope is a struct, and what to watch for.
+
+## Scope a semaphore
+
+`Lock()` on a `SemaphoreSlim` waits synchronously and `LockAsync()` waits asynchronously. Both take a `CancellationToken`, and both return a scope that releases the semaphore when you dispose it.
+
+```cs snippet=SemaphoreLock
+```
+
+## Cancel the wait
+
+When the token is cancelled while the wait is pending, the wait throws `OperationCanceledException` and returns no scope, so there is nothing to release.
+
+```cs snippet=SiteScopeALockCancelled
+```
+
+## Scope a reader-writer lock
+
+`ReadLock()`, `WriteLock()` and `UpgradeableReadLock()` on a `ReaderWriterLockSlim` each take that lock and return a scope that exits it.
+
+```cs snippet=ReaderWriterLock
+```
+
+An upgradeable read lock lets you read, decide to write, and take the write lock without releasing the read first.
+
+```cs snippet=SiteScopeALockUpgradeable
+```
+
+## Why a struct
+
+The scope is a `ValueDisposable<T>` built on one cached delegate, so taking a lock allocates nothing, as [ADR-1006](https://github.com/NCodeGroup/NCode.Disposables/blob/main/docs/decisions/1006-value-disposables-and-lock-scopes-are-non-idempotent-structs.md) records. A struct has no identity, so every copy of a scope releases the lock again, which is why you dispose it once. See [once, or on every call](/concepts/once-or-every-time/).
+
+## Pitfalls
+
+Disposing a scope twice releases the lock twice, and a `SemaphoreSlim(1, 1)` throws when its count would pass the maximum:
+
+```cs snippet=SiteScopeALockDoubleRelease
+```
+
+<Pitfalls>
+
+- **Disposing a scope twice.**
+  - *You write* `scope.Dispose()` twice, or dispose a scope and a copy of it.
+  - *What happens:* the lock is released twice, as `SemaphoreSlim.Release` would be.
+  - *Write instead:* dispose the scope once, through `using`.
+- **Holding a reader-writer lock across an `await`.**
+  - *You write* `using (cacheLock.ReadLock()) { await …; }`
+  - *What happens:* the code after the `await` can run on another thread, and `ReaderWriterLockSlim`, which belongs to the thread that entered it, throws `SynchronizationLockException` when the scope exits.
+  - *Write instead:* `await semaphore.LockAsync()`.
+
+</Pitfalls>
