@@ -1,0 +1,45 @@
+---
+title: Synchronous and asynchronous disposal
+description: How the IDisposable and IAsyncDisposable forms of each type differ, and which method disposes an item that implements both.
+---
+
+Most types come in two forms, one that disposes with `Dispose` and one that disposes with `DisposeAsync`. This page explains how the two forms differ and what happens to an item that implements both interfaces.
+
+## Two forms of each type
+
+`AsyncDisposable` creates the `IAsyncDisposable` form of every type that `Disposable` creates, except `Disposable.Flag`, `Disposable.PostingContext` and the lock scopes. `AsyncDisposable.Context` always posts the disposal to the context, and its `DisposeAsync` completes once the disposal has run. To see which types have an asynchronous form, read [the behavior of every disposable](/reference/behavior/).
+
+## An item that implements both
+
+Synchronous disposal disposes such an item through `IDisposable`, so a stream held by a synchronous collection is disposed with `Dispose`:
+
+```cs snippet=CollectionStream
+```
+
+Asynchronous disposal prefers `DisposeAsync`, so the same item is disposed with `DisposeAsync` when the collection is disposed asynchronously:
+
+```cs snippet=DisposeAllAsync
+```
+
+Each form of a collection disposes an item through its own interface:
+
+```cs snippet=SiteBridgeSyncAndAsyncBothForms
+```
+
+An item that implements only `IAsyncDisposable` is not disposed by `DisposeAll()`. It disposes the other items, then throws `InvalidOperationException`, and `DisposeAllIgnoringExceptions()` does not ignore that. [ADR-1001](https://github.com/NCodeGroup/NCode.Disposables/blob/main/docs/decisions/1001-synchronous-disposal-disposes-an-item-that-implements-both-interfaces-through-idisposable.md) records the decision.
+
+## Two names for two interfaces
+
+`AsSharedReference()` returns a lease that disposes with `Dispose`, and `AsAsyncSharedReference()` returns one that disposes with `DisposeAsync`. A name is never used for both, as [ADR-1002](https://github.com/NCodeGroup/NCode.Disposables/blob/main/docs/decisions/1002-the-async-shared-reference-extension-is-asasyncsharedreference.md) records.
+
+```cs snippet=AsAsyncSharedReference
+```
+
+## An async holder cannot dispose in a setter
+
+After disposal, the async aggregate's setter and the async collection's `Add` throw `ObjectDisposedException`, because they cannot await the resource's disposal. `SetDisposableAsync` and `AddAsync` dispose the resource instead:
+
+```cs snippet=CollectionLateAddAsync
+```
+
+To see what every holder does with a late resource, read [disposal status and late resources](/concepts/disposal-status/).
