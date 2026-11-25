@@ -52,7 +52,7 @@ resource thread-safe; or stop a cleanup delegate the caller supplies from throwi
 | A context's count of pending operations is left unbalanced | Yes | R6 |
 | A tampered or substituted package | Yes | R7, below |
 | A struct disposed twice | No | Documented misuse (ADR-1006, the lease's remarks) |
-| A cleanup delegate that throws, blocks or misbehaves | No | It runs with the caller's privileges; the library rethrows what it throws |
+| A cleanup delegate that throws, blocks or misbehaves | No | It runs with the caller's privileges; the library rethrows what it throws, except from a member named for ignoring exceptions |
 | A caller that never disposes | No | No finalizer to rely on |
 
 **Trust boundary.** The library runs inside the caller's process with the caller's privileges, and every input is an
@@ -71,7 +71,7 @@ privilege and open design."
 - **Fail-safe defaults:** a disposable runs its cleanup once unless a factory named for the other behavior, such as
   `CreateRepeatable`, creates it
   ([ADR-1007](decisions/1007-behavior-is-chosen-by-a-factory-name-not-a-flag-parameter.md)); a resource handed to a
-  disposed holder is disposed, not dropped (R3); a `null` resource is rejected, not ignored (R5).
+  disposed holder is disposed, not dropped (R3); a `null` resource to wrap is rejected, not ignored (R5).
 - **Complete mediation:** every member of a collection takes one lock and enumeration walks a snapshot; the holders
   swap their resource with atomic operations; every lease goes through its owner's atomic count, which refuses a new
   lease at zero (R1, R2).
