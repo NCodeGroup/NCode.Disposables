@@ -28,14 +28,13 @@ public class SharedReferenceTests
     }
 
     [Fact]
-    public void Create_WithNullValueAndOnRelease_PassesNullToOnRelease()
+    public void Create_WithCallbackAndNullValue_ThrowsArgumentNullException()
     {
-        object? released = new object();
-        var lease = SharedReference.Create<object?>(null, value => released = value);
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            SharedReference.Create<object?>(null, _ => { })
+        );
 
-        lease.Dispose();
-
-        Assert.Null(released);
+        Assert.Equal("value", exception.ParamName);
     }
 
     #endregion

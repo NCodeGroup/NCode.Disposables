@@ -60,6 +60,7 @@ public static class SharedReference
     /// <returns>
     /// A new <see cref="SharedReferenceLease{T}"/> representing the initial lease on the shared resource.
     /// </returns>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentNullException"><paramref name="onRelease"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
@@ -73,6 +74,7 @@ public static class SharedReference
     /// </remarks>
     public static SharedReferenceLease<T> Create<T>(T value, Action<T> onRelease)
     {
+        ArgumentNullException.ThrowIfNull(value);
         ArgumentNullException.ThrowIfNull(onRelease);
 
         var owner = new SharedReferenceOwner<T>(value, onRelease);
