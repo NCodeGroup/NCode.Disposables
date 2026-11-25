@@ -3,7 +3,7 @@
 
 namespace NCode.Disposables.Tests;
 
-public class DisposableTests
+public class DisposableTests : UnitTestBase
 {
     #region Aggregate Tests
 
@@ -32,8 +32,8 @@ public class DisposableTests
     [Fact]
     public void Serial_WithDisposable_HoldsIt()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable();
 
         using var serial = Disposable.Serial(mockDisposable.Object);
 
@@ -61,8 +61,8 @@ public class DisposableTests
     [Fact]
     public void Guard_WithValue_ReturnsGuardOverValue()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable();
 
         using var guard = Disposable.Guard(mockDisposable.Object);
 
@@ -257,20 +257,19 @@ public class DisposableTests
     [Fact]
     public void Context_WhenDisposed_SendsDisposal()
     {
-        var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
+        var context = CreateStrictMock<SynchronizationContext>();
         context
             .Setup(x => x.Send(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
-            .Callback((SendOrPostCallback c, object s) => c(s));
+            .Callback((SendOrPostCallback c, object s) => c(s))
+            .Verifiable(Times.Once());
 
-        var item = new Mock<IDisposable>(MockBehavior.Strict);
-        item.Setup(x => x.Dispose());
+        var item = CreateStrictMock<IDisposable>();
+        item.Setup(x => x.Dispose()).Verifiable(Times.Once());
 
         var disposable = Disposable.Context(item.Object, context.Object);
 
         disposable.Dispose();
 
-        context.Verify(x => x.Send(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()), Times.Once);
-        item.Verify(x => x.Dispose(), Times.Once);
         Assert.True(disposable.IsDisposed);
     }
 
@@ -283,8 +282,11 @@ public class DisposableTests
     {
         var callOrder = new List<string>();
 
-        var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
-        context.Setup(x => x.OperationStarted()).Callback(() => callOrder.Add("OperationStarted"));
+        var context = CreateStrictMock<SynchronizationContext>();
+        context
+            .Setup(x => x.OperationStarted())
+            .Callback(() => callOrder.Add("OperationStarted"))
+            .Verifiable();
         context
             .Setup(x => x.Post(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
             .Callback(
@@ -293,13 +295,15 @@ public class DisposableTests
                     callOrder.Add("Post");
                     c(s);
                 }
-            );
+            )
+            .Verifiable();
         context
             .Setup(x => x.OperationCompleted())
-            .Callback(() => callOrder.Add("OperationCompleted"));
+            .Callback(() => callOrder.Add("OperationCompleted"))
+            .Verifiable();
 
-        var item = new Mock<IDisposable>(MockBehavior.Strict);
-        item.Setup(x => x.Dispose()).Callback(() => callOrder.Add("Dispose"));
+        var item = CreateStrictMock<IDisposable>();
+        item.Setup(x => x.Dispose()).Callback(() => callOrder.Add("Dispose")).Verifiable();
 
         var disposable = Disposable.PostingContext(item.Object, context.Object);
 
@@ -312,7 +316,7 @@ public class DisposableTests
     [Fact]
     public void PostingContext_NullDisposable_ThrowsArgumentNullException()
     {
-        var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
+        var context = CreateStrictMock<SynchronizationContext>();
 
         var exception = Assert.Throws<ArgumentNullException>(() =>
             Disposable.PostingContext(null!, context.Object)
@@ -324,7 +328,7 @@ public class DisposableTests
     [Fact]
     public void PostingContext_NullContext_ThrowsArgumentNullException()
     {
-        var item = new Mock<IDisposable>(MockBehavior.Strict);
+        var item = CreateStrictMock<IDisposable>();
 
         var exception = Assert.Throws<ArgumentNullException>(() =>
             Disposable.PostingContext(item.Object, null!)

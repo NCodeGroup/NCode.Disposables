@@ -3,12 +3,15 @@
 
 namespace NCode.Disposables.Tests;
 
-public class AsyncDisposableContextTests
+public class AsyncDisposableContextTests : UnitTestBase
 {
-    private static Mock<SynchronizationContext> CreateContext(List<string>? callOrder = null)
+    private Mock<SynchronizationContext> CreateContext(List<string>? callOrder = null)
     {
-        var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
-        context.Setup(x => x.OperationStarted()).Callback(() => callOrder?.Add("OperationStarted"));
+        var context = CreateStrictMock<SynchronizationContext>();
+        context
+            .Setup(x => x.OperationStarted())
+            .Callback(() => callOrder?.Add("OperationStarted"))
+            .Verifiable(Times.Once());
         context
             .Setup(x => x.Post(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
             .Callback(
@@ -17,10 +20,12 @@ public class AsyncDisposableContextTests
                     callOrder?.Add("Post");
                     c(s);
                 }
-            );
+            )
+            .Verifiable(Times.Once());
         context
             .Setup(x => x.OperationCompleted())
-            .Callback(() => callOrder?.Add("OperationCompleted"));
+            .Callback(() => callOrder?.Add("OperationCompleted"))
+            .Verifiable(Times.Once());
         return context;
     }
 
@@ -29,8 +34,8 @@ public class AsyncDisposableContextTests
     [Fact]
     public void Constructor_WithValidArguments_CreatesInstance()
     {
-        var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
-        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var context = CreateStrictMock<SynchronizationContext>();
+        var disposable = CreateStrictMock<IAsyncDisposable>();
 
         var result = new AsyncDisposableContext(disposable.Object, context.Object);
 
@@ -40,7 +45,7 @@ public class AsyncDisposableContextTests
     [Fact]
     public void Constructor_WithNullDisposable_ThrowsArgumentNullException()
     {
-        var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
+        var context = CreateStrictMock<SynchronizationContext>();
 
         var exception = Assert.Throws<ArgumentNullException>(() =>
             new AsyncDisposableContext(null!, context.Object)
@@ -52,7 +57,7 @@ public class AsyncDisposableContextTests
     [Fact]
     public void Constructor_WithNullContext_ThrowsArgumentNullException()
     {
-        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var disposable = CreateStrictMock<IAsyncDisposable>();
 
         var exception = Assert.Throws<ArgumentNullException>(() =>
             new AsyncDisposableContext(disposable.Object, null!)
@@ -70,14 +75,12 @@ public class AsyncDisposableContextTests
     {
         var context = CreateContext();
 
-        var item = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        item.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var item = CreateStrictMock<IAsyncDisposable>();
+        item.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask).Verifiable();
 
         var disposable = new AsyncDisposableContext(item.Object, context.Object);
 
         await disposable.DisposeAsync();
-
-        context.Verify(x => x.Post(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()), Times.Once);
     }
 
     [Fact]
@@ -85,14 +88,12 @@ public class AsyncDisposableContextTests
     {
         var context = CreateContext();
 
-        var item = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        item.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var item = CreateStrictMock<IAsyncDisposable>();
+        item.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask).Verifiable(Times.Once());
 
         var disposable = new AsyncDisposableContext(item.Object, context.Object);
 
         await disposable.DisposeAsync();
-
-        item.Verify(x => x.DisposeAsync(), Times.Once);
     }
 
     [Fact]
@@ -101,10 +102,11 @@ public class AsyncDisposableContextTests
         var callOrder = new List<string>();
         var context = CreateContext(callOrder);
 
-        var item = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var item = CreateStrictMock<IAsyncDisposable>();
         item.Setup(x => x.DisposeAsync())
             .Callback(() => callOrder.Add("DisposeAsync"))
-            .Returns(ValueTask.CompletedTask);
+            .Returns(ValueTask.CompletedTask)
+            .Verifiable();
 
         var disposable = new AsyncDisposableContext(item.Object, context.Object);
 
@@ -118,9 +120,10 @@ public class AsyncDisposableContextTests
     {
         var context = CreateContext();
 
-        var item = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var item = CreateStrictMock<IAsyncDisposable>();
         item.Setup(x => x.DisposeAsync())
-            .ThrowsAsync(new InvalidOperationException("Test exception"));
+            .ThrowsAsync(new InvalidOperationException("Test exception"))
+            .Verifiable();
 
         var disposable = new AsyncDisposableContext(item.Object, context.Object);
 
@@ -129,8 +132,6 @@ public class AsyncDisposableContextTests
         );
 
         Assert.Equal("Test exception", exception.Message);
-        context.Verify(x => x.OperationStarted(), Times.Once);
-        context.Verify(x => x.OperationCompleted(), Times.Once);
     }
 
     [Fact]
@@ -138,14 +139,15 @@ public class AsyncDisposableContextTests
     {
         const string message = "Post failed";
 
-        var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
-        context.Setup(x => x.OperationStarted());
-        context.Setup(x => x.OperationCompleted());
+        var context = CreateStrictMock<SynchronizationContext>();
+        context.Setup(x => x.OperationStarted()).Verifiable(Times.Once());
+        context.Setup(x => x.OperationCompleted()).Verifiable(Times.Once());
         context
             .Setup(x => x.Post(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
-            .Throws(new InvalidOperationException(message));
+            .Throws(new InvalidOperationException(message))
+            .Verifiable();
 
-        var item = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var item = CreateStrictMock<IAsyncDisposable>();
 
         var disposable = new AsyncDisposableContext(item.Object, context.Object);
 
@@ -154,8 +156,6 @@ public class AsyncDisposableContextTests
         );
 
         Assert.Equal(message, exception.Message);
-        context.Verify(x => x.OperationStarted(), Times.Once);
-        context.Verify(x => x.OperationCompleted(), Times.Once);
     }
 
     [Fact]
@@ -164,9 +164,9 @@ public class AsyncDisposableContextTests
         SendOrPostCallback? posted = null;
         object? postedState = null;
 
-        var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
-        context.Setup(x => x.OperationStarted());
-        context.Setup(x => x.OperationCompleted());
+        var context = CreateStrictMock<SynchronizationContext>();
+        context.Setup(x => x.OperationStarted()).Verifiable();
+        context.Setup(x => x.OperationCompleted()).Verifiable();
         context
             .Setup(x => x.Post(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
             .Callback(
@@ -175,10 +175,11 @@ public class AsyncDisposableContextTests
                     posted = c;
                     postedState = s;
                 }
-            );
+            )
+            .Verifiable();
 
-        var item = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        item.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var item = CreateStrictMock<IAsyncDisposable>();
+        item.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask).Verifiable(Times.Once());
 
         var disposable = new AsyncDisposableContext(item.Object, context.Object);
 
@@ -191,8 +192,6 @@ public class AsyncDisposableContextTests
         posted(postedState);
 
         await disposeTask;
-
-        item.Verify(x => x.DisposeAsync(), Times.Once);
     }
 
     [Fact]
@@ -200,16 +199,13 @@ public class AsyncDisposableContextTests
     {
         var context = CreateContext();
 
-        var item = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        item.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var item = CreateStrictMock<IAsyncDisposable>();
+        item.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask).Verifiable(Times.Once());
 
         var disposable = new AsyncDisposableContext(item.Object, context.Object);
 
         await disposable.DisposeAsync();
         await disposable.DisposeAsync();
-
-        context.Verify(x => x.Post(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()), Times.Once);
-        item.Verify(x => x.DisposeAsync(), Times.Once);
     }
 
     #endregion
@@ -219,8 +215,8 @@ public class AsyncDisposableContextTests
     [Fact]
     public void IsDisposed_BeforeDisposeAsync_ReturnsFalse()
     {
-        var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
-        var item = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var context = CreateStrictMock<SynchronizationContext>();
+        var item = CreateStrictMock<IAsyncDisposable>();
 
         var disposable = new AsyncDisposableContext(item.Object, context.Object);
 
@@ -232,8 +228,8 @@ public class AsyncDisposableContextTests
     {
         var context = CreateContext();
 
-        var item = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        item.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var item = CreateStrictMock<IAsyncDisposable>();
+        item.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask).Verifiable();
 
         var disposable = new AsyncDisposableContext(item.Object, context.Object);
 

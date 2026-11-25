@@ -3,7 +3,7 @@
 
 namespace NCode.Disposables.Tests;
 
-public class AsyncDisposableTests
+public class AsyncDisposableTests : UnitTestBase
 {
     #region Adapt Tests
 
@@ -70,8 +70,8 @@ public class AsyncDisposableTests
     [Fact]
     public async Task Serial_WithDisposable_HoldsIt()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
+        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask).Verifiable();
 
         await using var serial = AsyncDisposable.Serial(mockDisposable.Object);
 
@@ -99,8 +99,8 @@ public class AsyncDisposableTests
     [Fact]
     public async Task Guard_WithValue_ReturnsGuardOverValue()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
+        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask).Verifiable();
 
         await using var guard = AsyncDisposable.Guard(mockDisposable.Object);
 
@@ -160,8 +160,8 @@ public class AsyncDisposableTests
     [Fact]
     public async Task Context_WithDisposableAndContext_ReturnsContextDisposable()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
+        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask).Verifiable();
         var context = new SynchronizationContext();
 
         await using var contextDisposable = AsyncDisposable.Context(mockDisposable.Object, context);
@@ -172,7 +172,7 @@ public class AsyncDisposableTests
     [Fact]
     public void Context_NullContext_ThrowsArgumentNullException()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
 
         var exception = Assert.Throws<ArgumentNullException>(() =>
             AsyncDisposable.Context(mockDisposable.Object, null!)
