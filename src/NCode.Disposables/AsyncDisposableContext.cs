@@ -21,33 +21,25 @@ namespace NCode.Disposables;
 /// Thread-safety: Concurrent calls to <see cref="DisposeAsync"/> are handled safely using atomic operations.
 /// </para>
 /// </remarks>
-public sealed class AsyncDisposableContext : IAsyncDisposable, IDisposalStatus
+/// <param name="disposable">The underlying <see cref="IAsyncDisposable"/> instance to wrap.</param>
+/// <param name="context">The <see cref="SynchronizationContext"/> used to invoke the disposal operation.</param>
+/// <exception cref="ArgumentNullException"><paramref name="disposable"/> is <see langword="null"/>.</exception>
+/// <exception cref="ArgumentNullException"><paramref name="context"/> is <see langword="null"/>.</exception>
+public sealed class AsyncDisposableContext(
+    IAsyncDisposable disposable,
+    SynchronizationContext context
+) : IAsyncDisposable, IDisposalStatus
 {
-    private IAsyncDisposable? _disposable;
+    private IAsyncDisposable? _disposable = disposable
+        ?? throw new ArgumentNullException(nameof(disposable));
 
-    private SynchronizationContext Context { get; }
+    private SynchronizationContext Context { get; } =
+        context ?? throw new ArgumentNullException(nameof(context));
 
     /// <summary>
     /// Gets a value indicating whether <see cref="DisposeAsync"/> has been called at least once.
     /// </summary>
     public bool IsDisposed => Volatile.Read(ref _disposable) is null;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AsyncDisposableContext"/> class that wraps an
-    /// underlying <see cref="IAsyncDisposable"/> resource for disposal via a <see cref="SynchronizationContext"/>.
-    /// </summary>
-    /// <param name="disposable">The underlying <see cref="IAsyncDisposable"/> instance to wrap.</param>
-    /// <param name="context">The <see cref="SynchronizationContext"/> used to invoke the disposal operation.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="disposable"/> is <see langword="null"/>.</exception>
-    /// <exception cref="ArgumentNullException"><paramref name="context"/> is <see langword="null"/>.</exception>
-    public AsyncDisposableContext(IAsyncDisposable disposable, SynchronizationContext context)
-    {
-        ArgumentNullException.ThrowIfNull(disposable);
-        ArgumentNullException.ThrowIfNull(context);
-
-        _disposable = disposable;
-        Context = context;
-    }
 
     /// <inheritdoc />
     /// <remarks>
