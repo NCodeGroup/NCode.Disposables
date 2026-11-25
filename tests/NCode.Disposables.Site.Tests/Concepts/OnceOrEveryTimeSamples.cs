@@ -12,14 +12,31 @@ public class OnceOrEveryTimeSamples
     #region Classes Run Their Cleanup Once Samples
 
     [Fact]
-    public void SiteOnceOrEveryTimeThreadsSample_Runs()
+    public async Task SiteOnceOrEveryTimeThreadsSample_Runs()
     {
         // begin-snippet: SiteOnceOrEveryTimeThreads
         var calls = 0;
-        var cleanup = Disposable.Create(() => Interlocked.Increment(ref calls));
+        var running = new TaskCompletionSource(
+            TaskCreationOptions.RunContinuationsAsynchronously
+        );
+        using var finish = new ManualResetEventSlim();
+        var cleanup = Disposable.Create(() =>
+        {
+            Interlocked.Increment(ref calls);
+            running.SetResult(); // throws if the action ever runs twice
+            finish.Wait();
+        });
 
-        Parallel.For(0, 8, _ => cleanup.Dispose());
-        // calls == 1: one thread takes the action, the others find it taken
+        var first = Task.Run(cleanup.Dispose);
+        await running.Task; // one thread is inside the action
+
+        // seven more threads dispose it while the action runs: they find it taken
+        var others = Enumerable.Range(0, 7).Select(_ => Task.Run(cleanup.Dispose));
+        await Task.WhenAll(others);
+
+        finish.Set();
+        await first;
+        // calls == 1
         // end-snippet
 
         Assert.Equal(1, calls);
