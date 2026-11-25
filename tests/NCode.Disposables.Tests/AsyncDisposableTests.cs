@@ -45,7 +45,7 @@ public class AsyncDisposableTests
     #region SingleAssignment Tests
 
     [Fact]
-    public async Task SingleAssignment_ReturnsUnassigned()
+    public async Task SingleAssignment_WhenCalled_ReturnsUnassignedHolder()
     {
         await using var singleAssignment = AsyncDisposable.SingleAssignment();
 
@@ -59,7 +59,7 @@ public class AsyncDisposableTests
     #region Guard Tests
 
     [Fact]
-    public async Task Guard_ReturnsGuardOverValue()
+    public async Task Guard_WithValue_ReturnsGuardOverValue()
     {
         var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
         mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
@@ -74,7 +74,11 @@ public class AsyncDisposableTests
     [Fact]
     public void Guard_Null_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => AsyncDisposable.Guard<IAsyncDisposable>(null!));
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            AsyncDisposable.Guard<IAsyncDisposable>(null!)
+        );
+
+        Assert.Equal("value", exception.ParamName);
     }
 
     #endregion
@@ -104,7 +108,11 @@ public class AsyncDisposableTests
     [Fact]
     public void Cancellation_NullSource_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => AsyncDisposable.Cancellation(null!));
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            AsyncDisposable.Cancellation(null!)
+        );
+
+        Assert.Equal("source", exception.ParamName);
     }
 
     #endregion
@@ -112,7 +120,7 @@ public class AsyncDisposableTests
     #region Context Tests
 
     [Fact]
-    public async Task Context_ReturnsContextDisposable()
+    public async Task Context_WithDisposableAndContext_ReturnsContextDisposable()
     {
         var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
         mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
@@ -128,9 +136,11 @@ public class AsyncDisposableTests
     {
         var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
 
-        Assert.Throws<ArgumentNullException>(() =>
+        var exception = Assert.Throws<ArgumentNullException>(() =>
             AsyncDisposable.Context(mockDisposable.Object, null!)
         );
+
+        Assert.Equal("context", exception.ParamName);
     }
 
     #endregion
@@ -184,7 +194,11 @@ public class AsyncDisposableTests
     [Fact]
     public void Create_OneArgumentNullAction_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => AsyncDisposable.Create<int>(null!, 0));
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            AsyncDisposable.Create<int>(null!, 0)
+        );
+
+        Assert.Equal("action", exception.ParamName);
     }
 
     [Fact]
@@ -211,7 +225,7 @@ public class AsyncDisposableTests
     #region CreateValue Tests
 
     [Fact]
-    public async Task CreateValue_DisposeInvokesAction()
+    public async Task CreateValue_WhenDisposed_InvokesAction()
     {
         const int expectedState = 42;
         var actualState = 0;
@@ -232,7 +246,11 @@ public class AsyncDisposableTests
     [Fact]
     public void CreateValue_NullAction_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => AsyncDisposable.CreateValue<int>(null!, 0));
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            AsyncDisposable.CreateValue<int>(null!, 0)
+        );
+
+        Assert.Equal("action", exception.ParamName);
     }
 
     #endregion

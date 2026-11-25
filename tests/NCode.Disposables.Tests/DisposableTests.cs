@@ -45,7 +45,7 @@ public class DisposableTests
     #region SingleAssignment Tests
 
     [Fact]
-    public void SingleAssignment_ReturnsUnassigned()
+    public void SingleAssignment_WhenCalled_ReturnsUnassignedHolder()
     {
         using var singleAssignment = Disposable.SingleAssignment();
 
@@ -59,7 +59,7 @@ public class DisposableTests
     #region Guard Tests
 
     [Fact]
-    public void Guard_ReturnsGuardOverValue()
+    public void Guard_WithValue_ReturnsGuardOverValue()
     {
         var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
         mockDisposable.Setup(x => x.Dispose());
@@ -74,7 +74,11 @@ public class DisposableTests
     [Fact]
     public void Guard_Null_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => Disposable.Guard<IDisposable>(null!));
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            Disposable.Guard<IDisposable>(null!)
+        );
+
+        Assert.Equal("value", exception.ParamName);
     }
 
     #endregion
@@ -106,7 +110,7 @@ public class DisposableTests
     #region Flag Tests
 
     [Fact]
-    public void Flag_ReturnsUndisposedFlag()
+    public void Flag_WhenCalled_ReturnsUndisposedFlag()
     {
         var flag = Disposable.Flag();
 
@@ -118,7 +122,7 @@ public class DisposableTests
     #region CreateValue Tests
 
     [Fact]
-    public void CreateValue_DisposeInvokesAction()
+    public void CreateValue_WhenDisposed_InvokesAction()
     {
         const int expectedState = 42;
         var actualState = 0;
