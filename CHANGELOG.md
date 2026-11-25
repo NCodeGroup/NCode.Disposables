@@ -12,7 +12,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Breaking:** `AsyncDisposable.Adapt`, `AsyncDisposable.AdaptRepeatable` and the `AsyncDisposableAdapter` constructor throw `ArgumentNullException` for a `null` disposable instead of returning an adapter that disposes nothing; pass the resource to adapt. ([#76](https://github.com/NCodeGroup/NCode.Disposables/issues/76), [ADR-1008](docs/decisions/1008-a-disposable-that-wraps-a-resource-rejects-a-null-resource.md))
-- The tests' `UnitTestBase` keeps its `MockRepository` in a private property and takes a mock's constructor arguments as `params IEnumerable<object>`, as the C# conventions ask. ([#77](https://github.com/NCodeGroup/NCode.Disposables/issues/77))
 
 ### Removed
 
