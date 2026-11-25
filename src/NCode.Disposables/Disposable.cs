@@ -564,6 +564,11 @@ public static class Disposable
     /// When <paramref name="idempotent"/> is <see langword="false"/>, each call to <see cref="IDisposable.Dispose"/>
     /// will invoke the action. Use this with caution as it deviates from the standard dispose pattern.
     /// </remarks>
+    // ADR-1007: deleted in the next major version.
+    [Obsolete(
+        "Use Disposable.Create(action), or Disposable.CreateRepeatable to run the action on every call. This overload is deleted in the next major version.",
+        DiagnosticId = "NCDISP003"
+    )]
     public static DisposableAction Create(Action action, bool idempotent)
     {
         ArgumentNullException.ThrowIfNull(action);
