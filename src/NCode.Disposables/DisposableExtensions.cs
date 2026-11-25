@@ -187,6 +187,27 @@ public static class DisposableExtensions
         }
     }
 
+    /// <summary>
+    /// Disposes every item of <paramref name="collection"/> that implements <see cref="IDisposable"/>, in reverse order.
+    /// </summary>
+    /// <param name="collection">
+    /// The items to dispose; items that are <see langword="null"/> or implement neither interface are skipped.
+    /// </param>
+    /// <param name="ignoreExceptions">
+    /// <see langword="true"/> to ignore the exceptions items' <see cref="IDisposable.Dispose"/> throw;
+    /// <see langword="false"/> to collect them.
+    /// </param>
+    /// <remarks>
+    /// <para>
+    /// Every item is visited even after one throws. An item that implements only <see cref="IAsyncDisposable"/>
+    /// is not disposed and adds an <see cref="InvalidOperationException"/>, also when
+    /// <paramref name="ignoreExceptions"/> is <see langword="true"/>.
+    /// </para>
+    /// <para>
+    /// After the loop, one collected exception is rethrown with its original stack trace, and several are thrown
+    /// as an <see cref="AggregateException"/>.
+    /// </para>
+    /// </remarks>
     private static void DisposeAllCore(IEnumerable<object?> collection, bool ignoreExceptions)
     {
         List<Exception>? exceptions = null;

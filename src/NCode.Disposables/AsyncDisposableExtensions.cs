@@ -125,6 +125,26 @@ public static class AsyncDisposableExtensions
             DisposeAllAsyncCore(collection, ignoreExceptions);
     }
 
+    /// <summary>
+    /// Disposes every item of <paramref name="collection"/>, in reverse order, preferring
+    /// <see cref="IAsyncDisposable.DisposeAsync"/> over <see cref="IDisposable.Dispose"/>.
+    /// </summary>
+    /// <param name="collection">
+    /// The items to dispose; items that are <see langword="null"/> or implement neither interface are skipped.
+    /// </param>
+    /// <param name="ignoreExceptions">
+    /// <see langword="true"/> to ignore the exceptions items' disposal throws; <see langword="false"/> to collect them.
+    /// </param>
+    /// <returns>A task that completes when every item has been disposed.</returns>
+    /// <remarks>
+    /// <para>
+    /// Every item is visited even after one throws.
+    /// </para>
+    /// <para>
+    /// After the loop, one collected exception is rethrown with its original stack trace, and several are thrown
+    /// as an <see cref="AggregateException"/>.
+    /// </para>
+    /// </remarks>
     private static async ValueTask DisposeAllAsyncCore(
         IEnumerable<object?> collection,
         bool ignoreExceptions
