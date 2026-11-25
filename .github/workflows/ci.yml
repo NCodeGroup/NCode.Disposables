@@ -48,8 +48,8 @@ jobs:
             ${{ runner.os }}-nuget-
       - name: Check the decision index
         run: ./.template/Test-AdrIndex.ps1
-      # The gate checks the sample keys, the README samples and the API map (ADR-1000, ADR-1010), then runs the Definition of
-      # Done, which builds, tests and, for a library, packs, as build/dod.ps1 says.
+      # The gate checks the sample keys, the README samples and the API map (ADR-1000, ADR-1010), then runs the
+      # Definition of Done, which builds, tests and, for a library, packs, as build/dod.ps1 says.
       - name: Definition of Done
         if: hashFiles('**/*.csproj', '**/*.sln', '**/*.slnx') != ''
         run: ./build/gate.ps1
