@@ -87,42 +87,6 @@ public static class AsyncDisposableExtensions
         /// </remarks>
         public ValueTask DisposeAllIgnoringExceptionsAsync() =>
             DisposeAllAsyncCore(collection, ignoreExceptions: true);
-
-        /// <summary>
-        /// Disposes all items in a collection that implement <see cref="IAsyncDisposable"/> or <see cref="IDisposable"/>,
-        /// processing items in reverse order.
-        /// </summary>
-        /// <param name="ignoreExceptions">
-        /// <see langword="true"/> to suppress exceptions thrown by individual items during disposal and continue
-        /// disposing remaining items; <see langword="false"/> (the default) to collect and throw exceptions.
-        /// </param>
-        /// <returns>A <see cref="ValueTask"/> that represents the asynchronous dispose operation.</returns>
-        /// <remarks>
-        /// <para>
-        /// Items are disposed in reverse order (LIFO), which is typically appropriate for resource cleanup
-        /// scenarios where resources may have dependencies.
-        /// </para>
-        /// <para>
-        /// Items implementing <see cref="IAsyncDisposable"/> are disposed asynchronously via
-        /// <see cref="IAsyncDisposable.DisposeAsync"/>. Items implementing only <see cref="IDisposable"/>
-        /// are disposed synchronously via <see cref="IDisposable.Dispose"/>.
-        /// </para>
-        /// <para>
-        /// When <paramref name="ignoreExceptions"/> is <see langword="false"/> and multiple items throw exceptions,
-        /// an <see cref="AggregateException"/> containing all exceptions is thrown. If only one item throws,
-        /// that exception is rethrown directly with its original stack trace preserved.
-        /// </para>
-        /// </remarks>
-        /// <exception cref="AggregateException">
-        /// Multiple items threw exceptions during disposal and <paramref name="ignoreExceptions"/> is <see langword="false"/>.
-        /// </exception>
-        // ADR-1007: deleted in the next major version.
-        [Obsolete(
-            "Use DisposeAllAsync(), or DisposeAllIgnoringExceptionsAsync() to ignore the exceptions items throw. This overload is deleted in the next major version.",
-            DiagnosticId = "NCDISP003"
-        )]
-        public ValueTask DisposeAllAsync(bool ignoreExceptions = false) =>
-            DisposeAllAsyncCore(collection, ignoreExceptions);
     }
 
     /// <summary>

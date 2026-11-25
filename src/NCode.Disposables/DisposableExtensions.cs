@@ -141,50 +141,6 @@ public static class DisposableExtensions
         {
             DisposeAllCore(collection, ignoreExceptions: true);
         }
-
-        /// <summary>
-        /// Disposes all items in a collection that implement <see cref="IDisposable"/>, processing items in reverse order.
-        /// </summary>
-        /// <param name="ignoreExceptions">
-        /// <see langword="true"/> to suppress exceptions thrown by individual items during disposal and continue
-        /// disposing remaining items; <see langword="false"/> (the default) to collect and throw exceptions.
-        /// Note: The <see cref="InvalidOperationException"/> for an item that implements only
-        /// <see cref="IAsyncDisposable"/> is never ignored.
-        /// </param>
-        /// <remarks>
-        /// <para>
-        /// Items are disposed in reverse order (LIFO), which is typically appropriate for resource cleanup
-        /// scenarios where resources may have dependencies.
-        /// </para>
-        /// <para>
-        /// <b>Important:</b> An item that implements both <see cref="IDisposable"/> and <see cref="IAsyncDisposable"/>
-        /// is disposed through <see cref="IDisposable.Dispose"/>. An item that implements only
-        /// <see cref="IAsyncDisposable"/> is not disposed, and once the other items are disposed an
-        /// <see cref="InvalidOperationException"/> is thrown for it. Use
-        /// <c>DisposeAllAsync()</c> for such items.
-        /// </para>
-        /// <para>
-        /// When <paramref name="ignoreExceptions"/> is <see langword="false"/> and multiple items throw exceptions,
-        /// an <see cref="AggregateException"/> containing all exceptions is thrown. If only one item throws,
-        /// that exception is rethrown directly with its original stack trace preserved.
-        /// </para>
-        /// </remarks>
-        /// <exception cref="InvalidOperationException">
-        /// The collection contains an item that implements <see cref="IAsyncDisposable"/> but not
-        /// <see cref="IDisposable"/>.
-        /// </exception>
-        /// <exception cref="AggregateException">
-        /// Multiple items threw exceptions during disposal and <paramref name="ignoreExceptions"/> is <see langword="false"/>.
-        /// </exception>
-        // ADR-1007: deleted in the next major version.
-        [Obsolete(
-            "Use DisposeAll(), or DisposeAllIgnoringExceptions() to ignore the exceptions items throw. This overload is deleted in the next major version.",
-            DiagnosticId = "NCDISP003"
-        )]
-        public void DisposeAll(bool ignoreExceptions = false)
-        {
-            DisposeAllCore(collection, ignoreExceptions);
-        }
     }
 
     /// <summary>

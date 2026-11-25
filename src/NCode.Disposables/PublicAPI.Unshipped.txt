@@ -52,3 +52,7 @@ static NCode.Disposables.DisposableExtensions.DisposeAllIgnoringExceptions(this 
 *REMOVED*static NCode.Disposables.Disposable.Collection(System.Collections.Generic.IEnumerable<System.IDisposable!>! collection, bool ignoreExceptions = false) -> NCode.Disposables.DisposableCollection!
 *REMOVED*static NCode.Disposables.Disposable.Context(System.IDisposable! disposable, System.Threading.SynchronizationContext! context, bool async = false) -> NCode.Disposables.DisposableContext!
 *REMOVED*static NCode.Disposables.Disposable.Create(System.Action! action, bool idempotent) -> NCode.Disposables.DisposableAction!
+*REMOVED*NCode.Disposables.AsyncDisposableExtensions.extension(System.Collections.Generic.IEnumerable<object?>!).DisposeAllAsync(bool ignoreExceptions = false) -> System.Threading.Tasks.ValueTask
+*REMOVED*NCode.Disposables.DisposableExtensions.extension(System.Collections.Generic.IEnumerable<object?>!).DisposeAll(bool ignoreExceptions = false) -> void
+*REMOVED*static NCode.Disposables.AsyncDisposableExtensions.DisposeAllAsync(this System.Collections.Generic.IEnumerable<object?>! collection, bool ignoreExceptions = false) -> System.Threading.Tasks.ValueTask
+*REMOVED*static NCode.Disposables.DisposableExtensions.DisposeAll(this System.Collections.Generic.IEnumerable<object?>! collection, bool ignoreExceptions = false) -> void
