@@ -43,8 +43,6 @@ public static class AsyncSharedReference
     public static AsyncSharedReferenceLease<T> Create<T>(T value)
         where T : IAsyncDisposable
     {
-        ArgumentNullException.ThrowIfNull(value);
-
         return Create(value, DisposeAsync);
     }
 

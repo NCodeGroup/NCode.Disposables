@@ -43,8 +43,6 @@ public static class SharedReference
     public static SharedReferenceLease<T> Create<T>(T value)
         where T : IDisposable
     {
-        ArgumentNullException.ThrowIfNull(value);
-
         return Create(value, Dispose);
     }
 
