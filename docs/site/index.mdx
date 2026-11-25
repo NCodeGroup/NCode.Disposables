@@ -80,3 +80,76 @@ Each guide is one situation, its code and its pitfalls.
 
 </Card>
 </CardGrid>
+
+## One scope, many resources
+
+Three resources go into one collection, and one `Dispose` releases all of them.
+
+```cs snippet=SiteQuickStartMany
+```
+
+The drawing above is this sample; [hold a resource that changes](/guides/hold-a-changing-resource/) shows what each holder does with the resources it is given.
+
+## What it does. What it does not.
+
+<CardGrid>
+<Card title="It does">
+
+- Run each class's cleanup once, even when several threads dispose it, unless a member named `Repeatable` asks for
+  every call.
+- Dispose a collection's items in reverse order, every one even when one throws.
+- Dispose a resource handed to a holder that is already disposed.
+  [ADR-1004](https://github.com/NCodeGroup/NCode.Disposables/blob/main/docs/decisions/1004-a-resource-handed-to-a-disposed-holder-is-disposed.md)
+- Share one resource through reference-counted leases.
+- Dispose a resource on its `SynchronizationContext`.
+- Scope a `SemaphoreSlim` or `ReaderWriterLockSlim` lock in a struct that allocates nothing.
+
+</Card>
+<Card title="It does not">
+
+- Make a struct safe to dispose twice. A value disposable, a lock scope or a lease runs again on every dispose.
+  [Once, or on every call](/concepts/once-or-every-time/)
+- Dispose an item that is only `IAsyncDisposable` from synchronous code: `DisposeAll()` throws
+  `InvalidOperationException`.
+- Dispose anything you never dispose. No type has a finalizer.
+- Hide failures. The exceptions items throw reach you unless you choose a member named `IgnoringExceptions`.
+- Dispose a resource on the calling thread when its context refuses the work.
+
+</Card>
+</CardGrid>
+
+## Find your situation
+
+Each guide is one situation, its code and its pitfalls.
+
+<LandingSituations>
+- **I clean up after my own code, and I need to…**
+  - [run code when a scope ends](/guides/run-code-on-dispose/)
+  - [cancel work when a scope ends](/guides/cancel-on-dispose/)
+  - [release a lock when a scope ends](/guides/scope-a-lock/)
+- **I hold resources, and I need to…**
+  - [dispose many together](/guides/dispose-many-resources/)
+  - [replace one I keep in a field](/guides/hold-a-changing-resource/)
+  - [hand one on only when setup succeeds](/guides/hand-on-ownership/)
+  - [share one between several owners](/guides/share-a-resource/)
+  - [dispose one on a UI thread](/guides/dispose-on-a-context/)
+  - [pass one to code that only takes `IAsyncDisposable`](/guides/bridge-sync-and-async/)
+- **I review code that uses it, and I need to…**
+  - [know what runs once and what runs every time](/concepts/once-or-every-time/)
+  - [know what happens to a resource that arrives late](/concepts/disposal-status/)
+  - [see every type side by side](/reference/behavior/)
+</LandingSituations>
+
+Not sure which type you need? [Which disposable?](/start/which-disposable/) asks a few questions and names one.
+
+## In the package
+
+- One assembly, `NCode.Disposables`, with every type in the namespace `NCode.Disposables`. It has no dependencies,
+  performs no I/O, starts no threads and keeps no mutable static state.
+- The target framework is the one the project file declares, which the badge shows and
+  [nuget.org](https://www.nuget.org/packages/NCode.Disposables#supportedframeworks-body-tab) lists.
+- Every C# sample on this site is a test the pull request build compiles and runs.
+- The reasons behind the design are on record in
+  [docs/decisions](https://github.com/NCodeGroup/NCode.Disposables/tree/main/docs/decisions).
+- Apache License 2.0, copyright NCode Group. A vulnerability is reported privately, as the
+  [security policy](https://github.com/NCodeGroup/NCode.Disposables/blob/main/SECURITY.md) says.
