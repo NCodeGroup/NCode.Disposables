@@ -28,10 +28,19 @@ namespace NCode.Disposables;
 /// </remarks>
 public sealed class DisposableCancellation : IDisposable, IDisposalStatus
 {
+    /// <summary>
+    /// One once disposal has started, zero before.
+    /// </summary>
     private int _disposed;
 
+    /// <summary>
+    /// Gets the source that is cancelled on disposal.
+    /// </summary>
     private CancellationTokenSource Source { get; }
 
+    /// <summary>
+    /// Gets a value indicating whether this instance created <see cref="Source"/> and disposes it after cancelling it.
+    /// </summary>
     private bool OwnsSource { get; }
 
     /// <summary>
@@ -56,6 +65,12 @@ public sealed class DisposableCancellation : IDisposable, IDisposalStatus
     public DisposableCancellation(CancellationTokenSource source)
         : this(source, ownsSource: false) { }
 
+    /// <summary>
+    /// Initializes a new instance that cancels <paramref name="source"/> and, when <paramref name="ownsSource"/>
+    /// is <see langword="true"/>, disposes it.
+    /// </summary>
+    /// <param name="source">The <see cref="CancellationTokenSource"/> to cancel when <see cref="Dispose"/> is called.</param>
+    /// <param name="ownsSource"><see langword="true"/> to dispose <paramref name="source"/> after cancelling it; otherwise, <see langword="false"/>.</param>
     private DisposableCancellation(CancellationTokenSource source, bool ownsSource)
     {
         ArgumentNullException.ThrowIfNull(source);
