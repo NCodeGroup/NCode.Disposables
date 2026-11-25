@@ -67,6 +67,13 @@ NCode.Disposables.DisposableFlag
 NCode.Disposables.DisposableFlag.DisposableFlag() -> void
 NCode.Disposables.DisposableFlag.Dispose() -> void
 NCode.Disposables.DisposableFlag.IsDisposed.get -> bool
+NCode.Disposables.DisposableGuard<T>
+NCode.Disposables.DisposableGuard<T>.DisposableGuard(T value) -> void
+NCode.Disposables.DisposableGuard<T>.Dispose() -> void
+NCode.Disposables.DisposableGuard<T>.IsDisposed.get -> bool
+NCode.Disposables.DisposableGuard<T>.IsReleased.get -> bool
+NCode.Disposables.DisposableGuard<T>.Release() -> T
+NCode.Disposables.DisposableGuard<T>.Value.get -> T
 NCode.Disposables.DisposableSerial
 NCode.Disposables.DisposableSerial.Disposable.get -> System.IDisposable?
 NCode.Disposables.DisposableSerial.Disposable.set -> void
