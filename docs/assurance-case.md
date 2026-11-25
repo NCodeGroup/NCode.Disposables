@@ -92,6 +92,13 @@ privilege and open design."
 
 [//]: # "Maintainers: add the tests and the coverage the project keeps."
 
+- **Tests (R1–R6):** xUnit tests of every type, 676 in all, cover a second dispose (such as
+  `Dispose_Twice_DisposesOnce`), concurrent disposal and assignment from several threads (such as
+  `Dispose_ConcurrentCalls_DisposesOnlyOnce` and `Dispose_ConcurrentWithAdd_DisposesEveryItemOnce`), `null` arguments,
+  a resource handed to a disposed holder, and a context whose `Post` throws
+  (`Dispose_Posting_WhenPostThrows_CompletesOperationAndPropagatesException`). Measured on 2026-11-25, they cover
+  89.0% of the statements and 95.9% of the branches; the gate doesn't enforce a minimum. `publish.yml` runs them on
+  the tagged commit before each release.
 - **Gate:** `./build/gate.ps1` checks that the README samples match their compiled tests
   ([ADR-1000](decisions/1000-readme-samples-are-compiled-tests-that-markdownsnippets-copies-into-the-readmes.md)), then
   runs `./build/dod.ps1`, which builds in Release with warnings as errors
@@ -112,7 +119,7 @@ privilege and open design."
   ([ADR-0008](decisions/project-template/0008-external-inputs-are-pinned-and-kept-current.md)) that wait three days for
   a new version ([ADR-0009](decisions/project-template/0009-new-dependency-versions-wait-a-cooldown.md)). Dependabot proposes the updates. Central package management keeps one version of each package
   ([ADR-0101](decisions/project-template/0101-central-package-management.md)).
-- **Release integrity:** packages are deterministic and source-linked
+- **Release integrity (R7):** packages are deterministic and source-linked
   ([ADR-0130](decisions/project-template/0130-source-link-and-symbol-packages.md)). `publish.yml` builds them from a tagged commit the default branch holds and pushes them through
   nuget.org trusted publishing with no stored key, after a maintainer approves
   ([ADR-0135](decisions/project-template/0135-packages-are-published-from-a-github-release-through-trusted-publishing.md),
