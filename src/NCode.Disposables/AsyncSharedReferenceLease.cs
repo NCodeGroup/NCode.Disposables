@@ -80,7 +80,7 @@ public readonly struct AsyncSharedReferenceLease<T>(IAsyncSharedReferenceOwner<T
         // calling dispose multiple times. We can only check if the lease is active and release the reference.
         if (IsActive)
         {
-            await OwnerOrNull.ReleaseReferenceAsync();
+            await OwnerOrNull.ReleaseReferenceAsync().ConfigureAwait(false);
         }
     }
 }

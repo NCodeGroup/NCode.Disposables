@@ -166,7 +166,7 @@ public sealed class AsyncSharedReferenceOwner<T>(T value, Func<T, ValueTask> onR
             {
                 if (newCount == 0)
                 {
-                    await onRelease(value);
+                    await onRelease(value).ConfigureAwait(false);
                 }
 
                 return newCount;

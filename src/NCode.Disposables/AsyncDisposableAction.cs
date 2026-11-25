@@ -54,6 +54,6 @@ public sealed class AsyncDisposableAction : IAsyncDisposable
     {
         var action = _idempotent ? Interlocked.Exchange(ref _action, null) : _action;
         if (action is not null)
-            await action();
+            await action().ConfigureAwait(false);
     }
 }
