@@ -8,7 +8,7 @@ public class SemaphoreSlimExtensionsTests
     #region Lock Tests
 
     [Fact]
-    public void Lock_AcquiresSemaphore()
+    public void Lock_WhenSemaphoreIsAvailable_AcquiresIt()
     {
         using var semaphore = new SemaphoreSlim(1, 1);
 
@@ -44,7 +44,9 @@ public class SemaphoreSlimExtensionsTests
     {
         SemaphoreSlim semaphore = null!;
 
-        Assert.Throws<ArgumentNullException>(() => semaphore.Lock());
+        var exception = Assert.Throws<ArgumentNullException>(() => semaphore.Lock());
+
+        Assert.Equal("semaphore", exception.ParamName);
     }
 
     #endregion
@@ -52,7 +54,7 @@ public class SemaphoreSlimExtensionsTests
     #region LockAsync Tests
 
     [Fact]
-    public async Task LockAsync_AcquiresSemaphore()
+    public async Task LockAsync_WhenSemaphoreIsAvailable_AcquiresIt()
     {
         using var semaphore = new SemaphoreSlim(1, 1);
 

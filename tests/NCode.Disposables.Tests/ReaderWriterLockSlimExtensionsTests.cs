@@ -8,7 +8,7 @@ public class ReaderWriterLockSlimExtensionsTests
     #region ReadLock Tests
 
     [Fact]
-    public void ReadLock_EntersReadLock()
+    public void ReadLock_WhenLockIsFree_EntersReadLock()
     {
         using var readerWriterLock = new ReaderWriterLockSlim();
 
@@ -33,7 +33,9 @@ public class ReaderWriterLockSlimExtensionsTests
     {
         ReaderWriterLockSlim readerWriterLock = null!;
 
-        Assert.Throws<ArgumentNullException>(() => readerWriterLock.ReadLock());
+        var exception = Assert.Throws<ArgumentNullException>(() => readerWriterLock.ReadLock());
+
+        Assert.Equal("readerWriterLock", exception.ParamName);
     }
 
     #endregion
@@ -41,7 +43,7 @@ public class ReaderWriterLockSlimExtensionsTests
     #region UpgradeableReadLock Tests
 
     [Fact]
-    public void UpgradeableReadLock_EntersUpgradeableReadLock()
+    public void UpgradeableReadLock_WhenLockIsFree_EntersUpgradeableReadLock()
     {
         using var readerWriterLock = new ReaderWriterLockSlim();
 
@@ -51,7 +53,7 @@ public class ReaderWriterLockSlimExtensionsTests
     }
 
     [Fact]
-    public void UpgradeableReadLock_AllowsNestedWriteLock()
+    public void UpgradeableReadLock_WhenHeld_AllowsNestedWriteLock()
     {
         using var readerWriterLock = new ReaderWriterLockSlim();
         using var upgradeable = readerWriterLock.UpgradeableReadLock();
@@ -66,7 +68,7 @@ public class ReaderWriterLockSlimExtensionsTests
     #region WriteLock Tests
 
     [Fact]
-    public void WriteLock_EntersWriteLock()
+    public void WriteLock_WhenLockIsFree_EntersWriteLock()
     {
         using var readerWriterLock = new ReaderWriterLockSlim();
 
