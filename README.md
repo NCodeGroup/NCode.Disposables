@@ -559,13 +559,13 @@ await items.DisposeAllAsync(); // DisposeAsync for the stream, then Dispose for 
 | --- | --- |
 | `DisposableEmpty`, `AsyncDisposableEmpty` | Do nothing; `Singleton` is the instance `Empty` returns |
 | `DisposableAction`, `AsyncDisposableAction` | Run a delegate on dispose, once, or on every dispose from `CreateRepeatable` |
-| `DisposableAggregate`, `AsyncDisposableAggregate` | Hold one replaceable resource; the obsolete `IDisposableAggregate` and `IAsyncDisposableAggregate` |
+| `DisposableAggregate`, `AsyncDisposableAggregate` | Hold one replaceable resource |
 | `DisposableSerial`, `AsyncDisposableSerial` | Hold one resource and dispose the previous one when it is replaced |
 | `DisposableSingleAssignment`, `AsyncDisposableSingleAssignment` | Take one resource, once |
 | `DisposableGuard<T>`, `AsyncDisposableGuard<T>` | Dispose a resource unless `Release()` hands ownership on |
 | `DisposableCancellation`, `AsyncDisposableCancellation` | Cancel a token on dispose |
 | `DisposableFlag` | Only records that it was disposed |
-| `DisposableCollection`, `AsyncDisposableCollection` | Dispose their items in reverse order; the obsolete `IDisposableCollection` and `IAsyncDisposableCollection` |
+| `DisposableCollection`, `AsyncDisposableCollection` | Dispose their items in reverse order |
 | `DisposableContext` | Disposes a resource on a `SynchronizationContext` |
 | `AsyncDisposableContext` | Posts the async disposal of a resource to a `SynchronizationContext` |
 | `ValueDisposable<TState>`, `AsyncValueDisposable<TState>` | An allocation-free struct that runs a static delegate with its state on every dispose |
@@ -582,8 +582,6 @@ await items.DisposeAllAsync(); // DisposeAsync for the stream, then Dispose for 
 | `AsyncDisposableExtensions` | `AsAsyncSharedReference()`, `DisposeAllAsync()` and `DisposeAllIgnoringExceptionsAsync()` |
 | `SemaphoreSlimExtensions` | `Lock()` and `LockAsync()` |
 | `ReaderWriterLockSlimExtensions` | `ReadLock()`, `UpgradeableReadLock()` and `WriteLock()` |
-
-The `bool` overloads that pick a behavior (`idempotent`, `async`, `ignoreExceptions`) are obsolete (`NCDISP003`) and are deleted in the next major version.
 
 ## Thread safety
 

@@ -700,16 +700,6 @@ public class AsyncDisposableCollectionTests : UnitTestBase
 
     #region Interface Tests
 
-#pragma warning disable NCDISP002 // implements the deprecated interface until it is deleted
-    [Fact]
-    public void ImplementsIAsyncDisposableCollection()
-    {
-        var collection = new AsyncDisposableCollection();
-
-        Assert.IsAssignableFrom<IAsyncDisposableCollection>(collection);
-    }
-#pragma warning restore NCDISP002
-
     [Fact]
     public void ImplementsIAsyncDisposable()
     {
@@ -725,105 +715,6 @@ public class AsyncDisposableCollectionTests : UnitTestBase
 
         Assert.IsAssignableFrom<ICollection<IAsyncDisposable>>(collection);
     }
-
-    #endregion
-
-    #region Deprecated Overload Tests
-
-#pragma warning disable NCDISP003 // tests the deprecated overloads until they are deleted
-
-    [Fact]
-    public void Constructor_WithIgnoreExceptionsFalse_CreatesEmptyCollection()
-    {
-        var collection = new AsyncDisposableCollection(ignoreExceptions: false);
-
-        Assert.Empty(collection);
-    }
-
-    [Fact]
-    public void Constructor_WithIgnoreExceptionsTrue_CreatesEmptyCollection()
-    {
-        var collection = new AsyncDisposableCollection(ignoreExceptions: true);
-
-        Assert.Empty(collection);
-    }
-
-    [Fact]
-    public async Task Constructor_WithIgnoreExceptionsTrue_IgnoresItemExceptions()
-    {
-        var disposeCount = 0;
-        var collection = new AsyncDisposableCollection(ignoreExceptions: true);
-        collection.Add(
-            new TestAsyncDisposable(() =>
-            {
-                Interlocked.Increment(ref disposeCount);
-                return ValueTask.CompletedTask;
-            })
-        );
-        collection.Add(
-            new TestAsyncDisposable(() =>
-            {
-                Interlocked.Increment(ref disposeCount);
-                throw new InvalidOperationException("Test exception");
-            })
-        );
-
-        await collection.DisposeAsync();
-
-        Assert.Equal(2, disposeCount);
-        Assert.Empty(collection);
-    }
-
-    [Fact]
-    public async Task Collection_WithIgnoreExceptionsTrue_IgnoresItemExceptions()
-    {
-        var disposeCount = 0;
-        var collection = AsyncDisposable.Collection(
-            true,
-            new TestAsyncDisposable(() =>
-            {
-                Interlocked.Increment(ref disposeCount);
-                return ValueTask.CompletedTask;
-            }),
-            new TestAsyncDisposable(() =>
-            {
-                Interlocked.Increment(ref disposeCount);
-                throw new InvalidOperationException("Test exception");
-            })
-        );
-
-        await collection.DisposeAsync();
-
-        Assert.Equal(2, disposeCount);
-        Assert.Empty(collection);
-    }
-
-    [Fact]
-    public async Task Collection_WithEnumerableAndIgnoreExceptionsTrue_IgnoresItemExceptions()
-    {
-        var disposeCount = 0;
-        IAsyncDisposable[] items =
-        [
-            new TestAsyncDisposable(() =>
-            {
-                Interlocked.Increment(ref disposeCount);
-                return ValueTask.CompletedTask;
-            }),
-            new TestAsyncDisposable(() =>
-            {
-                Interlocked.Increment(ref disposeCount);
-                throw new InvalidOperationException("Test exception");
-            }),
-        ];
-        var collection = AsyncDisposable.Collection(items, true);
-
-        await collection.DisposeAsync();
-
-        Assert.Equal(2, disposeCount);
-        Assert.Empty(collection);
-    }
-
-#pragma warning restore NCDISP003
 
     #endregion
 

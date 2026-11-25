@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [8.0.0] - 2026-11-24
+
+### Changed
+
+- **Breaking:** `AsyncDisposable.Adapt`, `AsyncDisposable.AdaptRepeatable` and the `AsyncDisposableAdapter` constructor throw `ArgumentNullException` for a `null` disposable instead of returning an adapter that disposes nothing; pass the resource to adapt. ([#76](https://github.com/NCodeGroup/NCode.Disposables/issues/76), [ADR-1008](docs/decisions/1008-a-disposable-that-wraps-a-resource-rejects-a-null-resource.md))
+
+### Removed
+
+- **Breaking:** `IDisposableAggregate`, `IAsyncDisposableAggregate`, `IDisposableCollection` and `IAsyncDisposableCollection`, obsolete since 7.0.0 (`NCDISP002`), are deleted: use `DisposableAggregate`, `AsyncDisposableAggregate`, `DisposableCollection` and `AsyncDisposableCollection`, which the factories return. ([#69](https://github.com/NCodeGroup/NCode.Disposables/issues/69), [ADR-1005](docs/decisions/1005-disposables-are-concrete-sealed-types-that-report-their-disposal-status.md))
+- **Breaking:** The 19 members whose `bool` picks a behavior, obsolete since 7.1.0 (`NCDISP003`), are deleted: `idempotent` on `Disposable.Create`, `AsyncDisposable.Create`, `AsyncDisposable.Adapt` and the `DisposableAction`, `AsyncDisposableAction` and `AsyncDisposableAdapter` constructors, `async` on `Disposable.Context` and the `DisposableContext` constructor, and `ignoreExceptions` on `Disposable.Collection`, `AsyncDisposable.Collection`, the `DisposableCollection` and `AsyncDisposableCollection` constructors, `DisposeAll` and `DisposeAllAsync`. Call the overload without the flag for the default behavior, or `CreateRepeatable`, `AdaptRepeatable`, `PostingContext`, `CollectionIgnoringExceptions`, `DisposeAllIgnoringExceptions()` or `DisposeAllIgnoringExceptionsAsync()` for the other one. ([#75](https://github.com/NCodeGroup/NCode.Disposables/issues/75), [ADR-1007](docs/decisions/1007-behavior-is-chosen-by-a-factory-name-not-a-flag-parameter.md))
+
 ## [7.1.0] - 2026-11-24
 
 ### Added
@@ -209,7 +220,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release for .NET Framework 4.5.1: `IDisposable` implementations for common resource management patterns, such as actions, aggregates, collections and shared references.
 
-[Unreleased]: https://github.com/NCodeGroup/NCode.Disposables/compare/v7.1.0...HEAD
+[Unreleased]: https://github.com/NCodeGroup/NCode.Disposables/compare/v8.0.0...HEAD
+[8.0.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v7.1.0...v8.0.0
 [7.1.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v7.0.0...v7.1.0
 [7.0.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v6.0.0...v7.0.0
 [6.0.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v5.3.0...v6.0.0

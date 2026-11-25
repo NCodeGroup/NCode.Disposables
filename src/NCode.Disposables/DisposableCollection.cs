@@ -26,9 +26,7 @@ namespace NCode.Disposables;
 /// <see cref="Add"/> after the collection is disposed disposes the added item instead of storing it.
 /// </para>
 /// </remarks>
-#pragma warning disable NCDISP002 // implements the deprecated interface until it is deleted
-public sealed class DisposableCollection : IDisposableCollection, IDisposalStatus
-#pragma warning restore NCDISP002
+public sealed class DisposableCollection : IDisposable, ICollection<IDisposable>, IDisposalStatus
 {
     private int _disposed;
     private readonly List<IDisposable> _list;
@@ -62,48 +60,6 @@ public sealed class DisposableCollection : IDisposableCollection, IDisposalStatu
         ArgumentNullException.ThrowIfNull(collection);
 
         _list = [.. collection];
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DisposableCollection"/> class with an empty collection.
-    /// </summary>
-    /// <param name="ignoreExceptions">
-    /// <see langword="true"/> to suppress exceptions thrown by individual items during disposal and continue
-    /// disposing remaining items; <see langword="false"/> (the default) to propagate exceptions.
-    /// </param>
-    // Callers that pass nothing bind to the constructor without the flag, so this one keeps its default until it is deleted.
-    // ADR-1007: deleted in the next major version.
-    [Obsolete(
-        "Use new DisposableCollection(), or Disposable.CollectionIgnoringExceptions to ignore the exceptions items throw. This constructor is deleted in the next major version.",
-        DiagnosticId = "NCDISP003"
-    )]
-#pragma warning disable RS0027 // optional parameter on an overload with fewer parameters than another
-    public DisposableCollection(bool ignoreExceptions = false)
-#pragma warning restore RS0027
-        : this()
-    {
-        IgnoresExceptions = ignoreExceptions;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DisposableCollection"/> class with elements
-    /// copied from the specified collection.
-    /// </summary>
-    /// <param name="collection">The collection whose elements are copied to the new collection.</param>
-    /// <param name="ignoreExceptions">
-    /// <see langword="true"/> to suppress exceptions thrown by individual items during disposal and continue
-    /// disposing remaining items; <see langword="false"/> (the default) to propagate exceptions.
-    /// </param>
-    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
-    // ADR-1007: deleted in the next major version.
-    [Obsolete(
-        "Use new DisposableCollection(collection), or Disposable.CollectionIgnoringExceptions to ignore the exceptions items throw. This constructor is deleted in the next major version.",
-        DiagnosticId = "NCDISP003"
-    )]
-    public DisposableCollection(IEnumerable<IDisposable> collection, bool ignoreExceptions = false)
-        : this(collection)
-    {
-        IgnoresExceptions = ignoreExceptions;
     }
 
     /// <inheritdoc />

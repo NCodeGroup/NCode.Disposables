@@ -22,6 +22,14 @@ public class AsyncDisposableTests : UnitTestBase
         Assert.True(adapter.IsDisposed);
     }
 
+    [Fact]
+    public void Adapt_NullDisposable_ThrowsArgumentNullException()
+    {
+        var exception = Assert.Throws<ArgumentNullException>(() => AsyncDisposable.Adapt(null!));
+
+        Assert.Equal("disposable", exception.ParamName);
+    }
+
     #endregion
 
     #region AdaptRepeatable Tests
@@ -39,6 +47,16 @@ public class AsyncDisposableTests : UnitTestBase
 
         Assert.Equal(3, count);
         Assert.True(adapter.IsDisposed);
+    }
+
+    [Fact]
+    public void AdaptRepeatable_NullDisposable_ThrowsArgumentNullException()
+    {
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            AsyncDisposable.AdaptRepeatable(null!)
+        );
+
+        Assert.Equal("disposable", exception.ParamName);
     }
 
     #endregion

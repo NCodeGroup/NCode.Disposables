@@ -21,10 +21,22 @@ namespace NCode.Disposables;
 /// Thread-safety: Concurrent calls to <see cref="Dispose"/> are handled safely using atomic operations.
 /// </para>
 /// </remarks>
-public sealed class DisposableContext : IDisposable, IDisposalStatus
+/// <param name="disposable">The underlying <see cref="IDisposable"/> instance to wrap.</param>
+/// <param name="context">The <see cref="SynchronizationContext"/> used to invoke the disposal operation.</param>
+/// <exception cref="ArgumentNullException"><paramref name="disposable"/> is <see langword="null"/>.</exception>
+/// <exception cref="ArgumentNullException"><paramref name="context"/> is <see langword="null"/>.</exception>
+public sealed class DisposableContext(IDisposable disposable, SynchronizationContext context)
+    : IDisposable,
+        IDisposalStatus
 {
-    private IDisposable? _disposable;
-    private readonly SynchronizationContext _context;
+    private IDisposable? _disposable = disposable
+        ?? throw new ArgumentNullException(nameof(disposable));
+
+    /// <summary>
+    /// Gets the context the disposal is sent or posted to.
+    /// </summary>
+    private SynchronizationContext Context { get; } =
+        context ?? throw new ArgumentNullException(nameof(context));
 
     /// <summary>
     /// Gets a value indicating whether <see cref="Dispose"/> posts the disposal to the context
@@ -36,56 +48,6 @@ public sealed class DisposableContext : IDisposable, IDisposalStatus
     /// Gets a value indicating whether <see cref="Dispose"/> has been called at least once.
     /// </summary>
     public bool IsDisposed => Volatile.Read(ref _disposable) is null;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DisposableContext"/> class that wraps an
-    /// underlying <see cref="IDisposable"/> resource for disposal via a <see cref="SynchronizationContext"/>,
-    /// which is invoked synchronously via <see cref="SynchronizationContext.Send"/>.
-    /// </summary>
-    /// <param name="disposable">The underlying <see cref="IDisposable"/> instance to wrap.</param>
-    /// <param name="context">The <see cref="SynchronizationContext"/> used to invoke the disposal operation.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="disposable"/> is <see langword="null"/>.</exception>
-    /// <exception cref="ArgumentNullException"><paramref name="context"/> is <see langword="null"/>.</exception>
-    public DisposableContext(IDisposable disposable, SynchronizationContext context)
-    {
-        ArgumentNullException.ThrowIfNull(disposable);
-        ArgumentNullException.ThrowIfNull(context);
-
-        _disposable = disposable;
-        _context = context;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DisposableContext"/> class that wraps an
-    /// underlying <see cref="IDisposable"/> resource for disposal via a <see cref="SynchronizationContext"/>.
-    /// </summary>
-    /// <param name="disposable">The underlying <see cref="IDisposable"/> instance to wrap.</param>
-    /// <param name="context">The <see cref="SynchronizationContext"/> used to invoke the disposal operation.</param>
-    /// <param name="async">
-    /// <see langword="true"/> to invoke disposal asynchronously via <see cref="SynchronizationContext.Post"/>;
-    /// <see langword="false"/> (the default) to invoke disposal synchronously via <see cref="SynchronizationContext.Send"/>.
-    /// </param>
-    /// <exception cref="ArgumentNullException"><paramref name="disposable"/> is <see langword="null"/>.</exception>
-    /// <exception cref="ArgumentNullException"><paramref name="context"/> is <see langword="null"/>.</exception>
-    /// <remarks>
-    /// When <paramref name="async"/> is <see langword="true"/>, the disposal uses
-    /// <see cref="SynchronizationContext.OperationStarted"/> and <see cref="SynchronizationContext.OperationCompleted"/>
-    /// to properly track the asynchronous operation.
-    /// </remarks>
-    // ADR-1007: deleted in the next major version.
-    [Obsolete(
-        "Use new DisposableContext(disposable, context) to dispose through Send, or Disposable.PostingContext to dispose through Post. This constructor is deleted in the next major version.",
-        DiagnosticId = "NCDISP003"
-    )]
-    public DisposableContext(
-        IDisposable disposable,
-        SynchronizationContext context,
-        bool async = false
-    )
-        : this(disposable, context)
-    {
-        IsPosting = async;
-    }
 
     /// <inheritdoc />
     /// <remarks>
@@ -113,10 +75,10 @@ public sealed class DisposableContext : IDisposable, IDisposalStatus
         if (IsPosting)
         {
             var callbackStarted = false;
-            _context.OperationStarted();
+            Context.OperationStarted();
             try
             {
-                _context.Post(
+                Context.Post(
                     _ =>
                     {
                         Volatile.Write(ref callbackStarted, true);
@@ -128,13 +90,13 @@ public sealed class DisposableContext : IDisposable, IDisposalStatus
             catch when (!Volatile.Read(ref callbackStarted))
             {
                 // The context refused the callback, so the operation it was told about ends here.
-                _context.OperationCompleted();
+                Context.OperationCompleted();
                 throw;
             }
         }
         else
         {
-            _context.Send(SynchronousCallback, disposable);
+            Context.Send(SynchronousCallback, disposable);
         }
     }
 
@@ -152,7 +114,7 @@ public sealed class DisposableContext : IDisposable, IDisposalStatus
         }
         finally
         {
-            _context.OperationCompleted();
+            Context.OperationCompleted();
         }
     }
 }

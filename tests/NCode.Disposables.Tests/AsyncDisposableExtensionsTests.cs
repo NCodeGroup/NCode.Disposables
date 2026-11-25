@@ -408,55 +408,6 @@ public sealed class AsyncDisposableExtensionsTests : UnitTestBase
 
     #endregion
 
-    #region Deprecated Overload Tests
-
-#pragma warning disable NCDISP003 // tests the deprecated overloads until they are deleted
-
-    [Fact]
-    public async Task DisposeAllAsync_WithIgnoreExceptionsTrue_IgnoresFailures()
-    {
-        var log = new List<string>();
-        var collection = new[]
-        {
-            AsyncDisposable.Create(() =>
-            {
-                log.Add("first");
-                return ValueTask.CompletedTask;
-            }),
-            AsyncDisposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
-        };
-
-        await collection.DisposeAllAsync(ignoreExceptions: true);
-
-        Assert.Equal(["first"], log);
-    }
-
-    [Fact]
-    public async Task DisposeAllAsync_WithIgnoreExceptionsFalse_RethrowsFailure()
-    {
-        var log = new List<string>();
-        var collection = new[]
-        {
-            AsyncDisposable.Create(() =>
-            {
-                log.Add("first");
-                return ValueTask.CompletedTask;
-            }),
-            AsyncDisposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
-        };
-
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
-            await collection.DisposeAllAsync(ignoreExceptions: false)
-        );
-
-        Assert.Equal("Dispose failed.", exception.Message);
-        Assert.Equal(["first"], log);
-    }
-
-#pragma warning restore NCDISP003
-
-    #endregion
-
     private sealed class DualDisposable : IDisposable, IAsyncDisposable
     {
         public bool DisposeCalled { get; private set; }

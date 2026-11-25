@@ -22,9 +22,14 @@ namespace NCode.Disposables;
 /// are handled safely using atomic operations.
 /// </para>
 /// </remarks>
-public sealed class AsyncDisposableAdapter : IAsyncDisposable, IDisposalStatus
+/// <param name="disposable">The underlying <see cref="IDisposable"/> instance to adapt.</param>
+/// <exception cref="ArgumentNullException"><paramref name="disposable"/> is <see langword="null"/>.</exception>
+public sealed class AsyncDisposableAdapter(IDisposable disposable)
+    : IAsyncDisposable,
+        IDisposalStatus
 {
-    private IDisposable? _disposable;
+    private IDisposable? _disposable = disposable
+        ?? throw new ArgumentNullException(nameof(disposable));
 
     /// <summary>
     /// Holds 1 after disposal has been requested and 0 before; <see cref="IsDisposed"/> reads it.
@@ -36,39 +41,6 @@ public sealed class AsyncDisposableAdapter : IAsyncDisposable, IDisposalStatus
     /// instead of only the first.
     /// </summary>
     internal bool IsRepeatable { get; init; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AsyncDisposableAdapter"/> class that wraps the specified
-    /// <see cref="IDisposable"/>, which is disposed only once.
-    /// </summary>
-    /// <param name="disposable">The underlying <see cref="IDisposable"/> instance to adapt.</param>
-    public AsyncDisposableAdapter(IDisposable disposable)
-    {
-        _disposable = disposable;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AsyncDisposableAdapter"/> class that wraps the specified
-    /// <see cref="IDisposable"/> with the specified idempotency setting.
-    /// </summary>
-    /// <param name="disposable">The underlying <see cref="IDisposable"/> instance to adapt.</param>
-    /// <param name="idempotent">
-    /// <see langword="true"/> (the default) to ensure multiple calls to <see cref="DisposeAsync"/>
-    /// will only dispose the underlying instance once; <see langword="false"/> to allow multiple disposals.
-    /// </param>
-    // Callers that pass only the disposable bind to the constructor without the flag, so this one keeps its default until it is deleted.
-    // ADR-1007: deleted in the next major version.
-    [Obsolete(
-        "Use new AsyncDisposableAdapter(disposable), or AsyncDisposable.AdaptRepeatable to dispose it on every call. This constructor is deleted in the next major version.",
-        DiagnosticId = "NCDISP003"
-    )]
-#pragma warning disable RS0027 // optional parameter on an overload with fewer parameters than another
-    public AsyncDisposableAdapter(IDisposable disposable, bool idempotent = true)
-#pragma warning restore RS0027
-        : this(disposable)
-    {
-        IsRepeatable = !idempotent;
-    }
 
     /// <summary>
     /// Gets a value indicating whether <see cref="DisposeAsync"/> has been called at least once.
