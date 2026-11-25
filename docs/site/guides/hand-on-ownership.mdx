@@ -1,0 +1,50 @@
+---
+title: Hand on ownership without leaking
+description: Build a resource in steps and hand it to the caller only when every step succeeds, so a failure never leaks it.
+---
+
+import { Pitfalls } from '@ncodegroup/docs/components';
+
+A method that opens a connection, then performs a handshake, owns the connection until it returns it. If a step in between throws, nobody else knows the connection exists, so it leaks. This page shows how to guard what you build, guard an asynchronous resource, check where ownership is, and what to watch for.
+
+## Guard what you build
+
+`Disposable.Guard` wraps a resource in a guard. The guard disposes the value when its scope ends, unless `Release()` returned the value first. Call `Release()` as the last step, and the caller becomes the owner.
+
+```cs snippet=GuardDisposable
+```
+
+## Guard an asynchronous resource
+
+`AsyncDisposable.Guard` does the same for an `IAsyncDisposable`: write `await using var guard`, and a failure disposes the value asynchronously.
+
+```cs snippet=SiteHandOnOwnershipAsync
+```
+
+## Check where ownership is
+
+`IsReleased` is true once `Release()` succeeded, and `IsDisposed` is true once the guard was disposed. `Value` is the guarded value either way.
+
+## Pitfalls
+
+A guard releases ownership once:
+
+```cs snippet=SiteHandOnOwnershipReleaseTwice
+```
+
+<Pitfalls>
+
+- **Releasing twice.**
+  - *You write* `guard.Release()` a second time.
+  - *What happens:* `InvalidOperationException`.
+  - *Write instead:* release once, as the last step.
+- **Releasing after the scope ended.**
+  - *You write* `guard.Release()` after the `using` block.
+  - *What happens:* `ObjectDisposedException`: the guard already disposed the value.
+  - *Write instead:* call `Release()` inside the scope.
+- **Returning `guard.Value`.**
+  - *You write* `return guard.Value;`.
+  - *What happens:* the guard still owns the value and disposes it as the scope ends, so the caller gets a disposed resource.
+  - *Write instead:* `return guard.Release();`.
+
+</Pitfalls>
