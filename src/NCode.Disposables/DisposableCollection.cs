@@ -99,7 +99,9 @@ public sealed class DisposableCollection : IDisposableCollection, IDisposalStatu
         items.DisposeAll(_ignoreExceptions);
     }
 
-    /// <summary>Gets a value indicating whether <see cref="Dispose"/> has been called at least once.</summary>
+    /// <summary>
+    /// Gets a value indicating whether <see cref="Dispose"/> has been called at least once.
+    /// </summary>
     public bool IsDisposed => Volatile.Read(ref _disposed) != 0;
 
     /// <summary>

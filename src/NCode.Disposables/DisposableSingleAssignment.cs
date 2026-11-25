@@ -32,10 +32,14 @@ public sealed class DisposableSingleAssignment : IDisposable, IDisposalStatus
     private int _assigned;
     private IDisposable? _disposable;
 
-    /// <summary>Gets a value indicating whether <see cref="Dispose"/> has been called at least once.</summary>
+    /// <summary>
+    /// Gets a value indicating whether <see cref="Dispose"/> has been called at least once.
+    /// </summary>
     public bool IsDisposed => ReferenceEquals(Volatile.Read(ref _disposable), Sentinel);
 
-    /// <summary>Gets a value indicating whether a disposable has been assigned.</summary>
+    /// <summary>
+    /// Gets a value indicating whether a disposable has been assigned.
+    /// </summary>
     public bool IsAssigned => Volatile.Read(ref _assigned) != 0;
 
     /// <inheritdoc />

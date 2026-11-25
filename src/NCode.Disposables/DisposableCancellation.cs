@@ -65,7 +65,9 @@ public sealed class DisposableCancellation : IDisposable, IDisposalStatus
         Token = source.Token;
     }
 
-    /// <summary>Gets a value indicating whether <see cref="Dispose"/> has been called at least once.</summary>
+    /// <summary>
+    /// Gets a value indicating whether <see cref="Dispose"/> has been called at least once.
+    /// </summary>
     public bool IsDisposed => Volatile.Read(ref _disposed) != 0;
 
     /// <inheritdoc />

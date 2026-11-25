@@ -32,7 +32,9 @@ public sealed class AsyncDisposableAggregate : IAsyncDisposableAggregate, IDispo
     private static readonly IAsyncDisposable Sentinel = new AsyncDisposableEmpty();
     private IAsyncDisposable? _disposable;
 
-    /// <summary>Gets a value indicating whether <see cref="DisposeAsync"/> has been called at least once.</summary>
+    /// <summary>
+    /// Gets a value indicating whether <see cref="DisposeAsync"/> has been called at least once.
+    /// </summary>
     public bool IsDisposed => ReferenceEquals(Volatile.Read(ref _disposable), Sentinel);
 
     /// <summary>

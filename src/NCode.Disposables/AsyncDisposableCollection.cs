@@ -99,7 +99,9 @@ public sealed class AsyncDisposableCollection : IAsyncDisposableCollection, IDis
         await items.DisposeAllAsync(_ignoreExceptions).ConfigureAwait(false);
     }
 
-    /// <summary>Gets a value indicating whether <see cref="DisposeAsync"/> has been called at least once.</summary>
+    /// <summary>
+    /// Gets a value indicating whether <see cref="DisposeAsync"/> has been called at least once.
+    /// </summary>
     public bool IsDisposed => Volatile.Read(ref _disposed) != 0;
 
     /// <summary>

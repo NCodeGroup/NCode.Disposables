@@ -30,10 +30,14 @@ public sealed class AsyncDisposableSingleAssignment : IAsyncDisposable, IDisposa
     private int _assigned;
     private IAsyncDisposable? _disposable;
 
-    /// <summary>Gets a value indicating whether <see cref="DisposeAsync"/> has been called at least once.</summary>
+    /// <summary>
+    /// Gets a value indicating whether <see cref="DisposeAsync"/> has been called at least once.
+    /// </summary>
     public bool IsDisposed => ReferenceEquals(Volatile.Read(ref _disposable), Sentinel);
 
-    /// <summary>Gets a value indicating whether a disposable has been assigned.</summary>
+    /// <summary>
+    /// Gets a value indicating whether a disposable has been assigned.
+    /// </summary>
     public bool IsAssigned => Volatile.Read(ref _assigned) != 0;
 
     /// <inheritdoc />

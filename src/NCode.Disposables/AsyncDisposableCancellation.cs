@@ -65,7 +65,9 @@ public sealed class AsyncDisposableCancellation : IAsyncDisposable, IDisposalSta
         Token = source.Token;
     }
 
-    /// <summary>Gets a value indicating whether <see cref="DisposeAsync"/> has been called at least once.</summary>
+    /// <summary>
+    /// Gets a value indicating whether <see cref="DisposeAsync"/> has been called at least once.
+    /// </summary>
     public bool IsDisposed => Volatile.Read(ref _disposed) != 0;
 
     /// <inheritdoc />
