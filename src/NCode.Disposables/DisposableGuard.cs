@@ -24,14 +24,35 @@ namespace NCode.Disposables;
 public sealed class DisposableGuard<T>(T value) : IDisposable, IDisposalStatus
     where T : IDisposable
 {
+    /// <summary>
+    /// The state while the guard owns the value.
+    /// </summary>
     private const int Owned = 0;
+
+    /// <summary>
+    /// The state after <see cref="Release"/> handed the value on.
+    /// </summary>
     private const int Released = 1;
+
+    /// <summary>
+    /// The state after the guard disposed the value.
+    /// </summary>
     private const int Disposed = 2;
+
+    /// <summary>
+    /// The state after the guard was disposed once the value had been released.
+    /// </summary>
     private const int ReleasedAndDisposed = 3;
 
+    /// <summary>
+    /// The message of the exception a second <see cref="Release"/> throws.
+    /// </summary>
     private const string AlreadyReleasedMessage =
         "Ownership of the resource has already been released.";
 
+    /// <summary>
+    /// One of <see cref="Owned"/>, <see cref="Released"/>, <see cref="Disposed"/> or <see cref="ReleasedAndDisposed"/>.
+    /// </summary>
     private int _state;
 
     /// <summary>
