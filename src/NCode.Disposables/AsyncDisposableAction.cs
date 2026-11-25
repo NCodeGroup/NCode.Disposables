@@ -25,6 +25,10 @@ public sealed class AsyncDisposableAction : IAsyncDisposable, IDisposalStatus
 {
     private Func<ValueTask>? _action;
     private readonly bool _idempotent;
+
+    /// <summary>
+    /// One once disposal has been requested, zero before; <see cref="IsDisposed"/> reads it.
+    /// </summary>
     private int _disposed;
 
     /// <summary>

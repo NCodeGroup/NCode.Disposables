@@ -12,6 +12,9 @@ namespace NCode.Disposables;
 /// </remarks>
 public sealed class DisposableFlag : IDisposable, IDisposalStatus
 {
+    /// <summary>
+    /// One once disposal has been requested, zero before; <see cref="IsDisposed"/> reads it.
+    /// </summary>
     private int _disposed;
 
     /// <summary>
