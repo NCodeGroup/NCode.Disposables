@@ -3,24 +3,17 @@
 
 namespace NCode.Disposables.Tests;
 
-public sealed class DisposableExtensionsTests : IDisposable
+public sealed class DisposableExtensionsTests : UnitTestBase
 {
     private const string AsyncOnlyMessage =
         "The collection contains an item that implements IAsyncDisposable but not IDisposable; dispose it with DisposeAllAsync.";
-
-    private readonly MockRepository _mocks = new(MockBehavior.Strict);
-
-    public void Dispose()
-    {
-        _mocks.Verify();
-    }
 
     #region DisposeAsyncIfAvailable Tests
 
     [Fact]
     public async Task DisposeAsyncIfAvailable_WhenAsyncDisposable_CallsDisposeAsync()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
         mockDisposable
             .As<IAsyncDisposable>()
             .Setup(x => x.DisposeAsync())
@@ -29,19 +22,16 @@ public sealed class DisposableExtensionsTests : IDisposable
 
         await mockDisposable.Object.DisposeAsyncIfAvailable();
 
-        mockDisposable.Verify();
         mockDisposable.Verify(x => x.Dispose(), Times.Never);
     }
 
     [Fact]
     public async Task DisposeAsyncIfAvailable_WhenNotAsyncDisposable_CallsDispose()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
         mockDisposable.Setup(x => x.Dispose()).Verifiable();
 
         await mockDisposable.Object.DisposeAsyncIfAvailable();
-
-        mockDisposable.Verify();
     }
 
     [Fact]
@@ -59,11 +49,12 @@ public sealed class DisposableExtensionsTests : IDisposable
     [Fact]
     public async Task DisposeAsyncIfAvailable_WhenAsyncDisposeThrows_PropagatesException()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
         mockDisposable
             .As<IAsyncDisposable>()
             .Setup(x => x.DisposeAsync())
-            .ThrowsAsync(new InvalidOperationException("Test exception"));
+            .ThrowsAsync(new InvalidOperationException("Test exception"))
+            .Verifiable();
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             mockDisposable.Object.DisposeAsyncIfAvailable().AsTask()
@@ -75,10 +66,11 @@ public sealed class DisposableExtensionsTests : IDisposable
     [Fact]
     public async Task DisposeAsyncIfAvailable_WhenSyncDisposeThrows_PropagatesException()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
         mockDisposable
             .Setup(x => x.Dispose())
-            .Throws(new InvalidOperationException("Test exception"));
+            .Throws(new InvalidOperationException("Test exception"))
+            .Verifiable();
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             mockDisposable.Object.DisposeAsyncIfAvailable().AsTask()
@@ -94,8 +86,8 @@ public sealed class DisposableExtensionsTests : IDisposable
     [Fact]
     public void AsSharedReference_CreatesLease()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable();
 
         using var lease = mockDisposable.Object.AsSharedReference();
 
@@ -105,23 +97,21 @@ public sealed class DisposableExtensionsTests : IDisposable
     [Fact]
     public void AsSharedReference_DisposesWhenLeaseReleased()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
 
         var lease = mockDisposable.Object.AsSharedReference();
 
         mockDisposable.Verify(x => x.Dispose(), Times.Never);
 
         lease.Dispose();
-
-        mockDisposable.Verify(x => x.Dispose(), Times.Once);
     }
 
     [Fact]
     public void AsSharedReference_MultipleLeases_DisposesOnlyWhenLastReleased()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
 
         var lease1 = mockDisposable.Object.AsSharedReference();
         var lease2 = lease1.AddReference();
@@ -134,7 +124,6 @@ public sealed class DisposableExtensionsTests : IDisposable
         mockDisposable.Verify(x => x.Dispose(), Times.Never);
 
         lease3.Dispose();
-        mockDisposable.Verify(x => x.Dispose(), Times.Once);
     }
 
     [Fact]
@@ -156,7 +145,7 @@ public sealed class DisposableExtensionsTests : IDisposable
     [Fact]
     public void DisposeAll_WithItemImplementingBothInterfaces_CallsDispose()
     {
-        var mockDisposable = _mocks.Create<IDisposable>();
+        var mockDisposable = CreateStrictMock<IDisposable>();
         _ = mockDisposable.As<IAsyncDisposable>();
         mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
         var collection = new object[] { mockDisposable.Object };

@@ -3,15 +3,8 @@
 
 namespace NCode.Disposables.Tests;
 
-public sealed class AsyncDisposableExtensionsTests : IDisposable
+public sealed class AsyncDisposableExtensionsTests : UnitTestBase
 {
-    private readonly MockRepository _mocks = new(MockBehavior.Strict);
-
-    public void Dispose()
-    {
-        _mocks.Verify();
-    }
-
     #region DisposeAllAsync Tests
 
     [Fact]
@@ -168,7 +161,7 @@ public sealed class AsyncDisposableExtensionsTests : IDisposable
     [Fact]
     public async Task DisposeAllAsync_WithItemImplementingBothInterfaces_CallsDisposeAsyncOnly()
     {
-        var mockDisposable = _mocks.Create<IAsyncDisposable>();
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
         _ = mockDisposable.As<IDisposable>();
         mockDisposable
             .Setup(x => x.DisposeAsync())
@@ -350,7 +343,7 @@ public sealed class AsyncDisposableExtensionsTests : IDisposable
     [Fact]
     public void AsAsyncSharedReference_ReturnsLease()
     {
-        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var disposable = CreateStrictMock<IAsyncDisposable>();
 
         var lease = disposable.Object.AsAsyncSharedReference();
 
@@ -360,20 +353,24 @@ public sealed class AsyncDisposableExtensionsTests : IDisposable
     [Fact]
     public async Task AsAsyncSharedReference_DisposingLease_DisposesUnderlying()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
+        mockDisposable
+            .Setup(x => x.DisposeAsync())
+            .Returns(ValueTask.CompletedTask)
+            .Verifiable(Times.Once());
 
         var lease = mockDisposable.Object.AsAsyncSharedReference();
         await lease.DisposeAsync();
-
-        mockDisposable.Verify(x => x.DisposeAsync(), Times.Once);
     }
 
     [Fact]
     public async Task AsAsyncSharedReference_MultipleLeases_DisposesOnLastRelease()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
+        mockDisposable
+            .Setup(x => x.DisposeAsync())
+            .Returns(ValueTask.CompletedTask)
+            .Verifiable(Times.Once());
 
         var lease1 = mockDisposable.Object.AsAsyncSharedReference();
         var lease2 = lease1.AddReference();
@@ -382,7 +379,6 @@ public sealed class AsyncDisposableExtensionsTests : IDisposable
         mockDisposable.Verify(x => x.DisposeAsync(), Times.Never);
 
         await lease2.DisposeAsync();
-        mockDisposable.Verify(x => x.DisposeAsync(), Times.Once);
     }
 
     [Fact]
