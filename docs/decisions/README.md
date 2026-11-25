@@ -68,3 +68,4 @@ override in `AGENTS.md`.
 | [1003](1003-the-package-targets-the-oldest-supported-lts-release.md) | The package targets the oldest supported .NET LTS release | Accepted |
 | [1004](1004-a-resource-handed-to-a-disposed-holder-is-disposed.md) | A resource handed to a disposed holder is disposed | Accepted |
 | [1005](1005-disposables-are-concrete-sealed-types-that-report-their-disposal-status.md) | Disposables are concrete sealed types that report their disposal status | Accepted |
+| [1006](1006-value-disposables-and-lock-scopes-are-non-idempotent-structs.md) | Value disposables and lock scopes are non-idempotent structs | Accepted |
