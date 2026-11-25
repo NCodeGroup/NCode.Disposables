@@ -64,7 +64,7 @@ $candidates = @(
                 Relative = [IO.Path]::GetRelativePath($Root, $_.FullName)
             }
         } |
-        Where-Object { $_.Relative -notmatch '(^|[\\/])(bin|obj|node_modules|artifacts|\.git)[\\/]' } |
+        Where-Object { $_.Relative -notmatch '(^|[\\/])(bin|obj|node_modules|artifacts|\.git|\.claude)[\\/]' } |
         Sort-Object -Property Relative
 )
 
