@@ -3,7 +3,7 @@
 
 namespace NCode.Disposables.Tests;
 
-public class AsyncDisposableGuardTests
+public class AsyncDisposableGuardTests : UnitTestBase
 {
     private const string AlreadyReleasedMessage =
         "Ownership of the resource has already been released.";
@@ -23,7 +23,7 @@ public class AsyncDisposableGuardTests
     [Fact]
     public void Constructor_Value_HoldsValue()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
 
         var guard = new AsyncDisposableGuard<IAsyncDisposable>(mockDisposable.Object);
 
@@ -37,19 +37,20 @@ public class AsyncDisposableGuardTests
     [Fact]
     public async Task DisposeAsync_WithoutRelease_DisposesValue()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
+        mockDisposable
+            .Setup(x => x.DisposeAsync())
+            .Returns(ValueTask.CompletedTask)
+            .Verifiable(Times.Once());
         var guard = new AsyncDisposableGuard<IAsyncDisposable>(mockDisposable.Object);
 
         await guard.DisposeAsync();
-
-        mockDisposable.Verify(x => x.DisposeAsync(), Times.Once);
     }
 
     [Fact]
     public async Task DisposeAsync_AfterRelease_DoesNotDisposeValue()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
         var guard = new AsyncDisposableGuard<IAsyncDisposable>(mockDisposable.Object);
         guard.Release();
 
@@ -61,25 +62,27 @@ public class AsyncDisposableGuardTests
     [Fact]
     public async Task DisposeAsync_Twice_DisposesOnce()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
+        mockDisposable
+            .Setup(x => x.DisposeAsync())
+            .Returns(ValueTask.CompletedTask)
+            .Verifiable(Times.Once());
         var guard = new AsyncDisposableGuard<IAsyncDisposable>(mockDisposable.Object);
 
         await guard.DisposeAsync();
         await guard.DisposeAsync();
-
-        mockDisposable.Verify(x => x.DisposeAsync(), Times.Once);
     }
 
     [Fact]
     public async Task AwaitUsingDeclaration_WhenScopeThrows_DisposesValue()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
+        mockDisposable
+            .Setup(x => x.DisposeAsync())
+            .Returns(ValueTask.CompletedTask)
+            .Verifiable(Times.Once());
 
         await Assert.ThrowsAsync<InvalidOperationException>(ThrowInScope);
-
-        mockDisposable.Verify(x => x.DisposeAsync(), Times.Once);
 
         async Task ThrowInScope()
         {
@@ -93,7 +96,7 @@ public class AsyncDisposableGuardTests
     [Fact]
     public async Task AwaitUsingDeclaration_WhenReleased_DoesNotDisposeValue()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
 
         IAsyncDisposable released;
         await using (var guard = new AsyncDisposableGuard<IAsyncDisposable>(mockDisposable.Object))
@@ -112,7 +115,7 @@ public class AsyncDisposableGuardTests
     [Fact]
     public void Release_WhenOwned_ReturnsValue()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
         var guard = new AsyncDisposableGuard<IAsyncDisposable>(mockDisposable.Object);
 
         var result = guard.Release();
@@ -123,7 +126,7 @@ public class AsyncDisposableGuardTests
     [Fact]
     public void Release_Twice_ThrowsInvalidOperationException()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
         var guard = new AsyncDisposableGuard<IAsyncDisposable>(mockDisposable.Object);
         guard.Release();
 
@@ -135,8 +138,8 @@ public class AsyncDisposableGuardTests
     [Fact]
     public async Task Release_AfterDispose_ThrowsObjectDisposedException()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
+        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask).Verifiable();
         var guard = new AsyncDisposableGuard<IAsyncDisposable>(mockDisposable.Object);
         await guard.DisposeAsync();
 
@@ -146,7 +149,7 @@ public class AsyncDisposableGuardTests
     [Fact]
     public async Task Release_AfterReleaseAndDispose_ThrowsInvalidOperationException()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
         var guard = new AsyncDisposableGuard<IAsyncDisposable>(mockDisposable.Object);
         guard.Release();
         await guard.DisposeAsync();
@@ -158,8 +161,11 @@ public class AsyncDisposableGuardTests
     public async Task Release_WhileDisposeAsyncRuns_ThrowsObjectDisposedException()
     {
         var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.DisposeAsync()).Returns(() => new ValueTask(gate.Task));
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
+        mockDisposable
+            .Setup(x => x.DisposeAsync())
+            .Returns(() => new ValueTask(gate.Task))
+            .Verifiable(Times.Once());
         var guard = new AsyncDisposableGuard<IAsyncDisposable>(mockDisposable.Object);
 
         var disposeTask = guard.DisposeAsync().AsTask();
@@ -169,8 +175,6 @@ public class AsyncDisposableGuardTests
 
         gate.SetResult();
         await disposeTask;
-
-        mockDisposable.Verify(x => x.DisposeAsync(), Times.Once);
     }
 
     #endregion
@@ -180,7 +184,7 @@ public class AsyncDisposableGuardTests
     [Fact]
     public void IsReleased_BeforeRelease_ReturnsFalse()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
         var guard = new AsyncDisposableGuard<IAsyncDisposable>(mockDisposable.Object);
 
         Assert.False(guard.IsReleased);
@@ -189,7 +193,7 @@ public class AsyncDisposableGuardTests
     [Fact]
     public void IsReleased_AfterRelease_ReturnsTrue()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
         var guard = new AsyncDisposableGuard<IAsyncDisposable>(mockDisposable.Object);
 
         guard.Release();
@@ -200,7 +204,7 @@ public class AsyncDisposableGuardTests
     [Fact]
     public async Task IsReleased_AfterReleaseAndDispose_ReturnsTrue()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
         var guard = new AsyncDisposableGuard<IAsyncDisposable>(mockDisposable.Object);
         guard.Release();
 
@@ -212,8 +216,8 @@ public class AsyncDisposableGuardTests
     [Fact]
     public async Task IsReleased_AfterDisposeWithoutRelease_ReturnsFalse()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
+        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask).Verifiable();
         var guard = new AsyncDisposableGuard<IAsyncDisposable>(mockDisposable.Object);
 
         await guard.DisposeAsync();
@@ -228,7 +232,7 @@ public class AsyncDisposableGuardTests
     [Fact]
     public void IsDisposed_BeforeDispose_ReturnsFalse()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
         var guard = new AsyncDisposableGuard<IAsyncDisposable>(mockDisposable.Object);
 
         Assert.False(guard.IsDisposed);
@@ -237,8 +241,8 @@ public class AsyncDisposableGuardTests
     [Fact]
     public async Task IsDisposed_AfterDispose_ReturnsTrue()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
+        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask).Verifiable();
         var guard = new AsyncDisposableGuard<IAsyncDisposable>(mockDisposable.Object);
 
         await guard.DisposeAsync();
@@ -249,7 +253,7 @@ public class AsyncDisposableGuardTests
     [Fact]
     public void IsDisposed_AfterReleaseWithoutDispose_ReturnsFalse()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
         var guard = new AsyncDisposableGuard<IAsyncDisposable>(mockDisposable.Object);
 
         guard.Release();
@@ -260,7 +264,7 @@ public class AsyncDisposableGuardTests
     [Fact]
     public async Task IsDisposed_AfterReleaseAndDispose_ReturnsTrue()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
         var guard = new AsyncDisposableGuard<IAsyncDisposable>(mockDisposable.Object);
         guard.Release();
 
