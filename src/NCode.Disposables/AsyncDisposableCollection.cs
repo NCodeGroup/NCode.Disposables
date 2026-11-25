@@ -38,16 +38,22 @@ public interface IAsyncDisposableCollection : IAsyncDisposable, ICollection<IAsy
 /// allowing all items to be disposed even if some throw exceptions.
 /// </para>
 /// <para>
-/// Disposal runs at most once, even when several threads dispose the collection at once.
-/// <c>Add</c>, <c>Remove</c>, <c>Clear</c> and enumeration take no lock: synchronize them, and don't change the
-/// collection while it is being disposed.
+/// Every member is thread-safe. Disposal runs at most once, even when several threads dispose the collection at once.
+/// Enumeration walks a snapshot of the items taken when <see cref="GetEnumerator"/> is called, so changing the
+/// collection while enumerating does not throw.
+/// </para>
+/// <para>
+/// <see cref="Add"/> after the collection is disposed throws <see cref="ObjectDisposedException"/> and does not take the item.
+/// <see cref="AddAsync"/> after the collection is disposed disposes the added item instead of storing it.
 /// </para>
 /// </remarks>
-public sealed class AsyncDisposableCollection : IAsyncDisposableCollection
+public sealed class AsyncDisposableCollection : IAsyncDisposableCollection, IDisposalStatus
 {
     private int _disposed;
     private readonly List<IAsyncDisposable> _list;
     private readonly bool _ignoreExceptions;
+
+    private Lock Gate { get; } = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AsyncDisposableCollection"/> class with an empty collection.
@@ -94,14 +100,24 @@ public sealed class AsyncDisposableCollection : IAsyncDisposableCollection
     /// </remarks>
     public async ValueTask DisposeAsync()
     {
-        if (Interlocked.CompareExchange(ref _disposed, 1, 0) != 0)
+        IAsyncDisposable[] items;
+        lock (Gate)
         {
-            return;
+            if (_disposed != 0)
+            {
+                return;
+            }
+
+            Volatile.Write(ref _disposed, 1);
+            items = [.. _list];
+            _list.Clear();
         }
 
-        await _list.DisposeAllAsync(_ignoreExceptions).ConfigureAwait(false);
-        _list.Clear();
+        await items.DisposeAllAsync(_ignoreExceptions).ConfigureAwait(false);
     }
+
+    /// <summary>Gets a value indicating whether <see cref="DisposeAsync"/> has been called at least once.</summary>
+    public bool IsDisposed => Volatile.Read(ref _disposed) != 0;
 
     /// <summary>
     /// Gets a value indicating whether the collection is read-only.
@@ -113,7 +129,16 @@ public sealed class AsyncDisposableCollection : IAsyncDisposableCollection
     /// Gets the number of items contained in the collection.
     /// </summary>
     /// <value>The number of <see cref="IAsyncDisposable"/> items in the collection.</value>
-    public int Count => _list.Count;
+    public int Count
+    {
+        get
+        {
+            lock (Gate)
+            {
+                return _list.Count;
+            }
+        }
+    }
 
     /// <summary>
     /// Adds an <see cref="IAsyncDisposable"/> item to the collection.
@@ -121,11 +146,52 @@ public sealed class AsyncDisposableCollection : IAsyncDisposableCollection
     /// </summary>
     /// <param name="item">The <see cref="IAsyncDisposable"/> item to add to the collection.</param>
     /// <exception cref="ArgumentNullException"><paramref name="item"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ObjectDisposedException">The collection is already disposed.</exception>
+    /// <remarks>
+    /// If the collection is already disposed, the item is not added and is not disposed.
+    /// Use <see cref="AddAsync"/> to have the item disposed in that case.
+    /// </remarks>
     public void Add(IAsyncDisposable item)
     {
         ArgumentNullException.ThrowIfNull(item);
 
-        _list.Add(item);
+        // ADR-1004: the synchronous Add can't await a disposal, so it throws after disposal and doesn't take the item.
+        lock (Gate)
+        {
+            ObjectDisposedException.ThrowIf(_disposed != 0, this);
+
+            _list.Add(item);
+        }
+    }
+
+    /// <summary>
+    /// Adds an <see cref="IAsyncDisposable"/> item to the collection.
+    /// The item will be disposed when the collection is disposed.
+    /// </summary>
+    /// <param name="item">The <see cref="IAsyncDisposable"/> item to add to the collection.</param>
+    /// <returns>
+    /// A task that is already completed when the item is added to the collection, or that completes when the item
+    /// is disposed because the collection is already disposed.
+    /// </returns>
+    /// <exception cref="ArgumentNullException"><paramref name="item"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// If the collection is already disposed, the item is disposed immediately and is not added to the collection.
+    /// </remarks>
+    public ValueTask AddAsync(IAsyncDisposable item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+
+        // ADR-1004: an item added after disposal is disposed instead of stored.
+        lock (Gate)
+        {
+            if (_disposed == 0)
+            {
+                _list.Add(item);
+                return ValueTask.CompletedTask;
+            }
+        }
+
+        return item.DisposeAsync();
     }
 
     /// <summary>
@@ -145,7 +211,10 @@ public sealed class AsyncDisposableCollection : IAsyncDisposableCollection
     {
         ArgumentNullException.ThrowIfNull(item);
 
-        return _list.Remove(item);
+        lock (Gate)
+        {
+            return _list.Remove(item);
+        }
     }
 
     /// <summary>
@@ -157,7 +226,10 @@ public sealed class AsyncDisposableCollection : IAsyncDisposableCollection
     /// </remarks>
     public void Clear()
     {
-        _list.Clear();
+        lock (Gate)
+        {
+            _list.Clear();
+        }
     }
 
     /// <summary>
@@ -173,7 +245,10 @@ public sealed class AsyncDisposableCollection : IAsyncDisposableCollection
     {
         ArgumentNullException.ThrowIfNull(item);
 
-        return _list.Contains(item);
+        lock (Gate)
+        {
+            return _list.Contains(item);
+        }
     }
 
     /// <summary>
@@ -194,16 +269,25 @@ public sealed class AsyncDisposableCollection : IAsyncDisposableCollection
     {
         ArgumentNullException.ThrowIfNull(array);
 
-        _list.CopyTo(array, arrayIndex);
+        lock (Gate)
+        {
+            _list.CopyTo(array, arrayIndex);
+        }
     }
 
     /// <summary>
     /// Returns an enumerator that iterates through the collection.
     /// </summary>
-    /// <returns>An enumerator that can be used to iterate through the collection.</returns>
+    /// <returns>An enumerator that can be used to iterate through a snapshot of the collection.</returns>
     public IEnumerator<IAsyncDisposable> GetEnumerator()
     {
-        return _list.GetEnumerator();
+        IAsyncDisposable[] snapshot;
+        lock (Gate)
+        {
+            snapshot = [.. _list];
+        }
+
+        return ((IEnumerable<IAsyncDisposable>)snapshot).GetEnumerator();
     }
 
     /// <inheritdoc />

@@ -3,6 +3,8 @@ NCode.Disposables.AsyncDisposableAction.IsDisposed.get -> bool
 NCode.Disposables.AsyncDisposableAdapter.IsDisposed.get -> bool
 NCode.Disposables.AsyncDisposableAggregate.IsDisposed.get -> bool
 NCode.Disposables.AsyncDisposableAggregate.SetDisposableAsync(System.IAsyncDisposable? disposable) -> System.Threading.Tasks.ValueTask
+NCode.Disposables.AsyncDisposableCollection.AddAsync(System.IAsyncDisposable! item) -> System.Threading.Tasks.ValueTask
+NCode.Disposables.AsyncDisposableCollection.IsDisposed.get -> bool
 NCode.Disposables.DisposableAction.IsDisposed.get -> bool
 NCode.Disposables.DisposableAggregate.IsDisposed.get -> bool
 NCode.Disposables.DisposableCollection.IsDisposed.get -> bool
