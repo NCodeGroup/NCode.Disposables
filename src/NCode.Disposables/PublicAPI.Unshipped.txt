@@ -47,6 +47,10 @@ NCode.Disposables.DisposableCollection.IsDisposed.get -> bool
 NCode.Disposables.DisposableContext.IsDisposed.get -> bool
 NCode.Disposables.IDisposalStatus
 NCode.Disposables.IDisposalStatus.IsDisposed.get -> bool
+NCode.Disposables.ValueDisposable<TState>
+NCode.Disposables.ValueDisposable<TState>.Dispose() -> void
+NCode.Disposables.ValueDisposable<TState>.ValueDisposable() -> void
+NCode.Disposables.ValueDisposable<TState>.ValueDisposable(System.Action<TState>! action, TState state) -> void
 static NCode.Disposables.AsyncDisposable.Adapt(System.IDisposable! disposable, bool idempotent) -> NCode.Disposables.AsyncDisposableAdapter!
 static NCode.Disposables.AsyncDisposable.Adapt(System.IDisposable! disposable) -> NCode.Disposables.AsyncDisposableAdapter!
 static NCode.Disposables.AsyncDisposable.Aggregate(System.IAsyncDisposable? disposable) -> NCode.Disposables.AsyncDisposableAggregate!
