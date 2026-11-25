@@ -104,8 +104,12 @@ public class AsyncDisposableSerialTests
         mockDisposable.Verify(x => x.DisposeAsync(), Times.Once);
     }
 
+    #endregion
+
+    #region Disposable Property Tests
+
     [Fact]
-    public async Task SetDisposableAsync_GetAfterDispose_ReturnsNull()
+    public async Task Disposable_GetAfterDispose_ReturnsNull()
     {
         var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
         mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);

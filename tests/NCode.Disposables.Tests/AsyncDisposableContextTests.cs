@@ -151,7 +151,7 @@ public class AsyncDisposableContextTests
 
     #endregion
 
-    #region IsDisposed Tests
+    #region IsDisposed Property Tests
 
     [Fact]
     public void IsDisposed_BeforeDisposeAsync_ReturnsFalse()

@@ -19,7 +19,7 @@ public class DisposableCancellationTests
 
     #endregion
 
-    #region Token Tests
+    #region Token Property Tests
 
     [Fact]
     public void Token_BeforeDispose_IsNotCancelled()
@@ -31,7 +31,7 @@ public class DisposableCancellationTests
 
     #endregion
 
-    #region IsDisposed Tests
+    #region IsDisposed Property Tests
 
     [Fact]
     public void IsDisposed_BeforeDispose_ReturnsFalse()

@@ -19,7 +19,7 @@ public class AsyncDisposableCancellationTests
 
     #endregion
 
-    #region Token Tests
+    #region Token Property Tests
 
     [Fact]
     public async Task Token_BeforeDispose_IsNotCancelled()
@@ -31,7 +31,7 @@ public class AsyncDisposableCancellationTests
 
     #endregion
 
-    #region IsDisposed Tests
+    #region IsDisposed Property Tests
 
     [Fact]
     public async Task IsDisposed_BeforeDispose_ReturnsFalse()
