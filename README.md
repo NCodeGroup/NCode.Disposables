@@ -446,6 +446,8 @@ await disposable.DisposeAsync(); // Post: completes once the UI thread has dispo
 ```
 <!-- endSnippet -->
 
+When the context's `Post` throws, `DisposeAsync` calls `OperationCompleted` and throws that exception. It doesn't dispose the resource on the calling thread, because a resource such as a UI control must be disposed on its context.
+
 ### Scoping a lock
 
 `semaphore.Lock()` and `LockAsync()` wait for a `SemaphoreSlim` and return a scope that releases it; `ReadLock()`, `UpgradeableReadLock()` and `WriteLock()` do the same for a `ReaderWriterLockSlim`. A scope is a struct that allocates nothing: dispose it once, through `using`:

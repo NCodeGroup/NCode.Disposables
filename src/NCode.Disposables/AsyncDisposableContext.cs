@@ -57,6 +57,11 @@ public sealed class AsyncDisposableContext(
     /// resource is propagated to the caller.
     /// </para>
     /// <para>
+    /// When the context's <see cref="SynchronizationContext.Post"/> throws, this method calls
+    /// <see cref="SynchronizationContext.OperationCompleted"/> and rethrows the exception.
+    /// The underlying resource is not disposed, because it is disposed only on the context.
+    /// </para>
+    /// <para>
     /// This method is idempotent; subsequent calls have no effect.
     /// </para>
     /// </remarks>
@@ -71,7 +76,16 @@ public sealed class AsyncDisposableContext(
         );
 
         Context.OperationStarted();
-        Context.Post(_ => _ = DisposeOnContextAsync(disposable, completion), null);
+        try
+        {
+            Context.Post(_ => _ = DisposeOnContextAsync(disposable, completion), null);
+        }
+        catch
+        {
+            // The context refused the callback, so the operation it was told about ends here.
+            Context.OperationCompleted();
+            throw;
+        }
 
         await completion.Task.ConfigureAwait(false);
     }
