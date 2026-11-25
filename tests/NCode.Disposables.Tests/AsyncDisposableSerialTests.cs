@@ -78,7 +78,19 @@ public class AsyncDisposableSerialTests
     }
 
     [Fact]
-    public async Task SetDisposableAsync_SetNull_DisposesPreviousAndHoldsNull()
+    public async Task SetDisposableAsync_SetNull_DisposesPrevious()
+    {
+        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var serial = new AsyncDisposableSerial(mockDisposable.Object);
+
+        await serial.SetDisposableAsync(null);
+
+        mockDisposable.Verify(x => x.DisposeAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task SetDisposableAsync_SetNull_HoldsNull()
     {
         var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
         mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
@@ -87,7 +99,6 @@ public class AsyncDisposableSerialTests
         await serial.SetDisposableAsync(null);
 
         Assert.Null(serial.Disposable);
-        mockDisposable.Verify(x => x.DisposeAsync(), Times.Once);
     }
 
     [Fact]
@@ -124,7 +135,7 @@ public class AsyncDisposableSerialTests
     #region DisposeAsync Tests
 
     [Fact]
-    public async Task DisposeAsync_DisposesCurrent()
+    public async Task DisposeAsync_WhenHoldingValue_DisposesIt()
     {
         var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
         mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
@@ -146,6 +157,31 @@ public class AsyncDisposableSerialTests
         await serial.DisposeAsync();
 
         mockDisposable.Verify(x => x.DisposeAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task DisposeAsync_WhileSetDisposesPrevious_DisposesNewValue()
+    {
+        var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var mockInitial = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        mockInitial.Setup(x => x.DisposeAsync()).Returns(() => new ValueTask(gate.Task));
+        var mockValue = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        mockValue.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var serial = new AsyncDisposableSerial(mockInitial.Object);
+
+        var setTask = serial.SetDisposableAsync(mockValue.Object).AsTask();
+
+        Assert.False(setTask.IsCompleted);
+
+        await serial.DisposeAsync();
+
+        mockValue.Verify(x => x.DisposeAsync(), Times.Once);
+        Assert.True(serial.IsDisposed);
+
+        gate.SetResult();
+        await setTask;
+
+        mockInitial.Verify(x => x.DisposeAsync(), Times.Once);
     }
 
     [Fact]
