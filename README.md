@@ -5,7 +5,7 @@
 <h1 align="center">NCode.Disposables</h1>
 
 <p align="center">
-  Building blocks for IDisposable and IAsyncDisposable in .NET: run an action on dispose, dispose many resources in reverse order, swap the resource an aggregate holds, share a resource through reference-counted leases, and dispose on a synchronization context.
+  Building blocks for IDisposable and IAsyncDisposable in .NET: run an action on dispose, dispose many resources in reverse order, hold a swappable, serial or single-assignment resource, guard a resource until ownership moves on, cancel on dispose, share a resource through reference-counted leases, scope a lock, and dispose on a synchronization context.
 </p>
 
 <p align="center">
@@ -17,7 +17,7 @@
   <a href="https://scorecard.dev/viewer/?uri=github.com/NCodeGroup/NCode.Disposables"><img alt="OpenSSF Scorecard" src="https://api.scorecard.dev/projects/github.com/NCodeGroup/NCode.Disposables/badge"></a>
 </p>
 
-Cleanup in .NET often needs more than one `using` statement: undoing a registration, disposing several resources in the right order, handing one expensive resource to several owners, or disposing a UI object on its own thread. NCode.Disposables gives each of these a small type behind the `Disposable` and `AsyncDisposable` factories, with an `IAsyncDisposable` counterpart for everything except disposal on a synchronization context.
+Cleanup in .NET often needs more than one `using` statement: undoing a registration, disposing several resources in the right order, handing one expensive resource to several owners, or disposing a UI object on its own thread. NCode.Disposables gives each of these a small type behind the `Disposable` and `AsyncDisposable` factories, each with an `IAsyncDisposable` counterpart except the flag and the lock scopes.
 
 This page is the full guide; nuget.org shows the shorter [package readme](src/NCode.Disposables/README.md).
 
@@ -529,8 +529,8 @@ await items.DisposeAllAsync(); // DisposeAsync for the stream, then Dispose for 
 
 | Type | Members |
 | --- | --- |
-| `Disposable` | `Empty`, `Create`, `Aggregate`, `Collection`, `Context` and `Shared` |
-| `AsyncDisposable` | `Empty`, `Create`, `Adapt`, `Aggregate`, `Collection` and `Shared` |
+| `Disposable` | `Empty`, `Create`, `CreateValue`, `Aggregate`, `Serial`, `SingleAssignment`, `Guard`, `Cancellation`, `Flag`, `Collection`, `Context` and `Shared` |
+| `AsyncDisposable` | `Empty`, `Create`, `CreateValue`, `Adapt`, `Aggregate`, `Serial`, `SingleAssignment`, `Guard`, `Cancellation`, `Collection`, `Context` and `Shared` |
 | `SharedReference` | `Create(value)` for an `IDisposable`, and `Create(value, onRelease)` for any value |
 | `AsyncSharedReference` | `Create(value)` for an `IAsyncDisposable`, and `Create(value, onRelease)` for any value |
 
@@ -540,9 +540,17 @@ await items.DisposeAllAsync(); // DisposeAsync for the stream, then Dispose for 
 | --- | --- |
 | `DisposableEmpty`, `AsyncDisposableEmpty` | Do nothing; `Singleton` is the instance `Empty` returns |
 | `DisposableAction`, `AsyncDisposableAction` | Run a delegate on dispose, once unless `idempotent` is `false` |
-| `DisposableAggregate`, `AsyncDisposableAggregate` | Hold one replaceable resource; `IDisposableAggregate` and `IAsyncDisposableAggregate` |
-| `DisposableCollection`, `AsyncDisposableCollection` | Dispose their items in reverse order; `IDisposableCollection` and `IAsyncDisposableCollection` |
+| `DisposableAggregate`, `AsyncDisposableAggregate` | Hold one replaceable resource; the obsolete `IDisposableAggregate` and `IAsyncDisposableAggregate` |
+| `DisposableSerial`, `AsyncDisposableSerial` | Hold one resource and dispose the previous one when it is replaced |
+| `DisposableSingleAssignment`, `AsyncDisposableSingleAssignment` | Take one resource, once |
+| `DisposableGuard<T>`, `AsyncDisposableGuard<T>` | Dispose a resource unless `Release()` hands ownership on |
+| `DisposableCancellation`, `AsyncDisposableCancellation` | Cancel a token on dispose |
+| `DisposableFlag` | Only records that it was disposed |
+| `DisposableCollection`, `AsyncDisposableCollection` | Dispose their items in reverse order; the obsolete `IDisposableCollection` and `IAsyncDisposableCollection` |
 | `DisposableContext` | Disposes a resource on a `SynchronizationContext` |
+| `AsyncDisposableContext` | Posts the async disposal of a resource to a `SynchronizationContext` |
+| `ValueDisposable<TState>`, `AsyncValueDisposable<TState>` | An allocation-free struct that runs a static delegate with its state on every dispose |
+| `IDisposalStatus` | Exposes `IsDisposed` |
 | `AsyncDisposableAdapter` | An `IAsyncDisposable` over an `IDisposable` |
 | `SharedReferenceLease<T>`, `AsyncSharedReferenceLease<T>` | A lease on a shared resource: `Value`, `IsActive`, `AddReference` and `TryAddReference` |
 | `SharedReferenceOwner<T>`, `AsyncSharedReferenceOwner<T>` | The reference count behind the leases; `ISharedReferenceOwner<T>` and `IAsyncSharedReferenceOwner<T>` |
@@ -553,10 +561,12 @@ await items.DisposeAllAsync(); // DisposeAsync for the stream, then Dispose for 
 | --- | --- |
 | `DisposableExtensions` | `DisposeAsyncIfAvailable()`, `AsSharedReference()` and `DisposeAll()` |
 | `AsyncDisposableExtensions` | `AsAsyncSharedReference()` and `DisposeAllAsync()` |
+| `SemaphoreSlimExtensions` | `Lock()` and `LockAsync()` |
+| `ReaderWriterLockSlimExtensions` | `ReadLock()`, `UpgradeableReadLock()` and `WriteLock()` |
 
 ## Thread safety
 
-The actions, aggregates, collections, context disposables and adapters run their cleanup at most once, even when several threads dispose them at once, unless an action or adapter is created with `idempotent: false`. An aggregate's `Disposable` property is safe to read and set from several threads. A lease's `AddReference`, `TryAddReference` and `Dispose` are safe from any thread, and the release action runs once, on the thread that releases the last lease. A collection's `Add`, `Remove`, `Clear` and enumeration hold no lock: synchronize them, and don't change a collection while it is being disposed.
+Every class runs its cleanup at most once, even when several threads dispose it at once, unless an action or adapter is created with `idempotent: false`. The aggregate, serial and single-assignment holders swap their resource atomically, and a collection's members all take one lock, its enumeration walking a snapshot. A resource handed to a holder after it is disposed is disposed at once. A lease's `AddReference`, `TryAddReference` and `Dispose` are safe from any thread, and the release action runs once, on the thread that releases the last lease. The structs (`ValueDisposable<TState>`, `AsyncValueDisposable<TState>` and the lock scopes) run their action on every dispose: dispose them once.
 
 ## Project
 

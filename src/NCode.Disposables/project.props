@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
   <PropertyGroup>
-    <Description>Building blocks for IDisposable and IAsyncDisposable in .NET: run an action on dispose, dispose many resources in reverse order, swap the resource an aggregate holds, share a resource through reference-counted leases, and dispose on a synchronization context.</Description>
-    <PackageTags>disposable;idisposable;iasyncdisposable;dispose;async;resource-management;reference-counting;shared-reference;dispose-pattern;cleanup;using;memory-management;lifecycle;dotnet</PackageTags>
+    <Description>Building blocks for IDisposable and IAsyncDisposable in .NET: run an action on dispose, dispose many resources in reverse order, hold a swappable, serial or single-assignment resource, guard a resource until ownership moves on, cancel on dispose, share a resource through reference-counted leases, scope a lock, and dispose on a synchronization context.</Description>
+    <PackageTags>disposable;idisposable;iasyncdisposable;dispose;async;resource-management;reference-counting;shared-reference;dispose-pattern;cleanup;using;memory-management;lifecycle;dotnet;serial-disposable;single-assignment;ownership;cancellation;lock;semaphore</PackageTags>
   </PropertyGroup>
 </Project>
