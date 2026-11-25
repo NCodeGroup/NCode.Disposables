@@ -57,6 +57,136 @@ public static class AsyncDisposable
     }
 
     /// <summary>
+    /// Creates and returns a new instance of <see cref="AsyncDisposableAggregate"/>
+    /// that does not yet contain an <see cref="IAsyncDisposable"/> instance.
+    /// </summary>
+    /// <returns>A new, empty <see cref="AsyncDisposableAggregate"/> instance.</returns>
+    /// <remarks>
+    /// The underlying disposable can be assigned later through the
+    /// <see cref="AsyncDisposableAggregate.Disposable"/> property. If no disposable is assigned,
+    /// no action is taken on disposal.
+    /// </remarks>
+    public static AsyncDisposableAggregate Aggregate()
+    {
+        return new AsyncDisposableAggregate();
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="AsyncDisposableSerial"/>
+    /// that does not yet contain an <see cref="IAsyncDisposable"/> instance.
+    /// </summary>
+    /// <returns>A new, empty <see cref="AsyncDisposableSerial"/> instance.</returns>
+    /// <remarks>
+    /// Each time a new <see cref="IAsyncDisposable"/> is assigned through the
+    /// <see cref="AsyncDisposableSerial.Disposable"/> property, the previously held instance is disposed.
+    /// </remarks>
+    public static AsyncDisposableSerial Serial()
+    {
+        return new AsyncDisposableSerial();
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="AsyncDisposableSerial"/>
+    /// that initially contains the specified <see cref="IAsyncDisposable"/> instance.
+    /// </summary>
+    /// <param name="disposable">The initial <see cref="IAsyncDisposable"/> instance that the <see cref="AsyncDisposableSerial"/> will contain.</param>
+    /// <returns>A new <see cref="AsyncDisposableSerial"/> instance holding the specified disposable.</returns>
+    /// <remarks>
+    /// Each time a new <see cref="IAsyncDisposable"/> is assigned through the
+    /// <see cref="AsyncDisposableSerial.Disposable"/> property, the previously held instance is disposed.
+    /// If <paramref name="disposable"/> is <see langword="null"/>, nothing is held initially.
+    /// </remarks>
+    public static AsyncDisposableSerial Serial(IAsyncDisposable? disposable)
+    {
+        return new AsyncDisposableSerial(disposable);
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="AsyncDisposableSingleAssignment"/>
+    /// that does not yet contain an <see cref="IAsyncDisposable"/> instance.
+    /// </summary>
+    /// <returns>A new, unassigned <see cref="AsyncDisposableSingleAssignment"/> instance.</returns>
+    /// <remarks>
+    /// The underlying disposable can be assigned once through the
+    /// <see cref="AsyncDisposableSingleAssignment.Disposable"/> property.
+    /// </remarks>
+    public static AsyncDisposableSingleAssignment SingleAssignment()
+    {
+        return new AsyncDisposableSingleAssignment();
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="AsyncDisposableGuard{T}"/>
+    /// that guards the specified <see cref="IAsyncDisposable"/> value.
+    /// </summary>
+    /// <typeparam name="T">The type of the guarded disposable value.</typeparam>
+    /// <param name="value">The <see cref="IAsyncDisposable"/> instance that the <see cref="AsyncDisposableGuard{T}"/> will guard.</param>
+    /// <returns>A new <see cref="AsyncDisposableGuard{T}"/> instance guarding the specified value.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// The guarded value is disposed when the guard is disposed, unless ownership of the value
+    /// has been released from the guard.
+    /// </remarks>
+    public static AsyncDisposableGuard<T> Guard<T>(T value)
+        where T : IAsyncDisposable
+    {
+        ArgumentNullException.ThrowIfNull(value);
+
+        return new AsyncDisposableGuard<T>(value);
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="AsyncDisposableCancellation"/>
+    /// with a new <see cref="CancellationTokenSource"/>.
+    /// </summary>
+    /// <returns>A new <see cref="AsyncDisposableCancellation"/> instance.</returns>
+    /// <remarks>
+    /// When the returned instance is disposed, its <see cref="CancellationTokenSource"/> is cancelled and then disposed.
+    /// </remarks>
+    public static AsyncDisposableCancellation Cancellation()
+    {
+        return new AsyncDisposableCancellation();
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="AsyncDisposableCancellation"/>
+    /// that cancels the specified <see cref="CancellationTokenSource"/>.
+    /// </summary>
+    /// <param name="source">The <see cref="CancellationTokenSource"/> to cancel when the returned instance is disposed.</param>
+    /// <returns>A new <see cref="AsyncDisposableCancellation"/> instance using the specified source.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// The returned instance cancels <paramref name="source"/> without disposing it.
+    /// The caller remains responsible for disposing <paramref name="source"/>.
+    /// </remarks>
+    public static AsyncDisposableCancellation Cancellation(CancellationTokenSource source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        return new AsyncDisposableCancellation(source);
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="AsyncDisposableContext"/>
+    /// that disposes the specified <see cref="IAsyncDisposable"/> on the specified <see cref="SynchronizationContext"/>.
+    /// </summary>
+    /// <param name="disposable">The <see cref="IAsyncDisposable"/> instance to dispose on <paramref name="context"/>.</param>
+    /// <param name="context">The <see cref="SynchronizationContext"/> on which <paramref name="disposable"/> is disposed.</param>
+    /// <returns>A new <see cref="AsyncDisposableContext"/> instance.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="disposable"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="context"/> is <see langword="null"/>.</exception>
+    public static AsyncDisposableContext Context(
+        IAsyncDisposable disposable,
+        SynchronizationContext context
+    )
+    {
+        ArgumentNullException.ThrowIfNull(disposable);
+        ArgumentNullException.ThrowIfNull(context);
+
+        return new AsyncDisposableContext(disposable, context);
+    }
+
+    /// <summary>
     /// Creates a new <see cref="AsyncSharedReferenceLease{T}"/> that wraps an <see cref="IAsyncDisposable"/> resource
     /// with reference counting semantics. The underlying resource is only disposed when all leases
     /// have been released (i.e., the reference count reaches zero).
@@ -233,5 +363,28 @@ public static class AsyncDisposable
             },
             idempotent
         );
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="AsyncValueDisposable{TState}"/>
+    /// that invokes an asynchronous action with a state value when it is disposed.
+    /// </summary>
+    /// <typeparam name="TState">The type of the state value that is passed to the action.</typeparam>
+    /// <param name="action">The asynchronous action to invoke when the returned value is disposed.</param>
+    /// <param name="state">The state value that is passed to <paramref name="action"/>.</param>
+    /// <returns>A new <see cref="AsyncValueDisposable{TState}"/> value.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// The returned value does not allocate and is not idempotent; every call to
+    /// <see cref="IAsyncDisposable.DisposeAsync"/> invokes <paramref name="action"/>.
+    /// </remarks>
+    public static AsyncValueDisposable<TState> CreateValue<TState>(
+        Func<TState, ValueTask> action,
+        TState state
+    )
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        return new AsyncValueDisposable<TState>(action, state);
     }
 }

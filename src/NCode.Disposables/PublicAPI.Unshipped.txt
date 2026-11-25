@@ -128,15 +128,24 @@ NCode.Disposables.ValueDisposable<TState>.ValueDisposable() -> void
 NCode.Disposables.ValueDisposable<TState>.ValueDisposable(System.Action<TState>! action, TState state) -> void
 static NCode.Disposables.AsyncDisposable.Adapt(System.IDisposable! disposable, bool idempotent) -> NCode.Disposables.AsyncDisposableAdapter!
 static NCode.Disposables.AsyncDisposable.Adapt(System.IDisposable! disposable) -> NCode.Disposables.AsyncDisposableAdapter!
+static NCode.Disposables.AsyncDisposable.Aggregate() -> NCode.Disposables.AsyncDisposableAggregate!
 static NCode.Disposables.AsyncDisposable.Aggregate(System.IAsyncDisposable? disposable) -> NCode.Disposables.AsyncDisposableAggregate!
+static NCode.Disposables.AsyncDisposable.Cancellation() -> NCode.Disposables.AsyncDisposableCancellation!
+static NCode.Disposables.AsyncDisposable.Cancellation(System.Threading.CancellationTokenSource! source) -> NCode.Disposables.AsyncDisposableCancellation!
 static NCode.Disposables.AsyncDisposable.Collection(bool ignoreExceptions, params System.IAsyncDisposable![]! collection) -> NCode.Disposables.AsyncDisposableCollection!
 static NCode.Disposables.AsyncDisposable.Collection(params System.IAsyncDisposable![]! collection) -> NCode.Disposables.AsyncDisposableCollection!
 static NCode.Disposables.AsyncDisposable.Collection(System.Collections.Generic.IEnumerable<System.IAsyncDisposable!>! collection, bool ignoreExceptions = false) -> NCode.Disposables.AsyncDisposableCollection!
+static NCode.Disposables.AsyncDisposable.Context(System.IAsyncDisposable! disposable, System.Threading.SynchronizationContext! context) -> NCode.Disposables.AsyncDisposableContext!
 static NCode.Disposables.AsyncDisposable.Create(System.Action! action, bool idempotent) -> NCode.Disposables.AsyncDisposableAction!
 static NCode.Disposables.AsyncDisposable.Create(System.Action! action) -> NCode.Disposables.AsyncDisposableAction!
 static NCode.Disposables.AsyncDisposable.Create(System.Func<System.Threading.Tasks.ValueTask>! action, bool idempotent) -> NCode.Disposables.AsyncDisposableAction!
 static NCode.Disposables.AsyncDisposable.Create(System.Func<System.Threading.Tasks.ValueTask>! action) -> NCode.Disposables.AsyncDisposableAction!
+static NCode.Disposables.AsyncDisposable.CreateValue<TState>(System.Func<TState, System.Threading.Tasks.ValueTask>! action, TState state) -> NCode.Disposables.AsyncValueDisposable<TState>
 static NCode.Disposables.AsyncDisposable.Empty.get -> NCode.Disposables.AsyncDisposableEmpty!
+static NCode.Disposables.AsyncDisposable.Guard<T>(T value) -> NCode.Disposables.AsyncDisposableGuard<T>!
+static NCode.Disposables.AsyncDisposable.Serial() -> NCode.Disposables.AsyncDisposableSerial!
+static NCode.Disposables.AsyncDisposable.Serial(System.IAsyncDisposable? disposable) -> NCode.Disposables.AsyncDisposableSerial!
+static NCode.Disposables.AsyncDisposable.SingleAssignment() -> NCode.Disposables.AsyncDisposableSingleAssignment!
 static NCode.Disposables.Disposable.Aggregate() -> NCode.Disposables.DisposableAggregate!
 static NCode.Disposables.Disposable.Aggregate(System.IDisposable? disposable) -> NCode.Disposables.DisposableAggregate!
 static NCode.Disposables.Disposable.Cancellation() -> NCode.Disposables.DisposableCancellation!
