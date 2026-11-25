@@ -51,12 +51,24 @@ public class DisposableCancellationTests
         Assert.True(cancellation.IsDisposed);
     }
 
+    [Fact]
+    public void IsDisposed_WhenCallbackThrows_ReturnsTrue()
+    {
+        var cancellation = new DisposableCancellation();
+        var token = cancellation.Token;
+        token.Register(() => throw new InvalidOperationException("Test exception"));
+
+        Assert.Throws<AggregateException>(() => cancellation.Dispose());
+
+        Assert.True(cancellation.IsDisposed);
+    }
+
     #endregion
 
     #region Dispose Tests
 
     [Fact]
-    public void Dispose_CancelsToken()
+    public void Dispose_WhenNotDisposed_CancelsToken()
     {
         var cancellation = new DisposableCancellation();
         var token = cancellation.Token;
@@ -113,7 +125,7 @@ public class DisposableCancellationTests
     }
 
     [Fact]
-    public void Dispose_WhenCallbackThrows_PropagatesAndDisposesOwnedSource()
+    public void Dispose_WhenCallbackThrows_ThrowsAggregateException()
     {
         var cancellation = new DisposableCancellation();
         var token = cancellation.Token;
@@ -121,8 +133,19 @@ public class DisposableCancellationTests
 
         var exception = Assert.Throws<AggregateException>(() => cancellation.Dispose());
 
-        Assert.IsType<InvalidOperationException>(Assert.Single(exception.InnerExceptions));
-        Assert.True(cancellation.IsDisposed);
+        var inner = Assert.Single(exception.InnerExceptions);
+        Assert.IsType<InvalidOperationException>(inner);
+    }
+
+    [Fact]
+    public void Dispose_WhenCallbackThrows_DisposesOwnedSource()
+    {
+        var cancellation = new DisposableCancellation();
+        var token = cancellation.Token;
+        token.Register(() => throw new InvalidOperationException("Test exception"));
+
+        Assert.Throws<AggregateException>(() => cancellation.Dispose());
+
         Assert.Throws<ObjectDisposedException>(() => token.WaitHandle);
     }
 

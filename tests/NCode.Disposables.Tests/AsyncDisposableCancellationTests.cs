@@ -51,12 +51,24 @@ public class AsyncDisposableCancellationTests
         Assert.True(cancellation.IsDisposed);
     }
 
+    [Fact]
+    public async Task IsDisposed_WhenCallbackThrows_ReturnsTrue()
+    {
+        var cancellation = new AsyncDisposableCancellation();
+        var token = cancellation.Token;
+        token.Register(() => throw new InvalidOperationException("Test exception"));
+
+        await Assert.ThrowsAsync<AggregateException>(async () => await cancellation.DisposeAsync());
+
+        Assert.True(cancellation.IsDisposed);
+    }
+
     #endregion
 
     #region DisposeAsync Tests
 
     [Fact]
-    public async Task DisposeAsync_CancelsToken()
+    public async Task DisposeAsync_WhenNotDisposed_CancelsToken()
     {
         var cancellation = new AsyncDisposableCancellation();
         var token = cancellation.Token;
@@ -113,15 +125,29 @@ public class AsyncDisposableCancellationTests
     }
 
     [Fact]
-    public async Task DisposeAsync_WhenCallbackThrows_PropagatesAndDisposesOwnedSource()
+    public async Task DisposeAsync_WhenCallbackThrows_ThrowsAggregateException()
     {
         var cancellation = new AsyncDisposableCancellation();
         var token = cancellation.Token;
         token.Register(() => throw new InvalidOperationException("Test exception"));
 
-        await Assert.ThrowsAnyAsync<Exception>(async () => await cancellation.DisposeAsync());
+        var exception = await Assert.ThrowsAsync<AggregateException>(async () =>
+            await cancellation.DisposeAsync()
+        );
 
-        Assert.True(cancellation.IsDisposed);
+        var inner = Assert.Single(exception.InnerExceptions);
+        Assert.IsType<InvalidOperationException>(inner);
+    }
+
+    [Fact]
+    public async Task DisposeAsync_WhenCallbackThrows_DisposesOwnedSource()
+    {
+        var cancellation = new AsyncDisposableCancellation();
+        var token = cancellation.Token;
+        token.Register(() => throw new InvalidOperationException("Test exception"));
+
+        await Assert.ThrowsAsync<AggregateException>(async () => await cancellation.DisposeAsync());
+
         Assert.Throws<ObjectDisposedException>(() => token.WaitHandle);
     }
 
