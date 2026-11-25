@@ -1,0 +1,49 @@
+---
+title: Quick start
+description: Install the package, then run code when a scope ends, dispose several resources in reverse order, share one resource and dispose asynchronously.
+---
+
+This page takes you from an empty project to code that runs when a scope ends, disposes several resources in order, shares one resource and disposes asynchronously.
+
+## Install
+
+```sh
+dotnet add package NCode.Disposables
+```
+
+The package is one assembly with no dependencies. Every type is in the namespace `NCode.Disposables`.
+
+## Run code when a scope ends
+
+`Disposable.Create` turns an `Action` into an `IDisposable` whose `Dispose` runs it once.
+
+```cs snippet=SiteQuickStartAction
+```
+
+## Dispose several resources
+
+`Disposable.Collection` disposes its items in reverse order, the last one added first, and disposes every item even when one throws. To go further, see how to [dispose many together](/guides/dispose-many-resources/).
+
+```cs snippet=SiteQuickStartMany
+```
+
+## Share one resource
+
+Each lease is a reference, and the resource is disposed when the last lease is. To go further, see how to [share a resource through leases](/guides/share-a-resource/).
+
+```cs snippet=SharedReference
+```
+
+## Dispose asynchronously
+
+`AsyncDisposable` has the same members for `IAsyncDisposable` and `await using`. To go further, read about [synchronous and asynchronous disposal](/concepts/sync-and-async/).
+
+```cs snippet=SiteQuickStartAsync
+```
+
+## Next steps
+
+- [Which disposable?](/start/which-disposable/) helps you pick the type that fits what you are doing.
+- [Hold a changing resource](/guides/hold-a-changing-resource/) shows how to replace a resource and dispose the one it replaces.
+- [Hand on ownership](/guides/hand-on-ownership/) shows how to pass a resource to another owner so it is disposed once.
+- [Behavior](/reference/behavior/) lists what every type does on the first and later calls to `Dispose`.
