@@ -55,6 +55,14 @@ public class SharedReferenceOwnerTests : UnitTestBase
     }
 
     [Fact]
+    public void Constructor_WithNullValue_Succeeds()
+    {
+        var owner = new SharedReferenceOwner<object?>(null, _ => { });
+
+        Assert.Null(owner.Value);
+    }
+
+    [Fact]
     public void Constructor_WithNullOnRelease_ThrowsArgumentNullException()
     {
         var exception = Assert.Throws<ArgumentNullException>(() =>
