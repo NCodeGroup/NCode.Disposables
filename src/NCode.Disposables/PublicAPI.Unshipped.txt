@@ -1,1 +1,3 @@
 #nullable enable
+NCode.Disposables.IDisposalStatus
+NCode.Disposables.IDisposalStatus.IsDisposed.get -> bool
