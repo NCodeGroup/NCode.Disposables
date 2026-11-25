@@ -844,6 +844,286 @@
         "NCode.Disposables.IDisposalStatus",
         "NCode.Disposables.IDisposalStatus.IsDisposed.get -> bool"
       ]
+    },
+    {
+      "id": "disposableaggregate",
+      "group": "holders",
+      "type": "DisposableAggregate",
+      "member": null,
+      "signatures": [
+        "public sealed class DisposableAggregate : IDisposable, IDisposalStatus",
+        "public bool IsDisposed { get; }",
+        "public DisposableAggregate()",
+        "public DisposableAggregate(IDisposable? disposable)",
+        "public void Dispose()",
+        "public IDisposable? Disposable { get; set; }"
+      ],
+      "summary": "Holds one resource in `Disposable`, swapped atomically. Disposing the aggregate disposes the resource it holds; replacing it does not. After disposal `Disposable` reads `null` and disposes a resource set on it.",
+      "page": "/guides/hold-a-changing-resource/",
+      "api": [
+        "NCode.Disposables.DisposableAggregate",
+        "NCode.Disposables.DisposableAggregate.Disposable.get -> System.IDisposable?",
+        "NCode.Disposables.DisposableAggregate.Disposable.set -> void",
+        "NCode.Disposables.DisposableAggregate.DisposableAggregate() -> void",
+        "NCode.Disposables.DisposableAggregate.DisposableAggregate(System.IDisposable? disposable) -> void",
+        "NCode.Disposables.DisposableAggregate.Dispose() -> void",
+        "NCode.Disposables.DisposableAggregate.IsDisposed.get -> bool"
+      ]
+    },
+    {
+      "id": "asyncdisposableaggregate",
+      "group": "holders",
+      "type": "AsyncDisposableAggregate",
+      "member": null,
+      "signatures": [
+        "public sealed class AsyncDisposableAggregate : IAsyncDisposable, IDisposalStatus",
+        "public bool IsDisposed { get; }",
+        "public AsyncDisposableAggregate()",
+        "public AsyncDisposableAggregate(IAsyncDisposable? disposable)",
+        "public ValueTask DisposeAsync()",
+        "public IAsyncDisposable? Disposable { get; set; }",
+        "public ValueTask SetDisposableAsync(IAsyncDisposable? disposable)"
+      ],
+      "summary": "As `DisposableAggregate`, for `IAsyncDisposable`. After disposal its setter throws `ObjectDisposedException`, and `SetDisposableAsync` disposes the resource.",
+      "page": "/guides/hold-a-changing-resource/",
+      "api": [
+        "NCode.Disposables.AsyncDisposableAggregate",
+        "NCode.Disposables.AsyncDisposableAggregate.AsyncDisposableAggregate() -> void",
+        "NCode.Disposables.AsyncDisposableAggregate.AsyncDisposableAggregate(System.IAsyncDisposable? disposable) -> void",
+        "NCode.Disposables.AsyncDisposableAggregate.Disposable.get -> System.IAsyncDisposable?",
+        "NCode.Disposables.AsyncDisposableAggregate.Disposable.set -> void",
+        "NCode.Disposables.AsyncDisposableAggregate.DisposeAsync() -> System.Threading.Tasks.ValueTask",
+        "NCode.Disposables.AsyncDisposableAggregate.IsDisposed.get -> bool",
+        "NCode.Disposables.AsyncDisposableAggregate.SetDisposableAsync(System.IAsyncDisposable? disposable) -> System.Threading.Tasks.ValueTask"
+      ]
+    },
+    {
+      "id": "disposableserial",
+      "group": "holders",
+      "type": "DisposableSerial",
+      "member": null,
+      "signatures": [
+        "public sealed class DisposableSerial : IDisposable, IDisposalStatus",
+        "public bool IsDisposed { get; }",
+        "public DisposableSerial()",
+        "public DisposableSerial(IDisposable? disposable)",
+        "public void Dispose()",
+        "public IDisposable? Disposable { get; set; }"
+      ],
+      "summary": "Holds one resource in `Disposable` and disposes it when another replaces it. Setting the instance it already holds does nothing.",
+      "page": "/guides/hold-a-changing-resource/",
+      "api": [
+        "NCode.Disposables.DisposableSerial",
+        "NCode.Disposables.DisposableSerial.Disposable.get -> System.IDisposable?",
+        "NCode.Disposables.DisposableSerial.Disposable.set -> void",
+        "NCode.Disposables.DisposableSerial.DisposableSerial() -> void",
+        "NCode.Disposables.DisposableSerial.DisposableSerial(System.IDisposable? disposable) -> void",
+        "NCode.Disposables.DisposableSerial.Dispose() -> void",
+        "NCode.Disposables.DisposableSerial.IsDisposed.get -> bool"
+      ]
+    },
+    {
+      "id": "asyncdisposableserial",
+      "group": "holders",
+      "type": "AsyncDisposableSerial",
+      "member": null,
+      "signatures": [
+        "public sealed class AsyncDisposableSerial : IAsyncDisposable, IDisposalStatus",
+        "public bool IsDisposed { get; }",
+        "public AsyncDisposableSerial()",
+        "public AsyncDisposableSerial(IAsyncDisposable? disposable)",
+        "public ValueTask DisposeAsync()",
+        "public IAsyncDisposable? Disposable { get; }",
+        "public ValueTask SetDisposableAsync(IAsyncDisposable? disposable)"
+      ],
+      "summary": "As `DisposableSerial`, through `SetDisposableAsync`.",
+      "page": "/guides/hold-a-changing-resource/",
+      "api": [
+        "NCode.Disposables.AsyncDisposableSerial",
+        "NCode.Disposables.AsyncDisposableSerial.AsyncDisposableSerial() -> void",
+        "NCode.Disposables.AsyncDisposableSerial.AsyncDisposableSerial(System.IAsyncDisposable? disposable) -> void",
+        "NCode.Disposables.AsyncDisposableSerial.Disposable.get -> System.IAsyncDisposable?",
+        "NCode.Disposables.AsyncDisposableSerial.DisposeAsync() -> System.Threading.Tasks.ValueTask",
+        "NCode.Disposables.AsyncDisposableSerial.IsDisposed.get -> bool",
+        "NCode.Disposables.AsyncDisposableSerial.SetDisposableAsync(System.IAsyncDisposable? disposable) -> System.Threading.Tasks.ValueTask"
+      ]
+    },
+    {
+      "id": "disposablesingleassignment",
+      "group": "holders",
+      "type": "DisposableSingleAssignment",
+      "member": null,
+      "signatures": [
+        "public sealed class DisposableSingleAssignment : IDisposable, IDisposalStatus",
+        "public bool IsDisposed { get; }",
+        "public bool IsAssigned { get; }",
+        "public void Dispose()",
+        "public IDisposable? Disposable { get; set; }"
+      ],
+      "summary": "Takes one non-null resource in `Disposable`, once: a second assignment throws `InvalidOperationException`. A resource assigned after disposal is disposed at once.",
+      "page": "/guides/hold-a-changing-resource/",
+      "api": [
+        "NCode.Disposables.DisposableSingleAssignment",
+        "NCode.Disposables.DisposableSingleAssignment.Disposable.get -> System.IDisposable?",
+        "NCode.Disposables.DisposableSingleAssignment.Disposable.set -> void",
+        "NCode.Disposables.DisposableSingleAssignment.DisposableSingleAssignment() -> void",
+        "NCode.Disposables.DisposableSingleAssignment.Dispose() -> void",
+        "NCode.Disposables.DisposableSingleAssignment.IsAssigned.get -> bool",
+        "NCode.Disposables.DisposableSingleAssignment.IsDisposed.get -> bool"
+      ]
+    },
+    {
+      "id": "asyncdisposablesingleassignment",
+      "group": "holders",
+      "type": "AsyncDisposableSingleAssignment",
+      "member": null,
+      "signatures": [
+        "public sealed class AsyncDisposableSingleAssignment : IAsyncDisposable, IDisposalStatus",
+        "public bool IsDisposed { get; }",
+        "public bool IsAssigned { get; }",
+        "public ValueTask DisposeAsync()",
+        "public IAsyncDisposable? Disposable { get; }",
+        "public ValueTask SetDisposableAsync(IAsyncDisposable disposable)"
+      ],
+      "summary": "As `DisposableSingleAssignment`, through `SetDisposableAsync`.",
+      "page": "/guides/hold-a-changing-resource/",
+      "api": [
+        "NCode.Disposables.AsyncDisposableSingleAssignment",
+        "NCode.Disposables.AsyncDisposableSingleAssignment.AsyncDisposableSingleAssignment() -> void",
+        "NCode.Disposables.AsyncDisposableSingleAssignment.Disposable.get -> System.IAsyncDisposable?",
+        "NCode.Disposables.AsyncDisposableSingleAssignment.DisposeAsync() -> System.Threading.Tasks.ValueTask",
+        "NCode.Disposables.AsyncDisposableSingleAssignment.IsAssigned.get -> bool",
+        "NCode.Disposables.AsyncDisposableSingleAssignment.IsDisposed.get -> bool",
+        "NCode.Disposables.AsyncDisposableSingleAssignment.SetDisposableAsync(System.IAsyncDisposable! disposable) -> System.Threading.Tasks.ValueTask"
+      ]
+    },
+    {
+      "id": "disposableguard-t",
+      "group": "holders",
+      "type": "DisposableGuard<T>",
+      "member": null,
+      "signatures": [
+        "public sealed class DisposableGuard<T>(T value) : IDisposable, IDisposalStatus where T : IDisposable",
+        "public T Value { get; }",
+        "public bool IsReleased { get; }",
+        "public bool IsDisposed { get; }",
+        "public T Release()",
+        "public void Dispose()"
+      ],
+      "summary": "Disposes `Value` on `Dispose` unless `Release()` returned it first. A second `Release()` throws `InvalidOperationException`, and `Release()` after `Dispose` throws `ObjectDisposedException`.",
+      "page": "/guides/hand-on-ownership/",
+      "api": [
+        "NCode.Disposables.DisposableGuard<T>",
+        "NCode.Disposables.DisposableGuard<T>.DisposableGuard(T value) -> void",
+        "NCode.Disposables.DisposableGuard<T>.Dispose() -> void",
+        "NCode.Disposables.DisposableGuard<T>.IsDisposed.get -> bool",
+        "NCode.Disposables.DisposableGuard<T>.IsReleased.get -> bool",
+        "NCode.Disposables.DisposableGuard<T>.Release() -> T",
+        "NCode.Disposables.DisposableGuard<T>.Value.get -> T"
+      ]
+    },
+    {
+      "id": "asyncdisposableguard-t",
+      "group": "holders",
+      "type": "AsyncDisposableGuard<T>",
+      "member": null,
+      "signatures": [
+        "public sealed class AsyncDisposableGuard<T>(T value) : IAsyncDisposable, IDisposalStatus where T : IAsyncDisposable",
+        "public T Value { get; }",
+        "public bool IsReleased { get; }",
+        "public bool IsDisposed { get; }",
+        "public T Release()",
+        "public ValueTask DisposeAsync()"
+      ],
+      "summary": "As `DisposableGuard<T>`, for an `IAsyncDisposable`.",
+      "page": "/guides/hand-on-ownership/",
+      "api": [
+        "NCode.Disposables.AsyncDisposableGuard<T>",
+        "NCode.Disposables.AsyncDisposableGuard<T>.AsyncDisposableGuard(T value) -> void",
+        "NCode.Disposables.AsyncDisposableGuard<T>.DisposeAsync() -> System.Threading.Tasks.ValueTask",
+        "NCode.Disposables.AsyncDisposableGuard<T>.IsDisposed.get -> bool",
+        "NCode.Disposables.AsyncDisposableGuard<T>.IsReleased.get -> bool",
+        "NCode.Disposables.AsyncDisposableGuard<T>.Release() -> T",
+        "NCode.Disposables.AsyncDisposableGuard<T>.Value.get -> T"
+      ]
+    },
+    {
+      "id": "disposablecollection",
+      "group": "holders",
+      "type": "DisposableCollection",
+      "member": null,
+      "signatures": [
+        "public sealed class DisposableCollection : IDisposable, ICollection<IDisposable>, IDisposalStatus",
+        "public DisposableCollection()",
+        "public DisposableCollection(IEnumerable<IDisposable> collection)",
+        "public void Dispose()",
+        "public bool IsDisposed { get; }",
+        "public bool IsReadOnly { get; }",
+        "public int Count { get; }",
+        "public void Add(IDisposable item)",
+        "public bool Remove(IDisposable item)",
+        "public void Clear()",
+        "public bool Contains(IDisposable item)",
+        "public void CopyTo(IDisposable[] array, int arrayIndex)",
+        "public IEnumerator<IDisposable> GetEnumerator()"
+      ],
+      "summary": "An `ICollection<IDisposable>` that disposes its items in reverse order on its first `Dispose`. `Remove` and `Clear` don't dispose, and an item added after disposal is disposed at once.",
+      "page": "/guides/dispose-many-resources/",
+      "api": [
+        "NCode.Disposables.DisposableCollection",
+        "NCode.Disposables.DisposableCollection.Add(System.IDisposable! item) -> void",
+        "NCode.Disposables.DisposableCollection.Clear() -> void",
+        "NCode.Disposables.DisposableCollection.Contains(System.IDisposable! item) -> bool",
+        "NCode.Disposables.DisposableCollection.CopyTo(System.IDisposable![]! array, int arrayIndex) -> void",
+        "NCode.Disposables.DisposableCollection.Count.get -> int",
+        "NCode.Disposables.DisposableCollection.DisposableCollection() -> void",
+        "NCode.Disposables.DisposableCollection.DisposableCollection(System.Collections.Generic.IEnumerable<System.IDisposable!>! collection) -> void",
+        "NCode.Disposables.DisposableCollection.Dispose() -> void",
+        "NCode.Disposables.DisposableCollection.GetEnumerator() -> System.Collections.Generic.IEnumerator<System.IDisposable!>!",
+        "NCode.Disposables.DisposableCollection.IsDisposed.get -> bool",
+        "NCode.Disposables.DisposableCollection.IsReadOnly.get -> bool",
+        "NCode.Disposables.DisposableCollection.Remove(System.IDisposable! item) -> bool"
+      ]
+    },
+    {
+      "id": "asyncdisposablecollection",
+      "group": "holders",
+      "type": "AsyncDisposableCollection",
+      "member": null,
+      "signatures": [
+        "public sealed class AsyncDisposableCollection : IAsyncDisposable, ICollection<IAsyncDisposable>, IDisposalStatus",
+        "public AsyncDisposableCollection()",
+        "public AsyncDisposableCollection(IEnumerable<IAsyncDisposable> collection)",
+        "public ValueTask DisposeAsync()",
+        "public bool IsDisposed { get; }",
+        "public bool IsReadOnly { get; }",
+        "public int Count { get; }",
+        "public void Add(IAsyncDisposable item)",
+        "public ValueTask AddAsync(IAsyncDisposable item)",
+        "public bool Remove(IAsyncDisposable item)",
+        "public void Clear()",
+        "public bool Contains(IAsyncDisposable item)",
+        "public void CopyTo(IAsyncDisposable[] array, int arrayIndex)",
+        "public IEnumerator<IAsyncDisposable> GetEnumerator()"
+      ],
+      "summary": "An `ICollection<IAsyncDisposable>` that disposes its items in reverse order with `DisposeAsync`. After disposal `Add` throws `ObjectDisposedException`, and `AddAsync` disposes the item.",
+      "page": "/guides/dispose-many-resources/",
+      "api": [
+        "NCode.Disposables.AsyncDisposableCollection",
+        "NCode.Disposables.AsyncDisposableCollection.Add(System.IAsyncDisposable! item) -> void",
+        "NCode.Disposables.AsyncDisposableCollection.AddAsync(System.IAsyncDisposable! item) -> System.Threading.Tasks.ValueTask",
+        "NCode.Disposables.AsyncDisposableCollection.AsyncDisposableCollection() -> void",
+        "NCode.Disposables.AsyncDisposableCollection.AsyncDisposableCollection(System.Collections.Generic.IEnumerable<System.IAsyncDisposable!>! collection) -> void",
+        "NCode.Disposables.AsyncDisposableCollection.Clear() -> void",
+        "NCode.Disposables.AsyncDisposableCollection.Contains(System.IAsyncDisposable! item) -> bool",
+        "NCode.Disposables.AsyncDisposableCollection.CopyTo(System.IAsyncDisposable![]! array, int arrayIndex) -> void",
+        "NCode.Disposables.AsyncDisposableCollection.Count.get -> int",
+        "NCode.Disposables.AsyncDisposableCollection.DisposeAsync() -> System.Threading.Tasks.ValueTask",
+        "NCode.Disposables.AsyncDisposableCollection.GetEnumerator() -> System.Collections.Generic.IEnumerator<System.IAsyncDisposable!>!",
+        "NCode.Disposables.AsyncDisposableCollection.IsDisposed.get -> bool",
+        "NCode.Disposables.AsyncDisposableCollection.IsReadOnly.get -> bool",
+        "NCode.Disposables.AsyncDisposableCollection.Remove(System.IAsyncDisposable! item) -> bool"
+      ]
     }
   ]
 }
