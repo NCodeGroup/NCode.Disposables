@@ -1,0 +1,70 @@
+---
+title: Hold a resource that changes
+description: "Keep one resource in a field and replace it: an aggregate leaves the old one to you, a serial disposable disposes it, and a single-assignment disposable takes one that arrives later."
+---
+
+import { Pitfalls } from '@ncodegroup/docs/components';
+import LifecycleTimeline from '@site/components/LifecycleTimeline.astro';
+
+A field that holds a connection, a subscription or a file has to decide what happens to the old resource when a new one arrives, and to the new one when the owner is already disposed. This page shows how to choose the holder, swap a resource and keep the old one, replace it and dispose the old one, replace it asynchronously, take one resource that arrives later, and what to watch for.
+
+## Choose the holder
+
+`Disposable.Aggregate` holds one resource and leaves the old one to you when you replace it. `Disposable.Serial` disposes the old one. `Disposable.SingleAssignment` takes one resource, once. `Disposable.Collection` holds many and is covered in [dispose many resources](/guides/dispose-many-resources/). A resource handed to a holder that is already disposed is disposed at once, as [ADR-1004](https://github.com/NCodeGroup/NCode.Disposables/blob/main/docs/decisions/1004-a-resource-handed-to-a-disposed-holder-is-disposed.md) records.
+
+<LifecycleTimeline figure="holders" />
+
+## Swap and keep the old one
+
+An aggregate holds one resource. Setting `Disposable` swaps it without disposing the old one, which stays yours. Disposing the aggregate disposes the one it holds.
+
+```cs snippet=AggregateDisposable
+```
+
+## Replace and dispose the old one
+
+A serial disposable disposes the old resource each time you set a new one, so a field never leaks the last one. Setting the instance it already holds is ignored.
+
+```cs snippet=SerialDisposable
+```
+
+```cs snippet=SiteHoldAChangingResourceSameInstance
+```
+
+## Replace asynchronously
+
+The asynchronous holders replace through `SetDisposableAsync`, which awaits the old one's disposal before it returns.
+
+```cs snippet=SiteHoldAChangingResourceAsync
+```
+
+## Take one resource that arrives later
+
+A single-assignment disposable takes one resource, now or later. A resource assigned after the holder is disposed is disposed at once.
+
+```cs snippet=SingleAssignmentDisposable
+```
+
+## Pitfalls
+
+A single-assignment disposable throws on a second assignment:
+
+```cs snippet=SiteHoldAChangingResourceSecondAssignment
+```
+
+<Pitfalls>
+
+- **Expecting an aggregate to dispose what it replaces.**
+  - *You write* `current.Disposable = next;` on `Disposable.Aggregate`.
+  - *What happens:* the old resource stays alive, and nothing disposes it.
+  - *Write instead:* `Disposable.Serial`, or dispose the old one yourself.
+- **Assigning a single-assignment disposable twice.**
+  - *You write* a second `pending.Disposable = …`.
+  - *What happens:* `InvalidOperationException`, before or after disposal.
+  - *Write instead:* `Disposable.Serial` when the resource changes.
+- **Setting a disposed async aggregate.**
+  - *You write* `current.Disposable = next;` on a disposed `AsyncDisposable.Aggregate`.
+  - *What happens:* `ObjectDisposedException`, because a setter cannot await the disposal.
+  - *Write instead:* `await current.SetDisposableAsync(next)`, which disposes it.
+
+</Pitfalls>
