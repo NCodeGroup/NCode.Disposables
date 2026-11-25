@@ -7,10 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [7.0.0] - 2026-11-24
+
+### Added
+
+- `DisposableSerial` and `AsyncDisposableSerial`, from `Disposable.Serial` and `AsyncDisposable.Serial`, hold one resource and dispose it when another replaces it. ([#65](https://github.com/NCodeGroup/NCode.Disposables/issues/65), [ADR-1004](docs/decisions/1004-a-resource-handed-to-a-disposed-holder-is-disposed.md))
+- `DisposableSingleAssignment` and `AsyncDisposableSingleAssignment`, from `Disposable.SingleAssignment` and `AsyncDisposable.SingleAssignment`, take one resource once; a second assignment throws `InvalidOperationException`. ([#65](https://github.com/NCodeGroup/NCode.Disposables/issues/65), [ADR-1004](docs/decisions/1004-a-resource-handed-to-a-disposed-holder-is-disposed.md))
+- `DisposableGuard<T>` and `AsyncDisposableGuard<T>`, from `Disposable.Guard` and `AsyncDisposable.Guard`, dispose a resource unless `Release()` hands its ownership on. ([#65](https://github.com/NCodeGroup/NCode.Disposables/issues/65))
+- `DisposableCancellation` and `AsyncDisposableCancellation`, from `Disposable.Cancellation` and `AsyncDisposable.Cancellation`, cancel a `CancellationTokenSource` when disposed, and dispose one they created. ([#65](https://github.com/NCodeGroup/NCode.Disposables/issues/65))
+- `IDisposalStatus.IsDisposed`, which every disposable that keeps state implements, and `DisposableFlag`, from `Disposable.Flag()`, which only records its disposal. ([#65](https://github.com/NCodeGroup/NCode.Disposables/issues/65), [ADR-1005](docs/decisions/1005-disposables-are-concrete-sealed-types-that-report-their-disposal-status.md))
+- `AsyncDisposable.Create` overloads that pass one to eight arguments to a `Func<…, ValueTask>`, `AsyncDisposable.Context`, which disposes on a `SynchronizationContext` and waits for it, and parameterless `Aggregate()` and `Serial()` factories. ([#65](https://github.com/NCodeGroup/NCode.Disposables/issues/65), [ADR-1005](docs/decisions/1005-disposables-are-concrete-sealed-types-that-report-their-disposal-status.md))
+- `ValueDisposable<TState>` and `AsyncValueDisposable<TState>`, from `Disposable.CreateValue` and `AsyncDisposable.CreateValue`, run a delegate on dispose without allocating. ([#65](https://github.com/NCodeGroup/NCode.Disposables/issues/65), [ADR-1006](docs/decisions/1006-value-disposables-and-lock-scopes-are-non-idempotent-structs.md))
+- Lock scopes: `SemaphoreSlim.Lock()` and `LockAsync()`, and `ReaderWriterLockSlim.ReadLock()`, `UpgradeableReadLock()` and `WriteLock()`, return a `ValueDisposable<T>` that releases the lock. ([#65](https://github.com/NCodeGroup/NCode.Disposables/issues/65), [ADR-1006](docs/decisions/1006-value-disposables-and-lock-scopes-are-non-idempotent-structs.md))
+- `AsyncDisposableAggregate.SetDisposableAsync` and `AsyncDisposableCollection.AddAsync`, which dispose the resource when the holder is already disposed. ([#65](https://github.com/NCodeGroup/NCode.Disposables/issues/65), [ADR-1004](docs/decisions/1004-a-resource-handed-to-a-disposed-holder-is-disposed.md))
+
 ### Changed
 
 - Package validation compares each package with the published 6.0.0 package.
 - Each release is tagged and published as its pull request merges: `.github/workflows/tag-release.yml` signs the tag with gitsign, publishes the GitHub release from the version's changelog section and starts `publish.yml`, which still waits for a maintainer to approve the `nuget` environment. `SECURITY.md` says how to verify a release tag. ([ADR-0016](docs/decisions/project-template/0016-releases-are-tagged-and-published-when-their-pull-request-merges.md))
+- **Breaking:** The `Disposable` and `AsyncDisposable` factories return the concrete sealed types, such as `DisposableAction`, `DisposableAggregate` and `DisposableCollection`, so recompile against 7.0.0; a `var` that later takes another `IDisposable` needs the type `IDisposable`. ([#65](https://github.com/NCodeGroup/NCode.Disposables/issues/65), [ADR-1005](docs/decisions/1005-disposables-are-concrete-sealed-types-that-report-their-disposal-status.md))
+- **Breaking:** A disposed aggregate's `Disposable` property returns `null` instead of throwing `ObjectDisposedException`, and `DisposableAggregate`'s setter disposes the resource it is given; `AsyncDisposableAggregate`'s setter still throws, so call `SetDisposableAsync`. ([#65](https://github.com/NCodeGroup/NCode.Disposables/issues/65), [ADR-1004](docs/decisions/1004-a-resource-handed-to-a-disposed-holder-is-disposed.md))
+- **Breaking:** `DisposableCollection.Add` on a disposed collection disposes the item instead of keeping it, and `AsyncDisposableCollection.Add` throws `ObjectDisposedException`; call `AddAsync` to dispose the item instead. ([#65](https://github.com/NCodeGroup/NCode.Disposables/issues/65), [ADR-1004](docs/decisions/1004-a-resource-handed-to-a-disposed-holder-is-disposed.md))
+- `DisposableCollection` and `AsyncDisposableCollection` are safe to use from several threads: every member takes one lock, and enumeration walks a snapshot. ([#65](https://github.com/NCodeGroup/NCode.Disposables/issues/65))
+- The library awaits with `ConfigureAwait(false)`, so its continuations never resume on the caller's `SynchronizationContext`, and CA2007 enforces it. ([#65](https://github.com/NCodeGroup/NCode.Disposables/issues/65))
+
+### Deprecated
+
+- `IDisposableAggregate`, `IAsyncDisposableAggregate`, `IDisposableCollection` and `IAsyncDisposableCollection` report `NCDISP002`: use the concrete types, because the next major version deletes the interfaces. ([#65](https://github.com/NCodeGroup/NCode.Disposables/issues/65), [ADR-1005](docs/decisions/1005-disposables-are-concrete-sealed-types-that-report-their-disposal-status.md))
 
 ## [6.0.0] - 2026-11-24
 
@@ -167,7 +190,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release for .NET Framework 4.5.1: `IDisposable` implementations for common resource management patterns, such as actions, aggregates, collections and shared references.
 
-[Unreleased]: https://github.com/NCodeGroup/NCode.Disposables/compare/v6.0.0...HEAD
+[Unreleased]: https://github.com/NCodeGroup/NCode.Disposables/compare/v7.0.0...HEAD
+[7.0.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v6.0.0...v7.0.0
 [6.0.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v5.3.0...v6.0.0
 [5.3.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v5.2.1...v5.3.0
 [5.2.1]: https://github.com/NCodeGroup/NCode.Disposables/compare/v5.1.1...v5.2.1
