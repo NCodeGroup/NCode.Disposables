@@ -687,6 +687,7 @@ public sealed class DisposableCollectionTests : IDisposable
 
     #region Interface Tests
 
+#pragma warning disable NCDISP002 // implements the deprecated interface until it is deleted
     [Fact]
     public void ImplementsIDisposableCollection()
     {
@@ -694,6 +695,7 @@ public sealed class DisposableCollectionTests : IDisposable
 
         Assert.IsAssignableFrom<IDisposableCollection>(collection);
     }
+#pragma warning restore NCDISP002
 
     [Fact]
     public void ImplementsIDisposable()
