@@ -296,7 +296,7 @@ public sealed class DisposableExtensionsTests : UnitTestBase
     }
 
     [Fact]
-    public void DisposeAll_CalledTwice_DisposesEachTime()
+    public void DisposeAll_WithOneShotItem_InvokesActionOnce()
     {
         var disposeCount = 0;
         IDisposable disposable = Disposable.Create(() => disposeCount++);
@@ -304,8 +304,6 @@ public sealed class DisposableExtensionsTests : UnitTestBase
 
         collection.DisposeAll();
 
-        // Note: DisposableAction is one-shot, so second call doesn't increment
-        // The extension method itself doesn't track previous calls
         Assert.Equal(1, disposeCount);
     }
 
