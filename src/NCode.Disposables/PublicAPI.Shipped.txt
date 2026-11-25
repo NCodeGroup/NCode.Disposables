@@ -3,17 +3,28 @@ NCode.Disposables.AsyncDisposable
 NCode.Disposables.AsyncDisposableAction
 NCode.Disposables.AsyncDisposableAction.AsyncDisposableAction(System.Func<System.Threading.Tasks.ValueTask>! action, bool idempotent = true) -> void
 NCode.Disposables.AsyncDisposableAction.DisposeAsync() -> System.Threading.Tasks.ValueTask
+NCode.Disposables.AsyncDisposableAction.IsDisposed.get -> bool
 NCode.Disposables.AsyncDisposableAdapter
 NCode.Disposables.AsyncDisposableAdapter.AsyncDisposableAdapter(System.IDisposable! disposable, bool idempotent = true) -> void
 NCode.Disposables.AsyncDisposableAdapter.DisposeAsync() -> System.Threading.Tasks.ValueTask
+NCode.Disposables.AsyncDisposableAdapter.IsDisposed.get -> bool
 NCode.Disposables.AsyncDisposableAggregate
 NCode.Disposables.AsyncDisposableAggregate.AsyncDisposableAggregate() -> void
 NCode.Disposables.AsyncDisposableAggregate.AsyncDisposableAggregate(System.IAsyncDisposable? disposable) -> void
 NCode.Disposables.AsyncDisposableAggregate.Disposable.get -> System.IAsyncDisposable?
 NCode.Disposables.AsyncDisposableAggregate.Disposable.set -> void
 NCode.Disposables.AsyncDisposableAggregate.DisposeAsync() -> System.Threading.Tasks.ValueTask
+NCode.Disposables.AsyncDisposableAggregate.IsDisposed.get -> bool
+NCode.Disposables.AsyncDisposableAggregate.SetDisposableAsync(System.IAsyncDisposable? disposable) -> System.Threading.Tasks.ValueTask
+NCode.Disposables.AsyncDisposableCancellation
+NCode.Disposables.AsyncDisposableCancellation.AsyncDisposableCancellation() -> void
+NCode.Disposables.AsyncDisposableCancellation.AsyncDisposableCancellation(System.Threading.CancellationTokenSource! source) -> void
+NCode.Disposables.AsyncDisposableCancellation.DisposeAsync() -> System.Threading.Tasks.ValueTask
+NCode.Disposables.AsyncDisposableCancellation.IsDisposed.get -> bool
+NCode.Disposables.AsyncDisposableCancellation.Token.get -> System.Threading.CancellationToken
 NCode.Disposables.AsyncDisposableCollection
 NCode.Disposables.AsyncDisposableCollection.Add(System.IAsyncDisposable! item) -> void
+NCode.Disposables.AsyncDisposableCollection.AddAsync(System.IAsyncDisposable! item) -> System.Threading.Tasks.ValueTask
 NCode.Disposables.AsyncDisposableCollection.AsyncDisposableCollection(bool ignoreExceptions = false) -> void
 NCode.Disposables.AsyncDisposableCollection.AsyncDisposableCollection(System.Collections.Generic.IEnumerable<System.IAsyncDisposable!>! collection, bool ignoreExceptions = false) -> void
 NCode.Disposables.AsyncDisposableCollection.Clear() -> void
@@ -22,8 +33,13 @@ NCode.Disposables.AsyncDisposableCollection.CopyTo(System.IAsyncDisposable![]! a
 NCode.Disposables.AsyncDisposableCollection.Count.get -> int
 NCode.Disposables.AsyncDisposableCollection.DisposeAsync() -> System.Threading.Tasks.ValueTask
 NCode.Disposables.AsyncDisposableCollection.GetEnumerator() -> System.Collections.Generic.IEnumerator<System.IAsyncDisposable!>!
+NCode.Disposables.AsyncDisposableCollection.IsDisposed.get -> bool
 NCode.Disposables.AsyncDisposableCollection.IsReadOnly.get -> bool
 NCode.Disposables.AsyncDisposableCollection.Remove(System.IAsyncDisposable! item) -> bool
+NCode.Disposables.AsyncDisposableContext
+NCode.Disposables.AsyncDisposableContext.AsyncDisposableContext(System.IAsyncDisposable! disposable, System.Threading.SynchronizationContext! context) -> void
+NCode.Disposables.AsyncDisposableContext.DisposeAsync() -> System.Threading.Tasks.ValueTask
+NCode.Disposables.AsyncDisposableContext.IsDisposed.get -> bool
 NCode.Disposables.AsyncDisposableEmpty
 NCode.Disposables.AsyncDisposableEmpty.AsyncDisposableEmpty() -> void
 NCode.Disposables.AsyncDisposableEmpty.DisposeAsync() -> System.Threading.Tasks.ValueTask
@@ -32,6 +48,27 @@ NCode.Disposables.AsyncDisposableExtensions.extension(System.Collections.Generic
 NCode.Disposables.AsyncDisposableExtensions.extension(System.Collections.Generic.IEnumerable<object?>!).DisposeAllAsync(bool ignoreExceptions = false) -> System.Threading.Tasks.ValueTask
 NCode.Disposables.AsyncDisposableExtensions.extension<T>(T)
 NCode.Disposables.AsyncDisposableExtensions.extension<T>(T).AsAsyncSharedReference() -> NCode.Disposables.AsyncSharedReferenceLease<T>
+NCode.Disposables.AsyncDisposableGuard<T>
+NCode.Disposables.AsyncDisposableGuard<T>.AsyncDisposableGuard(T value) -> void
+NCode.Disposables.AsyncDisposableGuard<T>.DisposeAsync() -> System.Threading.Tasks.ValueTask
+NCode.Disposables.AsyncDisposableGuard<T>.IsDisposed.get -> bool
+NCode.Disposables.AsyncDisposableGuard<T>.IsReleased.get -> bool
+NCode.Disposables.AsyncDisposableGuard<T>.Release() -> T
+NCode.Disposables.AsyncDisposableGuard<T>.Value.get -> T
+NCode.Disposables.AsyncDisposableSerial
+NCode.Disposables.AsyncDisposableSerial.AsyncDisposableSerial() -> void
+NCode.Disposables.AsyncDisposableSerial.AsyncDisposableSerial(System.IAsyncDisposable? disposable) -> void
+NCode.Disposables.AsyncDisposableSerial.Disposable.get -> System.IAsyncDisposable?
+NCode.Disposables.AsyncDisposableSerial.DisposeAsync() -> System.Threading.Tasks.ValueTask
+NCode.Disposables.AsyncDisposableSerial.IsDisposed.get -> bool
+NCode.Disposables.AsyncDisposableSerial.SetDisposableAsync(System.IAsyncDisposable? disposable) -> System.Threading.Tasks.ValueTask
+NCode.Disposables.AsyncDisposableSingleAssignment
+NCode.Disposables.AsyncDisposableSingleAssignment.AsyncDisposableSingleAssignment() -> void
+NCode.Disposables.AsyncDisposableSingleAssignment.Disposable.get -> System.IAsyncDisposable?
+NCode.Disposables.AsyncDisposableSingleAssignment.DisposeAsync() -> System.Threading.Tasks.ValueTask
+NCode.Disposables.AsyncDisposableSingleAssignment.IsAssigned.get -> bool
+NCode.Disposables.AsyncDisposableSingleAssignment.IsDisposed.get -> bool
+NCode.Disposables.AsyncDisposableSingleAssignment.SetDisposableAsync(System.IAsyncDisposable! disposable) -> System.Threading.Tasks.ValueTask
 NCode.Disposables.AsyncSharedReference
 NCode.Disposables.AsyncSharedReferenceLease<T>
 NCode.Disposables.AsyncSharedReferenceLease<T>.AddReference() -> NCode.Disposables.AsyncSharedReferenceLease<T>
@@ -48,16 +85,28 @@ NCode.Disposables.AsyncSharedReferenceOwner<T>.ReleaseReferenceAsync() -> System
 NCode.Disposables.AsyncSharedReferenceOwner<T>.TryAddReference(out NCode.Disposables.AsyncSharedReferenceLease<T> reference) -> bool
 NCode.Disposables.AsyncSharedReferenceOwner<T>.UnsafeReleaseReference() -> int
 NCode.Disposables.AsyncSharedReferenceOwner<T>.Value.get -> T
+NCode.Disposables.AsyncValueDisposable<TState>
+NCode.Disposables.AsyncValueDisposable<TState>.AsyncValueDisposable() -> void
+NCode.Disposables.AsyncValueDisposable<TState>.AsyncValueDisposable(System.Func<TState, System.Threading.Tasks.ValueTask>! action, TState state) -> void
+NCode.Disposables.AsyncValueDisposable<TState>.DisposeAsync() -> System.Threading.Tasks.ValueTask
 NCode.Disposables.Disposable
 NCode.Disposables.DisposableAction
 NCode.Disposables.DisposableAction.DisposableAction(System.Action! action, bool idempotent = true) -> void
 NCode.Disposables.DisposableAction.Dispose() -> void
+NCode.Disposables.DisposableAction.IsDisposed.get -> bool
 NCode.Disposables.DisposableAggregate
 NCode.Disposables.DisposableAggregate.Disposable.get -> System.IDisposable?
 NCode.Disposables.DisposableAggregate.Disposable.set -> void
 NCode.Disposables.DisposableAggregate.DisposableAggregate() -> void
 NCode.Disposables.DisposableAggregate.DisposableAggregate(System.IDisposable? disposable) -> void
 NCode.Disposables.DisposableAggregate.Dispose() -> void
+NCode.Disposables.DisposableAggregate.IsDisposed.get -> bool
+NCode.Disposables.DisposableCancellation
+NCode.Disposables.DisposableCancellation.DisposableCancellation() -> void
+NCode.Disposables.DisposableCancellation.DisposableCancellation(System.Threading.CancellationTokenSource! source) -> void
+NCode.Disposables.DisposableCancellation.Dispose() -> void
+NCode.Disposables.DisposableCancellation.IsDisposed.get -> bool
+NCode.Disposables.DisposableCancellation.Token.get -> System.Threading.CancellationToken
 NCode.Disposables.DisposableCollection
 NCode.Disposables.DisposableCollection.Add(System.IDisposable! item) -> void
 NCode.Disposables.DisposableCollection.Clear() -> void
@@ -68,11 +117,13 @@ NCode.Disposables.DisposableCollection.DisposableCollection(bool ignoreException
 NCode.Disposables.DisposableCollection.DisposableCollection(System.Collections.Generic.IEnumerable<System.IDisposable!>! collection, bool ignoreExceptions = false) -> void
 NCode.Disposables.DisposableCollection.Dispose() -> void
 NCode.Disposables.DisposableCollection.GetEnumerator() -> System.Collections.Generic.IEnumerator<System.IDisposable!>!
+NCode.Disposables.DisposableCollection.IsDisposed.get -> bool
 NCode.Disposables.DisposableCollection.IsReadOnly.get -> bool
 NCode.Disposables.DisposableCollection.Remove(System.IDisposable! item) -> bool
 NCode.Disposables.DisposableContext
 NCode.Disposables.DisposableContext.DisposableContext(System.IDisposable! disposable, System.Threading.SynchronizationContext! context, bool async = false) -> void
 NCode.Disposables.DisposableContext.Dispose() -> void
+NCode.Disposables.DisposableContext.IsDisposed.get -> bool
 NCode.Disposables.DisposableEmpty
 NCode.Disposables.DisposableEmpty.DisposableEmpty() -> void
 NCode.Disposables.DisposableEmpty.Dispose() -> void
@@ -83,6 +134,31 @@ NCode.Disposables.DisposableExtensions.extension(System.IDisposable?)
 NCode.Disposables.DisposableExtensions.extension(System.IDisposable?).DisposeAsyncIfAvailable() -> System.Threading.Tasks.ValueTask
 NCode.Disposables.DisposableExtensions.extension<T>(T)
 NCode.Disposables.DisposableExtensions.extension<T>(T).AsSharedReference() -> NCode.Disposables.SharedReferenceLease<T>
+NCode.Disposables.DisposableFlag
+NCode.Disposables.DisposableFlag.DisposableFlag() -> void
+NCode.Disposables.DisposableFlag.Dispose() -> void
+NCode.Disposables.DisposableFlag.IsDisposed.get -> bool
+NCode.Disposables.DisposableGuard<T>
+NCode.Disposables.DisposableGuard<T>.DisposableGuard(T value) -> void
+NCode.Disposables.DisposableGuard<T>.Dispose() -> void
+NCode.Disposables.DisposableGuard<T>.IsDisposed.get -> bool
+NCode.Disposables.DisposableGuard<T>.IsReleased.get -> bool
+NCode.Disposables.DisposableGuard<T>.Release() -> T
+NCode.Disposables.DisposableGuard<T>.Value.get -> T
+NCode.Disposables.DisposableSerial
+NCode.Disposables.DisposableSerial.Disposable.get -> System.IDisposable?
+NCode.Disposables.DisposableSerial.Disposable.set -> void
+NCode.Disposables.DisposableSerial.DisposableSerial() -> void
+NCode.Disposables.DisposableSerial.DisposableSerial(System.IDisposable? disposable) -> void
+NCode.Disposables.DisposableSerial.Dispose() -> void
+NCode.Disposables.DisposableSerial.IsDisposed.get -> bool
+NCode.Disposables.DisposableSingleAssignment
+NCode.Disposables.DisposableSingleAssignment.Disposable.get -> System.IDisposable?
+NCode.Disposables.DisposableSingleAssignment.Disposable.set -> void
+NCode.Disposables.DisposableSingleAssignment.DisposableSingleAssignment() -> void
+NCode.Disposables.DisposableSingleAssignment.Dispose() -> void
+NCode.Disposables.DisposableSingleAssignment.IsAssigned.get -> bool
+NCode.Disposables.DisposableSingleAssignment.IsDisposed.get -> bool
 NCode.Disposables.IAsyncDisposableAggregate
 NCode.Disposables.IAsyncDisposableAggregate.Disposable.get -> System.IAsyncDisposable?
 NCode.Disposables.IAsyncDisposableAggregate.Disposable.set -> void
@@ -96,11 +172,22 @@ NCode.Disposables.IDisposableAggregate
 NCode.Disposables.IDisposableAggregate.Disposable.get -> System.IDisposable?
 NCode.Disposables.IDisposableAggregate.Disposable.set -> void
 NCode.Disposables.IDisposableCollection
+NCode.Disposables.IDisposalStatus
+NCode.Disposables.IDisposalStatus.IsDisposed.get -> bool
 NCode.Disposables.ISharedReferenceOwner<T>
 NCode.Disposables.ISharedReferenceOwner<T>.AddReference() -> NCode.Disposables.SharedReferenceLease<T>
 NCode.Disposables.ISharedReferenceOwner<T>.ReleaseReference() -> int
 NCode.Disposables.ISharedReferenceOwner<T>.TryAddReference(out NCode.Disposables.SharedReferenceLease<T> reference) -> bool
 NCode.Disposables.ISharedReferenceOwner<T>.Value.get -> T
+NCode.Disposables.ReaderWriterLockSlimExtensions
+NCode.Disposables.ReaderWriterLockSlimExtensions.extension(System.Threading.ReaderWriterLockSlim!)
+NCode.Disposables.ReaderWriterLockSlimExtensions.extension(System.Threading.ReaderWriterLockSlim!).ReadLock() -> NCode.Disposables.ValueDisposable<System.Threading.ReaderWriterLockSlim!>
+NCode.Disposables.ReaderWriterLockSlimExtensions.extension(System.Threading.ReaderWriterLockSlim!).UpgradeableReadLock() -> NCode.Disposables.ValueDisposable<System.Threading.ReaderWriterLockSlim!>
+NCode.Disposables.ReaderWriterLockSlimExtensions.extension(System.Threading.ReaderWriterLockSlim!).WriteLock() -> NCode.Disposables.ValueDisposable<System.Threading.ReaderWriterLockSlim!>
+NCode.Disposables.SemaphoreSlimExtensions
+NCode.Disposables.SemaphoreSlimExtensions.extension(System.Threading.SemaphoreSlim!)
+NCode.Disposables.SemaphoreSlimExtensions.extension(System.Threading.SemaphoreSlim!).Lock(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> NCode.Disposables.ValueDisposable<System.Threading.SemaphoreSlim!>
+NCode.Disposables.SemaphoreSlimExtensions.extension(System.Threading.SemaphoreSlim!).LockAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<NCode.Disposables.ValueDisposable<System.Threading.SemaphoreSlim!>>
 NCode.Disposables.SharedReference
 NCode.Disposables.SharedReferenceLease<T>
 NCode.Disposables.SharedReferenceLease<T>.AddReference() -> NCode.Disposables.SharedReferenceLease<T>
@@ -116,54 +203,89 @@ NCode.Disposables.SharedReferenceOwner<T>.ReleaseReference() -> int
 NCode.Disposables.SharedReferenceOwner<T>.SharedReferenceOwner(T value, System.Action<T>! onRelease) -> void
 NCode.Disposables.SharedReferenceOwner<T>.TryAddReference(out NCode.Disposables.SharedReferenceLease<T> reference) -> bool
 NCode.Disposables.SharedReferenceOwner<T>.Value.get -> T
-static NCode.Disposables.AsyncDisposable.Adapt(System.IDisposable! disposable, bool idempotent) -> System.IAsyncDisposable!
-static NCode.Disposables.AsyncDisposable.Adapt(System.IDisposable! disposable) -> System.IAsyncDisposable!
-static NCode.Disposables.AsyncDisposable.Aggregate(System.IAsyncDisposable? disposable) -> NCode.Disposables.IAsyncDisposableAggregate!
-static NCode.Disposables.AsyncDisposable.Collection(bool ignoreExceptions, params System.IAsyncDisposable![]! collection) -> NCode.Disposables.IAsyncDisposableCollection!
-static NCode.Disposables.AsyncDisposable.Collection(params System.IAsyncDisposable![]! collection) -> NCode.Disposables.IAsyncDisposableCollection!
-static NCode.Disposables.AsyncDisposable.Collection(System.Collections.Generic.IEnumerable<System.IAsyncDisposable!>! collection, bool ignoreExceptions = false) -> NCode.Disposables.IAsyncDisposableCollection!
-static NCode.Disposables.AsyncDisposable.Create(System.Action! action, bool idempotent) -> System.IAsyncDisposable!
-static NCode.Disposables.AsyncDisposable.Create(System.Action! action) -> System.IAsyncDisposable!
-static NCode.Disposables.AsyncDisposable.Create(System.Func<System.Threading.Tasks.ValueTask>! action, bool idempotent) -> System.IAsyncDisposable!
-static NCode.Disposables.AsyncDisposable.Create(System.Func<System.Threading.Tasks.ValueTask>! action) -> System.IAsyncDisposable!
-static NCode.Disposables.AsyncDisposable.Empty.get -> System.IAsyncDisposable!
+NCode.Disposables.ValueDisposable<TState>
+NCode.Disposables.ValueDisposable<TState>.Dispose() -> void
+NCode.Disposables.ValueDisposable<TState>.ValueDisposable() -> void
+NCode.Disposables.ValueDisposable<TState>.ValueDisposable(System.Action<TState>! action, TState state) -> void
+static NCode.Disposables.AsyncDisposable.Adapt(System.IDisposable! disposable, bool idempotent) -> NCode.Disposables.AsyncDisposableAdapter!
+static NCode.Disposables.AsyncDisposable.Adapt(System.IDisposable! disposable) -> NCode.Disposables.AsyncDisposableAdapter!
+static NCode.Disposables.AsyncDisposable.Aggregate() -> NCode.Disposables.AsyncDisposableAggregate!
+static NCode.Disposables.AsyncDisposable.Aggregate(System.IAsyncDisposable? disposable) -> NCode.Disposables.AsyncDisposableAggregate!
+static NCode.Disposables.AsyncDisposable.Cancellation() -> NCode.Disposables.AsyncDisposableCancellation!
+static NCode.Disposables.AsyncDisposable.Cancellation(System.Threading.CancellationTokenSource! source) -> NCode.Disposables.AsyncDisposableCancellation!
+static NCode.Disposables.AsyncDisposable.Collection(bool ignoreExceptions, params System.IAsyncDisposable![]! collection) -> NCode.Disposables.AsyncDisposableCollection!
+static NCode.Disposables.AsyncDisposable.Collection(params System.IAsyncDisposable![]! collection) -> NCode.Disposables.AsyncDisposableCollection!
+static NCode.Disposables.AsyncDisposable.Collection(System.Collections.Generic.IEnumerable<System.IAsyncDisposable!>! collection, bool ignoreExceptions = false) -> NCode.Disposables.AsyncDisposableCollection!
+static NCode.Disposables.AsyncDisposable.Context(System.IAsyncDisposable! disposable, System.Threading.SynchronizationContext! context) -> NCode.Disposables.AsyncDisposableContext!
+static NCode.Disposables.AsyncDisposable.Create(System.Action! action, bool idempotent) -> NCode.Disposables.AsyncDisposableAction!
+static NCode.Disposables.AsyncDisposable.Create(System.Action! action) -> NCode.Disposables.AsyncDisposableAction!
+static NCode.Disposables.AsyncDisposable.Create(System.Func<System.Threading.Tasks.ValueTask>! action, bool idempotent) -> NCode.Disposables.AsyncDisposableAction!
+static NCode.Disposables.AsyncDisposable.Create(System.Func<System.Threading.Tasks.ValueTask>! action) -> NCode.Disposables.AsyncDisposableAction!
+static NCode.Disposables.AsyncDisposable.Create<T>(System.Func<T, System.Threading.Tasks.ValueTask>! action, T arg) -> NCode.Disposables.AsyncDisposableAction!
+static NCode.Disposables.AsyncDisposable.Create<T1, T2, T3, T4, T5, T6, T7, T8>(System.Func<T1, T2, T3, T4, T5, T6, T7, T8, System.Threading.Tasks.ValueTask>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8) -> NCode.Disposables.AsyncDisposableAction!
+static NCode.Disposables.AsyncDisposable.Create<T1, T2, T3, T4, T5, T6, T7>(System.Func<T1, T2, T3, T4, T5, T6, T7, System.Threading.Tasks.ValueTask>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7) -> NCode.Disposables.AsyncDisposableAction!
+static NCode.Disposables.AsyncDisposable.Create<T1, T2, T3, T4, T5, T6>(System.Func<T1, T2, T3, T4, T5, T6, System.Threading.Tasks.ValueTask>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6) -> NCode.Disposables.AsyncDisposableAction!
+static NCode.Disposables.AsyncDisposable.Create<T1, T2, T3, T4, T5>(System.Func<T1, T2, T3, T4, T5, System.Threading.Tasks.ValueTask>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5) -> NCode.Disposables.AsyncDisposableAction!
+static NCode.Disposables.AsyncDisposable.Create<T1, T2, T3, T4>(System.Func<T1, T2, T3, T4, System.Threading.Tasks.ValueTask>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4) -> NCode.Disposables.AsyncDisposableAction!
+static NCode.Disposables.AsyncDisposable.Create<T1, T2, T3>(System.Func<T1, T2, T3, System.Threading.Tasks.ValueTask>! action, T1 arg1, T2 arg2, T3 arg3) -> NCode.Disposables.AsyncDisposableAction!
+static NCode.Disposables.AsyncDisposable.Create<T1, T2>(System.Func<T1, T2, System.Threading.Tasks.ValueTask>! action, T1 arg1, T2 arg2) -> NCode.Disposables.AsyncDisposableAction!
+static NCode.Disposables.AsyncDisposable.CreateValue<TState>(System.Func<TState, System.Threading.Tasks.ValueTask>! action, TState state) -> NCode.Disposables.AsyncValueDisposable<TState>
+static NCode.Disposables.AsyncDisposable.Empty.get -> NCode.Disposables.AsyncDisposableEmpty!
+static NCode.Disposables.AsyncDisposable.Guard<T>(T value) -> NCode.Disposables.AsyncDisposableGuard<T>!
+static NCode.Disposables.AsyncDisposable.Serial() -> NCode.Disposables.AsyncDisposableSerial!
+static NCode.Disposables.AsyncDisposable.Serial(System.IAsyncDisposable? disposable) -> NCode.Disposables.AsyncDisposableSerial!
 static NCode.Disposables.AsyncDisposable.Shared<T>(T value, System.Func<T, System.Threading.Tasks.ValueTask>! onRelease) -> NCode.Disposables.AsyncSharedReferenceLease<T>
 static NCode.Disposables.AsyncDisposable.Shared<T>(T value) -> NCode.Disposables.AsyncSharedReferenceLease<T>
+static NCode.Disposables.AsyncDisposable.SingleAssignment() -> NCode.Disposables.AsyncDisposableSingleAssignment!
 static NCode.Disposables.AsyncDisposableEmpty.Singleton.get -> NCode.Disposables.AsyncDisposableEmpty!
 static NCode.Disposables.AsyncDisposableExtensions.AsAsyncSharedReference<T>(this T value) -> NCode.Disposables.AsyncSharedReferenceLease<T>
 static NCode.Disposables.AsyncDisposableExtensions.DisposeAllAsync(this System.Collections.Generic.IEnumerable<object?>! collection, bool ignoreExceptions = false) -> System.Threading.Tasks.ValueTask
 static NCode.Disposables.AsyncSharedReference.Create<T>(T value, System.Func<T, System.Threading.Tasks.ValueTask>! onRelease) -> NCode.Disposables.AsyncSharedReferenceLease<T>
 static NCode.Disposables.AsyncSharedReference.Create<T>(T value) -> NCode.Disposables.AsyncSharedReferenceLease<T>
-static NCode.Disposables.Disposable.Aggregate(System.IDisposable? disposable) -> NCode.Disposables.IDisposableAggregate!
-static NCode.Disposables.Disposable.Collection(bool ignoreExceptions, params System.IDisposable![]! collection) -> NCode.Disposables.IDisposableCollection!
-static NCode.Disposables.Disposable.Collection(params System.IDisposable![]! collection) -> NCode.Disposables.IDisposableCollection!
-static NCode.Disposables.Disposable.Collection(System.Collections.Generic.IEnumerable<System.IDisposable!>! collection, bool ignoreExceptions = false) -> NCode.Disposables.IDisposableCollection!
-static NCode.Disposables.Disposable.Context(System.IDisposable! disposable, System.Threading.SynchronizationContext! context, bool async = false) -> System.IDisposable!
-static NCode.Disposables.Disposable.Create(System.Action! action, bool idempotent) -> System.IDisposable!
-static NCode.Disposables.Disposable.Create(System.Action! action) -> System.IDisposable!
-static NCode.Disposables.Disposable.Create<T, TResult>(System.Func<T, TResult>! action, T arg) -> System.IDisposable!
-static NCode.Disposables.Disposable.Create<T>(System.Action<T>! action, T arg) -> System.IDisposable!
-static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6, T7, T8, TResult>(System.Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8) -> System.IDisposable!
-static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6, T7, T8>(System.Action<T1, T2, T3, T4, T5, T6, T7, T8>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8) -> System.IDisposable!
-static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6, T7, TResult>(System.Func<T1, T2, T3, T4, T5, T6, T7, TResult>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7) -> System.IDisposable!
-static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6, T7>(System.Action<T1, T2, T3, T4, T5, T6, T7>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7) -> System.IDisposable!
-static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6, TResult>(System.Func<T1, T2, T3, T4, T5, T6, TResult>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6) -> System.IDisposable!
-static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6>(System.Action<T1, T2, T3, T4, T5, T6>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6) -> System.IDisposable!
-static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, TResult>(System.Func<T1, T2, T3, T4, T5, TResult>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5) -> System.IDisposable!
-static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5>(System.Action<T1, T2, T3, T4, T5>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5) -> System.IDisposable!
-static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, TResult>(System.Func<T1, T2, T3, T4, TResult>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4) -> System.IDisposable!
-static NCode.Disposables.Disposable.Create<T1, T2, T3, T4>(System.Action<T1, T2, T3, T4>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4) -> System.IDisposable!
-static NCode.Disposables.Disposable.Create<T1, T2, T3, TResult>(System.Func<T1, T2, T3, TResult>! action, T1 arg1, T2 arg2, T3 arg3) -> System.IDisposable!
-static NCode.Disposables.Disposable.Create<T1, T2, T3>(System.Action<T1, T2, T3>! action, T1 arg1, T2 arg2, T3 arg3) -> System.IDisposable!
-static NCode.Disposables.Disposable.Create<T1, T2, TResult>(System.Func<T1, T2, TResult>! action, T1 arg1, T2 arg2) -> System.IDisposable!
-static NCode.Disposables.Disposable.Create<T1, T2>(System.Action<T1, T2>! action, T1 arg1, T2 arg2) -> System.IDisposable!
-static NCode.Disposables.Disposable.Create<TResult>(System.Func<TResult>! action) -> System.IDisposable!
-static NCode.Disposables.Disposable.Empty.get -> System.IDisposable!
+static NCode.Disposables.Disposable.Aggregate() -> NCode.Disposables.DisposableAggregate!
+static NCode.Disposables.Disposable.Aggregate(System.IDisposable? disposable) -> NCode.Disposables.DisposableAggregate!
+static NCode.Disposables.Disposable.Cancellation() -> NCode.Disposables.DisposableCancellation!
+static NCode.Disposables.Disposable.Cancellation(System.Threading.CancellationTokenSource! source) -> NCode.Disposables.DisposableCancellation!
+static NCode.Disposables.Disposable.Collection(bool ignoreExceptions, params System.IDisposable![]! collection) -> NCode.Disposables.DisposableCollection!
+static NCode.Disposables.Disposable.Collection(params System.IDisposable![]! collection) -> NCode.Disposables.DisposableCollection!
+static NCode.Disposables.Disposable.Collection(System.Collections.Generic.IEnumerable<System.IDisposable!>! collection, bool ignoreExceptions = false) -> NCode.Disposables.DisposableCollection!
+static NCode.Disposables.Disposable.Context(System.IDisposable! disposable, System.Threading.SynchronizationContext! context, bool async = false) -> NCode.Disposables.DisposableContext!
+static NCode.Disposables.Disposable.Create(System.Action! action, bool idempotent) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create(System.Action! action) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T, TResult>(System.Func<T, TResult>! action, T arg) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T>(System.Action<T>! action, T arg) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6, T7, T8, TResult>(System.Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6, T7, T8>(System.Action<T1, T2, T3, T4, T5, T6, T7, T8>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6, T7, TResult>(System.Func<T1, T2, T3, T4, T5, T6, T7, TResult>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6, T7>(System.Action<T1, T2, T3, T4, T5, T6, T7>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6, TResult>(System.Func<T1, T2, T3, T4, T5, T6, TResult>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6>(System.Action<T1, T2, T3, T4, T5, T6>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, TResult>(System.Func<T1, T2, T3, T4, T5, TResult>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5>(System.Action<T1, T2, T3, T4, T5>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, TResult>(System.Func<T1, T2, T3, T4, TResult>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T1, T2, T3, T4>(System.Action<T1, T2, T3, T4>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T1, T2, T3, TResult>(System.Func<T1, T2, T3, TResult>! action, T1 arg1, T2 arg2, T3 arg3) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T1, T2, T3>(System.Action<T1, T2, T3>! action, T1 arg1, T2 arg2, T3 arg3) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T1, T2, TResult>(System.Func<T1, T2, TResult>! action, T1 arg1, T2 arg2) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<T1, T2>(System.Action<T1, T2>! action, T1 arg1, T2 arg2) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.Create<TResult>(System.Func<TResult>! action) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.CreateValue<TState>(System.Action<TState>! action, TState state) -> NCode.Disposables.ValueDisposable<TState>
+static NCode.Disposables.Disposable.Empty.get -> NCode.Disposables.DisposableEmpty!
+static NCode.Disposables.Disposable.Flag() -> NCode.Disposables.DisposableFlag!
+static NCode.Disposables.Disposable.Guard<T>(T value) -> NCode.Disposables.DisposableGuard<T>!
+static NCode.Disposables.Disposable.Serial() -> NCode.Disposables.DisposableSerial!
+static NCode.Disposables.Disposable.Serial(System.IDisposable? disposable) -> NCode.Disposables.DisposableSerial!
 static NCode.Disposables.Disposable.Shared<T>(T value, System.Action<T>! onRelease) -> NCode.Disposables.SharedReferenceLease<T>
 static NCode.Disposables.Disposable.Shared<T>(T value) -> NCode.Disposables.SharedReferenceLease<T>
+static NCode.Disposables.Disposable.SingleAssignment() -> NCode.Disposables.DisposableSingleAssignment!
 static NCode.Disposables.DisposableEmpty.Singleton.get -> NCode.Disposables.DisposableEmpty!
 static NCode.Disposables.DisposableExtensions.AsSharedReference<T>(this T value) -> NCode.Disposables.SharedReferenceLease<T>
 static NCode.Disposables.DisposableExtensions.DisposeAll(this System.Collections.Generic.IEnumerable<object?>! collection, bool ignoreExceptions = false) -> void
 static NCode.Disposables.DisposableExtensions.DisposeAsyncIfAvailable(this System.IDisposable? disposable) -> System.Threading.Tasks.ValueTask
+static NCode.Disposables.ReaderWriterLockSlimExtensions.ReadLock(this System.Threading.ReaderWriterLockSlim! readerWriterLock) -> NCode.Disposables.ValueDisposable<System.Threading.ReaderWriterLockSlim!>
+static NCode.Disposables.ReaderWriterLockSlimExtensions.UpgradeableReadLock(this System.Threading.ReaderWriterLockSlim! readerWriterLock) -> NCode.Disposables.ValueDisposable<System.Threading.ReaderWriterLockSlim!>
+static NCode.Disposables.ReaderWriterLockSlimExtensions.WriteLock(this System.Threading.ReaderWriterLockSlim! readerWriterLock) -> NCode.Disposables.ValueDisposable<System.Threading.ReaderWriterLockSlim!>
+static NCode.Disposables.SemaphoreSlimExtensions.Lock(this System.Threading.SemaphoreSlim! semaphore, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> NCode.Disposables.ValueDisposable<System.Threading.SemaphoreSlim!>
+static NCode.Disposables.SemaphoreSlimExtensions.LockAsync(this System.Threading.SemaphoreSlim! semaphore, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<NCode.Disposables.ValueDisposable<System.Threading.SemaphoreSlim!>>
 static NCode.Disposables.SharedReference.Create<T>(T value, System.Action<T>! onRelease) -> NCode.Disposables.SharedReferenceLease<T>
 static NCode.Disposables.SharedReference.Create<T>(T value) -> NCode.Disposables.SharedReferenceLease<T>
