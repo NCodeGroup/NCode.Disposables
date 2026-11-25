@@ -115,7 +115,7 @@ using var subscription = Subscribe(enabled: false); // Disposable.Empty: disposi
 
 ### Swapping the resource an aggregate holds
 
-`Disposable.Aggregate` holds one resource, or `null`, in its `Disposable` property, and disposes the resource it holds when it is disposed. Setting the property replaces the resource without disposing the old one. Once the aggregate is disposed, reading or setting the property throws `ObjectDisposedException`. `AsyncDisposable.Aggregate` does the same for an `IAsyncDisposable`:
+`Disposable.Aggregate` holds one resource, or `null`, in its `Disposable` property, and disposes the resource it holds when it is disposed. Setting the property replaces the resource without disposing the old one. Once the aggregate is disposed, the property reads `null` and setting it disposes the resource it is given; `AsyncDisposable.Aggregate`'s setter throws `ObjectDisposedException` then, and its `SetDisposableAsync` disposes the resource. `AsyncDisposable.Aggregate` does the same for an `IAsyncDisposable`:
 
 <!-- snippet: AggregateDisposable -->
 ```cs
@@ -167,7 +167,7 @@ pending.Disposable = Disposable.Create(() => log.Add("late resource closed")); /
 
 ### Disposing many resources together
 
-`Disposable.Collection` is an `ICollection<IDisposable>` that disposes its items in reverse order, the last one added first, on its first `Dispose`; later calls do nothing, and an item added after that is never disposed. `Remove` and `Clear` take items out without disposing them:
+`Disposable.Collection` is an `ICollection<IDisposable>` that disposes its items in reverse order, the last one added first, on its first `Dispose`; later calls do nothing, and an item added after that is disposed at once. `Remove` and `Clear` take items out without disposing them:
 
 <!-- snippet: CollectionDisposable -->
 ```cs
@@ -182,6 +182,19 @@ using (var resources = Disposable.Collection(first, second, third))
 }
 
 // log: "third", "first"
+```
+<!-- endSnippet -->
+
+`AsyncDisposable.Collection`'s `Add` throws `ObjectDisposedException` once it is disposed; `AddAsync` disposes the item instead:
+
+<!-- snippet: CollectionLateAdd -->
+```cs
+var log = new List<string>();
+var resources = Disposable.Collection();
+resources.Dispose();
+resources.Add(Disposable.Create(() => log.Add("late item closed"))); // disposed at once, not kept
+
+// log: "late item closed"; resources.Count == 0
 ```
 <!-- endSnippet -->
 

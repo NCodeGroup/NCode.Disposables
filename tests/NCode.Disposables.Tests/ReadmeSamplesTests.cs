@@ -194,6 +194,22 @@ public class ReadmeSamplesTests
     }
 
     [Fact]
+    public void CollectionLateAddSample_Runs()
+    {
+        // begin-snippet: CollectionLateAdd
+        var log = new List<string>();
+        var resources = Disposable.Collection();
+        resources.Dispose();
+        resources.Add(Disposable.Create(() => log.Add("late item closed"))); // disposed at once, not kept
+
+        // log: "late item closed"; resources.Count == 0
+        // end-snippet
+
+        Assert.Equal(["late item closed"], log);
+        Assert.Empty(resources);
+    }
+
+    [Fact]
     public void CollectionErrorsSample_Runs()
     {
         // begin-snippet: CollectionErrors
