@@ -14,7 +14,8 @@ namespace NCode.Disposables;
 /// </para>
 /// <para>
 /// All factory methods in this class return instances that are idempotent by default, meaning multiple calls to
-/// <see cref="IDisposable.Dispose"/> will only perform the disposal operation once.
+/// <see cref="IDisposable.Dispose"/> will only perform the disposal operation once. <see cref="CreateRepeatable"/>
+/// is the factory that isn't idempotent: it invokes its action on every call.
 /// </para>
 /// </remarks>
 public static class Disposable
@@ -497,7 +498,25 @@ public static class Disposable
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return new DisposableAction(action, idempotent);
+        return idempotent ? Create(action) : CreateRepeatable(action);
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="IDisposable"/> that
+    /// will invoke an <see cref="Action"/> on every call to <see cref="IDisposable.Dispose"/>.
+    /// </summary>
+    /// <param name="action">Specifies the <see cref="Action"/> to invoke each time <see cref="IDisposable.Dispose"/> is called.</param>
+    /// <returns>A new <see cref="IDisposable"/> instance that invokes the specified action on every disposal.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// The returned instance is not idempotent: each call to <see cref="IDisposable.Dispose"/> invokes the action.
+    /// Use this with caution as it deviates from the standard dispose pattern.
+    /// </remarks>
+    public static DisposableAction CreateRepeatable(Action action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        return new DisposableAction(action) { IsRepeatable = true };
     }
 
     /// <summary>

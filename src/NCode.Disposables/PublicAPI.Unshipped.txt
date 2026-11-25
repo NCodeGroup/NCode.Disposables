@@ -3,6 +3,7 @@ NCode.Disposables.AsyncDisposableCollection.AsyncDisposableCollection() -> void
 NCode.Disposables.AsyncDisposableCollection.AsyncDisposableCollection(System.Collections.Generic.IEnumerable<System.IAsyncDisposable!>! collection) -> void
 NCode.Disposables.AsyncDisposableExtensions.extension(System.Collections.Generic.IEnumerable<object?>!).DisposeAllAsync() -> System.Threading.Tasks.ValueTask
 NCode.Disposables.AsyncDisposableExtensions.extension(System.Collections.Generic.IEnumerable<object?>!).DisposeAllIgnoringExceptionsAsync() -> System.Threading.Tasks.ValueTask
+NCode.Disposables.DisposableAction.DisposableAction(System.Action! action) -> void
 NCode.Disposables.DisposableCollection.DisposableCollection() -> void
 NCode.Disposables.DisposableCollection.DisposableCollection(System.Collections.Generic.IEnumerable<System.IDisposable!>! collection) -> void
 NCode.Disposables.DisposableExtensions.extension(System.Collections.Generic.IEnumerable<object?>!).DisposeAll() -> void
@@ -15,5 +16,6 @@ static NCode.Disposables.AsyncDisposableExtensions.DisposeAllIgnoringExceptionsA
 static NCode.Disposables.Disposable.Collection(System.Collections.Generic.IEnumerable<System.IDisposable!>! collection) -> NCode.Disposables.DisposableCollection!
 static NCode.Disposables.Disposable.CollectionIgnoringExceptions(params System.IDisposable![]! collection) -> NCode.Disposables.DisposableCollection!
 static NCode.Disposables.Disposable.CollectionIgnoringExceptions(System.Collections.Generic.IEnumerable<System.IDisposable!>! collection) -> NCode.Disposables.DisposableCollection!
+static NCode.Disposables.Disposable.CreateRepeatable(System.Action! action) -> NCode.Disposables.DisposableAction!
 static NCode.Disposables.DisposableExtensions.DisposeAll(this System.Collections.Generic.IEnumerable<object?>! collection) -> void
 static NCode.Disposables.DisposableExtensions.DisposeAllIgnoringExceptions(this System.Collections.Generic.IEnumerable<object?>! collection) -> void

@@ -205,4 +205,50 @@ public class DisposableTests
     }
 
     #endregion
+
+    #region Create Tests
+
+    [Fact]
+    public void Create_WhenDisposedThreeTimes_InvokesActionOnce()
+    {
+        var count = 0;
+        var disposable = Disposable.Create(() => count++);
+
+        disposable.Dispose();
+        disposable.Dispose();
+        disposable.Dispose();
+
+        Assert.Equal(1, count);
+        Assert.True(disposable.IsDisposed);
+    }
+
+    #endregion
+
+    #region CreateRepeatable Tests
+
+    [Fact]
+    public void CreateRepeatable_WhenDisposedThreeTimes_InvokesActionEachTime()
+    {
+        var count = 0;
+        var disposable = Disposable.CreateRepeatable(() => count++);
+
+        disposable.Dispose();
+        disposable.Dispose();
+        disposable.Dispose();
+
+        Assert.Equal(3, count);
+        Assert.True(disposable.IsDisposed);
+    }
+
+    [Fact]
+    public void CreateRepeatable_NullAction_ThrowsArgumentNullException()
+    {
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            Disposable.CreateRepeatable(null!)
+        );
+
+        Assert.Equal("action", exception.ParamName);
+    }
+
+    #endregion
 }
