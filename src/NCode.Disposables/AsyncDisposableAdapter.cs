@@ -57,6 +57,11 @@ public sealed class AsyncDisposableAdapter : IAsyncDisposable, IDisposalStatus
     /// will only dispose the underlying instance once; <see langword="false"/> to allow multiple disposals.
     /// </param>
     // Callers that pass only the disposable bind to the constructor without the flag, so this one keeps its default until it is deleted.
+    // ADR-1007: deleted in the next major version.
+    [Obsolete(
+        "Use new AsyncDisposableAdapter(disposable), or AsyncDisposable.AdaptRepeatable to dispose it on every call. This constructor is deleted in the next major version.",
+        DiagnosticId = "NCDISP003"
+    )]
 #pragma warning disable RS0027 // optional parameter on an overload with fewer parameters than another
     public AsyncDisposableAdapter(IDisposable disposable, bool idempotent = true)
 #pragma warning restore RS0027

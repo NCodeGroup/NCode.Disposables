@@ -37,6 +37,11 @@ public static class AsyncDisposable
     /// will only dispose the underlying instance once; <see langword="false"/> to allow multiple disposals.
     /// </param>
     /// <returns>A new <see cref="AsyncDisposableAdapter"/> instance that wraps the specified disposable.</returns>
+    // ADR-1007: deleted in the next major version.
+    [Obsolete(
+        "Use AsyncDisposable.Adapt(disposable), or AsyncDisposable.AdaptRepeatable to dispose it on every call. This overload is deleted in the next major version.",
+        DiagnosticId = "NCDISP003"
+    )]
     public static AsyncDisposableAdapter Adapt(IDisposable disposable, bool idempotent)
     {
         return idempotent ? Adapt(disposable) : AdaptRepeatable(disposable);

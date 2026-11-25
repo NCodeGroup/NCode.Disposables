@@ -18,26 +18,6 @@ public class AsyncDisposableAdapterTests
     }
 
     [Fact]
-    public void Constructor_WithIdempotentTrue_CreatesInstance()
-    {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-
-        var adapter = new AsyncDisposableAdapter(mockDisposable.Object, idempotent: true);
-
-        Assert.NotNull(adapter);
-    }
-
-    [Fact]
-    public void Constructor_WithIdempotentFalse_CreatesInstance()
-    {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-
-        var adapter = new AsyncDisposableAdapter(mockDisposable.Object, idempotent: false);
-
-        Assert.NotNull(adapter);
-    }
-
-    [Fact]
     public async Task Constructor_DefaultIdempotent_IsTrue()
     {
         var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
@@ -74,7 +54,7 @@ public class AsyncDisposableAdapterTests
         var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
         mockDisposable.Setup(x => x.Dispose());
 
-        var adapter = new AsyncDisposableAdapter(mockDisposable.Object, idempotent: true);
+        var adapter = new AsyncDisposableAdapter(mockDisposable.Object);
 
         await adapter.DisposeAsync();
         await adapter.DisposeAsync();
@@ -89,7 +69,7 @@ public class AsyncDisposableAdapterTests
         var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
         mockDisposable.Setup(x => x.Dispose());
 
-        var adapter = new AsyncDisposableAdapter(mockDisposable.Object, idempotent: false);
+        var adapter = AsyncDisposable.AdaptRepeatable(mockDisposable.Object);
 
         await adapter.DisposeAsync();
         await adapter.DisposeAsync();
@@ -128,7 +108,7 @@ public class AsyncDisposableAdapterTests
             }
         });
 
-        var adapter = new AsyncDisposableAdapter(disposable, idempotent: true);
+        var adapter = new AsyncDisposableAdapter(disposable);
 
         await Assert.ThrowsAsync<InvalidOperationException>(async () =>
             await adapter.DisposeAsync()
@@ -147,7 +127,7 @@ public class AsyncDisposableAdapterTests
             .Setup(x => x.Dispose())
             .Throws(new InvalidOperationException("Test exception"));
 
-        var adapter = new AsyncDisposableAdapter(mockDisposable.Object, idempotent: false);
+        var adapter = AsyncDisposable.AdaptRepeatable(mockDisposable.Object);
 
         await Assert.ThrowsAsync<InvalidOperationException>(async () =>
             await adapter.DisposeAsync()
@@ -179,7 +159,7 @@ public class AsyncDisposableAdapterTests
         var disposeCount = 0;
         var disposable = new TestDisposable(() => Interlocked.Increment(ref disposeCount));
 
-        var adapter = new AsyncDisposableAdapter(disposable, idempotent: true);
+        var adapter = new AsyncDisposableAdapter(disposable);
 
         const int concurrentCalls = 100;
         var tasks = new Task[concurrentCalls];
@@ -200,7 +180,7 @@ public class AsyncDisposableAdapterTests
         var disposeCount = 0;
         var disposable = new TestDisposable(() => Interlocked.Increment(ref disposeCount));
 
-        var adapter = new AsyncDisposableAdapter(disposable, idempotent: false);
+        var adapter = AsyncDisposable.AdaptRepeatable(disposable);
 
         const int concurrentCalls = 100;
         var tasks = new Task[concurrentCalls];
@@ -262,12 +242,70 @@ public class AsyncDisposableAdapterTests
         var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
         mockDisposable.Setup(x => x.Dispose());
 
-        var adapter = new AsyncDisposableAdapter(mockDisposable.Object, idempotent: false);
+        var adapter = AsyncDisposable.AdaptRepeatable(mockDisposable.Object);
 
         await adapter.DisposeAsync();
 
         Assert.True(adapter.IsDisposed);
     }
+
+    #endregion
+
+    #region Deprecated Overload Tests
+
+#pragma warning disable NCDISP003 // tests the deprecated overloads until they are deleted
+
+    [Fact]
+    public void Constructor_WithIdempotentTrue_CreatesInstance()
+    {
+        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+
+        var adapter = new AsyncDisposableAdapter(mockDisposable.Object, idempotent: true);
+
+        Assert.NotNull(adapter);
+    }
+
+    [Fact]
+    public void Constructor_WithIdempotentFalse_CreatesInstance()
+    {
+        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+
+        var adapter = new AsyncDisposableAdapter(mockDisposable.Object, idempotent: false);
+
+        Assert.NotNull(adapter);
+    }
+
+    [Fact]
+    public async Task Constructor_WithIdempotentFalse_DisposesEachTime()
+    {
+        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        mockDisposable.Setup(x => x.Dispose());
+
+        var adapter = new AsyncDisposableAdapter(mockDisposable.Object, idempotent: false);
+
+        await adapter.DisposeAsync();
+        await adapter.DisposeAsync();
+        await adapter.DisposeAsync();
+
+        mockDisposable.Verify(x => x.Dispose(), Times.Exactly(3));
+    }
+
+    [Fact]
+    public async Task Adapt_WithIdempotentFalse_DisposesEachTime()
+    {
+        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        mockDisposable.Setup(x => x.Dispose());
+
+        var adapter = AsyncDisposable.Adapt(mockDisposable.Object, idempotent: false);
+
+        await adapter.DisposeAsync();
+        await adapter.DisposeAsync();
+        await adapter.DisposeAsync();
+
+        mockDisposable.Verify(x => x.Dispose(), Times.Exactly(3));
+    }
+
+#pragma warning restore NCDISP003
 
     #endregion
 
