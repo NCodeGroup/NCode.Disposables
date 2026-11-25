@@ -6,8 +6,8 @@
 
 ## Context
 
-The factories return `IDisposable` or a per-type interface, which hides members such as `IsDisposed`. An interface
-can't gain a member without breaking its implementers, so each addition to one costs a major version.
+A factory that returns `IDisposable` or a per-type interface hides members such as `IsDisposed`. An interface can't gain
+a member without breaking its implementers, so each addition to one costs a major version.
 
 ## Decision
 
