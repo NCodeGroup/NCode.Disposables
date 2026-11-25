@@ -5,6 +5,34 @@
   xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 >
   <Suppression>
+    <DiagnosticId>CP0001</DiagnosticId>
+    <Target>T:NCode.Disposables.IAsyncDisposableAggregate</Target>
+    <Left>lib/net10.0/NCode.Disposables.dll</Left>
+    <Right>lib/net10.0/NCode.Disposables.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0001</DiagnosticId>
+    <Target>T:NCode.Disposables.IAsyncDisposableCollection</Target>
+    <Left>lib/net10.0/NCode.Disposables.dll</Left>
+    <Right>lib/net10.0/NCode.Disposables.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0001</DiagnosticId>
+    <Target>T:NCode.Disposables.IDisposableAggregate</Target>
+    <Left>lib/net10.0/NCode.Disposables.dll</Left>
+    <Right>lib/net10.0/NCode.Disposables.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0001</DiagnosticId>
+    <Target>T:NCode.Disposables.IDisposableCollection</Target>
+    <Left>lib/net10.0/NCode.Disposables.dll</Left>
+    <Right>lib/net10.0/NCode.Disposables.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:NCode.Disposables.AsyncDisposable.Adapt(System.IDisposable,System.Boolean)</Target>
     <Left>lib/net10.0/NCode.Disposables.dll</Left>
@@ -77,6 +105,48 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:NCode.Disposables.AsyncDisposable.get_Empty</Target>
+    <Left>lib/net10.0/NCode.Disposables.dll</Left>
+    <Right>lib/net10.0/NCode.Disposables.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:NCode.Disposables.AsyncDisposableAction.#ctor(System.Func{System.Threading.Tasks.ValueTask},System.Boolean)</Target>
+    <Left>lib/net10.0/NCode.Disposables.dll</Left>
+    <Right>lib/net10.0/NCode.Disposables.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:NCode.Disposables.AsyncDisposableAdapter.#ctor(System.IDisposable,System.Boolean)</Target>
+    <Left>lib/net10.0/NCode.Disposables.dll</Left>
+    <Right>lib/net10.0/NCode.Disposables.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:NCode.Disposables.AsyncDisposableCollection.#ctor(System.Boolean)</Target>
+    <Left>lib/net10.0/NCode.Disposables.dll</Left>
+    <Right>lib/net10.0/NCode.Disposables.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:NCode.Disposables.AsyncDisposableCollection.#ctor(System.Collections.Generic.IEnumerable{System.IAsyncDisposable},System.Boolean)</Target>
+    <Left>lib/net10.0/NCode.Disposables.dll</Left>
+    <Right>lib/net10.0/NCode.Disposables.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:NCode.Disposables.AsyncDisposableExtensions.&lt;G&gt;$977919F21861BE18BA139544085CA0BD.DisposeAllAsync(System.Boolean)</Target>
+    <Left>lib/net10.0/NCode.Disposables.dll</Left>
+    <Right>lib/net10.0/NCode.Disposables.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:NCode.Disposables.AsyncDisposableExtensions.DisposeAllAsync(System.Collections.Generic.IEnumerable{System.Object},System.Boolean)</Target>
     <Left>lib/net10.0/NCode.Disposables.dll</Left>
     <Right>lib/net10.0/NCode.Disposables.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -252,6 +322,76 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:NCode.Disposables.Disposable.get_Empty</Target>
+    <Left>lib/net10.0/NCode.Disposables.dll</Left>
+    <Right>lib/net10.0/NCode.Disposables.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:NCode.Disposables.DisposableAction.#ctor(System.Action,System.Boolean)</Target>
+    <Left>lib/net10.0/NCode.Disposables.dll</Left>
+    <Right>lib/net10.0/NCode.Disposables.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:NCode.Disposables.DisposableCollection.#ctor(System.Boolean)</Target>
+    <Left>lib/net10.0/NCode.Disposables.dll</Left>
+    <Right>lib/net10.0/NCode.Disposables.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:NCode.Disposables.DisposableCollection.#ctor(System.Collections.Generic.IEnumerable{System.IDisposable},System.Boolean)</Target>
+    <Left>lib/net10.0/NCode.Disposables.dll</Left>
+    <Right>lib/net10.0/NCode.Disposables.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:NCode.Disposables.DisposableContext.#ctor(System.IDisposable,System.Threading.SynchronizationContext,System.Boolean)</Target>
+    <Left>lib/net10.0/NCode.Disposables.dll</Left>
+    <Right>lib/net10.0/NCode.Disposables.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:NCode.Disposables.DisposableExtensions.&lt;G&gt;$977919F21861BE18BA139544085CA0BD.DisposeAll(System.Boolean)</Target>
+    <Left>lib/net10.0/NCode.Disposables.dll</Left>
+    <Right>lib/net10.0/NCode.Disposables.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:NCode.Disposables.DisposableExtensions.DisposeAll(System.Collections.Generic.IEnumerable{System.Object},System.Boolean)</Target>
+    <Left>lib/net10.0/NCode.Disposables.dll</Left>
+    <Right>lib/net10.0/NCode.Disposables.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0008</DiagnosticId>
+    <Target>T:NCode.Disposables.AsyncDisposableAggregate</Target>
+    <Left>lib/net10.0/NCode.Disposables.dll</Left>
+    <Right>lib/net10.0/NCode.Disposables.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0008</DiagnosticId>
+    <Target>T:NCode.Disposables.AsyncDisposableCollection</Target>
+    <Left>lib/net10.0/NCode.Disposables.dll</Left>
+    <Right>lib/net10.0/NCode.Disposables.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0008</DiagnosticId>
+    <Target>T:NCode.Disposables.DisposableAggregate</Target>
+    <Left>lib/net10.0/NCode.Disposables.dll</Left>
+    <Right>lib/net10.0/NCode.Disposables.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0008</DiagnosticId>
+    <Target>T:NCode.Disposables.DisposableCollection</Target>
     <Left>lib/net10.0/NCode.Disposables.dll</Left>
     <Right>lib/net10.0/NCode.Disposables.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
