@@ -89,7 +89,8 @@ trim_trailing_whitespace = false
 [*.{htm,html,cshtml,js,ts,css,scss}]
 indent_size = 2
 
-# The documentation site's pages and components (docs/site) and its launcher (build/site.mjs) take the 2-space indent of the other web files.
+# The documentation site's pages and components (docs/site) and its launcher (build/site.mjs) take the 2-space indent
+# of the other web files.
 [*.{mdx,astro,mjs}]
 indent_size = 2
 

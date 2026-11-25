@@ -5,8 +5,8 @@ using NCode.Disposables;
 
 namespace SiteSamples.Guides;
 
-// The samples of docs/site/guides/hold-a-changing-resource.mdx. The site's build includes each begin-snippet region in the
-// page by its key (ADR-1010).
+// The samples of docs/site/guides/hold-a-changing-resource.mdx. The site's build includes each begin-snippet region
+// in the page by its key (ADR-1010).
 public class HoldAChangingResourceSamples
 {
     #region Replace And Dispose The Old One Samples
@@ -37,14 +37,12 @@ public class HoldAChangingResourceSamples
     {
         // begin-snippet: SiteHoldAChangingResourceAsync
         List<string> log = [];
+        var first = AsyncDisposable.Create(() => log.Add("first closed"));
+        var second = AsyncDisposable.Create(() => log.Add("second closed"));
         await using (var current = AsyncDisposable.Serial())
         {
-            await current.SetDisposableAsync(
-                AsyncDisposable.Create(() => log.Add("first closed"))
-            );
-            await current.SetDisposableAsync(
-                AsyncDisposable.Create(() => log.Add("second closed"))
-            ); // disposes the first
+            await current.SetDisposableAsync(first);
+            await current.SetDisposableAsync(second); // disposes the first
         }
 
         // log: "first closed", "second closed"

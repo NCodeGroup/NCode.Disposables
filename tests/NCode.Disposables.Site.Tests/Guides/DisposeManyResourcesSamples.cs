@@ -5,8 +5,8 @@ using NCode.Disposables;
 
 namespace SiteSamples.Guides;
 
-// The samples of docs/site/guides/dispose-many-resources.mdx. The site's build includes each begin-snippet region in the
-// page by its key (ADR-1010).
+// The samples of docs/site/guides/dispose-many-resources.mdx. The site's build includes each begin-snippet region in
+// the page by its key (ADR-1010).
 public class DisposeManyResourcesSamples
 {
     #region Handle The Errors Samples
@@ -15,10 +15,11 @@ public class DisposeManyResourcesSamples
     public void SiteDisposeManyResourcesErrorsSample_Runs()
     {
         // begin-snippet: SiteDisposeManyResourcesErrors
-        var resources = Disposable.Collection(
-            Disposable.Create(() => throw new InvalidOperationException("first")),
-            Disposable.Create(() => throw new InvalidOperationException("second"))
+        var first = Disposable.Create(() => throw new InvalidOperationException("first"));
+        var second = Disposable.Create(() =>
+            throw new InvalidOperationException("second")
         );
+        var resources = Disposable.Collection(first, second);
 
         AggregateException? failure = null;
         try
@@ -33,10 +34,10 @@ public class DisposeManyResourcesSamples
         // end-snippet
 
         Assert.NotNull(failure);
-        Assert.Equal(
-            ["second", "first"],
-            failure.InnerExceptions.Select(exception => exception.Message)
-        );
+        var messages = failure
+            .InnerExceptions.Select(exception => exception.Message)
+            .ToList();
+        Assert.Equal(["second", "first"], messages);
     }
 
     #endregion
