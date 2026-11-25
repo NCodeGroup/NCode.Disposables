@@ -70,3 +70,4 @@ override in `AGENTS.md`.
 | [1005](1005-disposables-are-concrete-sealed-types-that-report-their-disposal-status.md) | Disposables are concrete sealed types that report their disposal status | Accepted |
 | [1006](1006-value-disposables-and-lock-scopes-are-non-idempotent-structs.md) | Value disposables and lock scopes are non-idempotent structs | Accepted |
 | [1007](1007-behavior-is-chosen-by-a-factory-name-not-a-flag-parameter.md) | Behavior is chosen by a factory's name, not a flag parameter | Accepted |
+| [1008](1008-a-disposable-that-wraps-a-resource-rejects-a-null-resource.md) | A disposable that wraps a resource rejects a null resource | Accepted |
