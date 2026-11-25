@@ -3,14 +3,14 @@
 
 namespace NCode.Disposables.Tests;
 
-public class AsyncDisposableAdapterTests
+public class AsyncDisposableAdapterTests : UnitTestBase
 {
     #region Constructor Tests
 
     [Fact]
     public void Constructor_WithValidDisposable_CreatesInstance()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
 
         var adapter = new AsyncDisposableAdapter(mockDisposable.Object);
 
@@ -20,15 +20,13 @@ public class AsyncDisposableAdapterTests
     [Fact]
     public async Task Constructor_DefaultIdempotent_IsTrue()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
 
         var adapter = new AsyncDisposableAdapter(mockDisposable.Object);
 
         await adapter.DisposeAsync();
         await adapter.DisposeAsync();
-
-        mockDisposable.Verify(x => x.Dispose(), Times.Once);
     }
 
     #endregion
@@ -38,36 +36,32 @@ public class AsyncDisposableAdapterTests
     [Fact]
     public async Task DisposeAsync_WithValidDisposable_InvokesDispose()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
 
         var adapter = new AsyncDisposableAdapter(mockDisposable.Object);
 
         await adapter.DisposeAsync();
-
-        mockDisposable.Verify(x => x.Dispose(), Times.Once);
     }
 
     [Fact]
     public async Task DisposeAsync_WhenIdempotent_CalledMultipleTimes_DisposesOnce()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
 
         var adapter = new AsyncDisposableAdapter(mockDisposable.Object);
 
         await adapter.DisposeAsync();
         await adapter.DisposeAsync();
         await adapter.DisposeAsync();
-
-        mockDisposable.Verify(x => x.Dispose(), Times.Once);
     }
 
     [Fact]
     public async Task DisposeAsync_WhenNotIdempotent_CalledMultipleTimes_DisposesEachTime()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable();
 
         var adapter = AsyncDisposable.AdaptRepeatable(mockDisposable.Object);
 
@@ -81,10 +75,11 @@ public class AsyncDisposableAdapterTests
     [Fact]
     public async Task DisposeAsync_WhenUnderlyingDisposeThrows_PropagatesException()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
         mockDisposable
             .Setup(x => x.Dispose())
-            .Throws(new InvalidOperationException("Test exception"));
+            .Throws(new InvalidOperationException("Test exception"))
+            .Verifiable();
 
         var adapter = new AsyncDisposableAdapter(mockDisposable.Object);
 
@@ -122,10 +117,11 @@ public class AsyncDisposableAdapterTests
     [Fact]
     public async Task DisposeAsync_WhenNotIdempotentAndDisposeThrows_SubsequentCallsAlsoThrow()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
         mockDisposable
             .Setup(x => x.Dispose())
-            .Throws(new InvalidOperationException("Test exception"));
+            .Throws(new InvalidOperationException("Test exception"))
+            .Verifiable();
 
         var adapter = AsyncDisposable.AdaptRepeatable(mockDisposable.Object);
 
@@ -142,8 +138,8 @@ public class AsyncDisposableAdapterTests
     [Fact]
     public async Task DisposeAsync_ReturnsCompletedValueTask()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable();
 
         var adapter = new AsyncDisposableAdapter(mockDisposable.Object);
 
@@ -198,15 +194,13 @@ public class AsyncDisposableAdapterTests
     [Fact]
     public async Task DisposeAsync_CanBeUsedWithAwaitUsing()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
 
         await using (new AsyncDisposableAdapter(mockDisposable.Object))
         {
             // Use the adapter within await using block
         }
-
-        mockDisposable.Verify(x => x.Dispose(), Times.Once);
     }
 
     #endregion
@@ -216,7 +210,7 @@ public class AsyncDisposableAdapterTests
     [Fact]
     public void IsDisposed_BeforeDispose_ReturnsFalse()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
 
         var adapter = new AsyncDisposableAdapter(mockDisposable.Object);
 
@@ -226,8 +220,8 @@ public class AsyncDisposableAdapterTests
     [Fact]
     public async Task IsDisposed_AfterDispose_ReturnsTrue()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable();
 
         var adapter = new AsyncDisposableAdapter(mockDisposable.Object);
 
@@ -239,8 +233,8 @@ public class AsyncDisposableAdapterTests
     [Fact]
     public async Task IsDisposed_NonIdempotentAfterDispose_ReturnsTrue()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable();
 
         var adapter = AsyncDisposable.AdaptRepeatable(mockDisposable.Object);
 
@@ -258,7 +252,7 @@ public class AsyncDisposableAdapterTests
     [Fact]
     public void Constructor_WithIdempotentTrue_CreatesInstance()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
 
         var adapter = new AsyncDisposableAdapter(mockDisposable.Object, idempotent: true);
 
@@ -268,7 +262,7 @@ public class AsyncDisposableAdapterTests
     [Fact]
     public void Constructor_WithIdempotentFalse_CreatesInstance()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
 
         var adapter = new AsyncDisposableAdapter(mockDisposable.Object, idempotent: false);
 
@@ -278,8 +272,8 @@ public class AsyncDisposableAdapterTests
     [Fact]
     public async Task Constructor_WithIdempotentFalse_DisposesEachTime()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable();
 
         var adapter = new AsyncDisposableAdapter(mockDisposable.Object, idempotent: false);
 
@@ -293,8 +287,8 @@ public class AsyncDisposableAdapterTests
     [Fact]
     public async Task Adapt_WithIdempotentFalse_DisposesEachTime()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable();
 
         var adapter = AsyncDisposable.Adapt(mockDisposable.Object, idempotent: false);
 

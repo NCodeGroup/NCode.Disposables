@@ -3,7 +3,7 @@
 
 namespace NCode.Disposables.Tests;
 
-public class SharedReferenceOwnerTests
+public class SharedReferenceOwnerTests : UnitTestBase
 {
     #region Helper Methods
 
@@ -492,16 +492,14 @@ public class SharedReferenceOwnerTests
     [Fact]
     public void GenericType_WorksWithDisposableTypes()
     {
-        var mockValue = new Mock<IDisposable>(MockBehavior.Strict);
-        mockValue.Setup(x => x.Dispose());
+        var mockValue = CreateStrictMock<IDisposable>();
+        mockValue.Setup(x => x.Dispose()).Verifiable(Times.Once());
         var onRelease = (IDisposable d) => d.Dispose();
         var owner = new SharedReferenceOwner<IDisposable>(mockValue.Object, onRelease);
 
         Assert.Same(mockValue.Object, owner.Value);
 
         owner.ReleaseReference();
-
-        mockValue.Verify(x => x.Dispose(), Times.Once);
     }
 
     [Fact]
@@ -571,8 +569,8 @@ public class SharedReferenceOwnerTests
     [Fact]
     public void Integration_SharedReferenceCreate_WorksEndToEnd()
     {
-        var value = new Mock<IDisposable>(MockBehavior.Strict);
-        value.Setup(x => x.Dispose());
+        var value = CreateStrictMock<IDisposable>();
+        value.Setup(x => x.Dispose()).Verifiable(Times.Once());
 
         var lease1 = SharedReference.Create(value.Object);
         var lease2 = lease1.AddReference();
@@ -589,7 +587,6 @@ public class SharedReferenceOwnerTests
         value.Verify(x => x.Dispose(), Times.Never);
 
         lease3.Dispose();
-        value.Verify(x => x.Dispose(), Times.Once);
     }
 
     #endregion
