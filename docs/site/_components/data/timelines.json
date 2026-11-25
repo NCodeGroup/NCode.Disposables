@@ -4,7 +4,7 @@
     {
       "id": "holders",
       "label": "What each holder does at four moments",
-      "caption": "Each holder is given resource A, then B, then disposed, then given C. A cell is a resource: lit while it lives, struck through once it is disposed.",
+      "caption": "Each holder is given resource A, then B, then disposed, then given C. A cell is a resource: lit while it lives, struck through once it is disposed. A second assignment throws `InvalidOperationException`.",
       "stops": ["Given A", "Given B", "`Dispose`", "Given C afterwards"],
       "lanes": [
         {
@@ -29,9 +29,9 @@
           "owner": "`Disposable.SingleAssignment`",
           "stops": [
             { "cells": "A . .", "text": "Holds A" },
-            { "cells": "A B .", "text": "Throws `InvalidOperationException`; B stays yours" },
+            { "cells": "A B .", "text": "Throws; B stays yours" },
             { "cells": "a B .", "text": "Disposes A" },
-            { "cells": "a B C", "text": "Throws `InvalidOperationException`; C stays yours" }
+            { "cells": "a B C", "text": "Throws; C stays yours" }
           ]
         },
         {
@@ -75,7 +75,7 @@
         {
           "owner": "`Create` with a release action",
           "stops": [
-            { "cells": "1 R", "text": "`Create(buffer, array => pool.Return(array))`" },
+            { "cells": "1 R", "text": "`Create` with `onRelease`" },
             { "cells": "2 R", "text": "A second lease" },
             { "cells": "1 R", "text": "One lease released" },
             { "cells": "0 r", "text": "The last release runs the action once" }
