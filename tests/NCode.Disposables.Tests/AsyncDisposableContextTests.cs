@@ -66,7 +66,7 @@ public class AsyncDisposableContextTests
     #region DisposeAsync Tests
 
     [Fact]
-    public async Task DisposeAsync_PostsToContext()
+    public async Task DisposeAsync_WhenNotDisposed_PostsToContext()
     {
         var context = CreateContext();
 
@@ -81,7 +81,7 @@ public class AsyncDisposableContextTests
     }
 
     [Fact]
-    public async Task DisposeAsync_DisposesUnderlying()
+    public async Task DisposeAsync_WhenNotDisposed_DisposesUnderlying()
     {
         var context = CreateContext();
 
@@ -96,7 +96,7 @@ public class AsyncDisposableContextTests
     }
 
     [Fact]
-    public async Task DisposeAsync_CallsOperationStartedAndCompleted()
+    public async Task DisposeAsync_WhenNotDisposed_CallsOperationStartedAndCompleted()
     {
         var callOrder = new List<string>();
         var context = CreateContext(callOrder);

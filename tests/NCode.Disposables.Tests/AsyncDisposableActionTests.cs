@@ -262,9 +262,8 @@ public class AsyncDisposableActionTests
     [Fact]
     public async Task IsDisposed_WhenActionThrows_ReturnsTrue()
     {
-        var disposable = new AsyncDisposableAction(() =>
-            throw new InvalidOperationException("Test exception")
-        );
+        var failure = new InvalidOperationException("Test exception");
+        var disposable = new AsyncDisposableAction(() => ValueTask.FromException(failure));
 
         await Assert.ThrowsAsync<InvalidOperationException>(async () =>
             await disposable.DisposeAsync()
