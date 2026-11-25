@@ -245,64 +245,6 @@ public class AsyncDisposableAdapterTests : UnitTestBase
 
     #endregion
 
-    #region Deprecated Overload Tests
-
-#pragma warning disable NCDISP003 // tests the deprecated overloads until they are deleted
-
-    [Fact]
-    public void Constructor_WithIdempotentTrue_CreatesInstance()
-    {
-        var mockDisposable = CreateStrictMock<IDisposable>();
-
-        var adapter = new AsyncDisposableAdapter(mockDisposable.Object, idempotent: true);
-
-        Assert.NotNull(adapter);
-    }
-
-    [Fact]
-    public void Constructor_WithIdempotentFalse_CreatesInstance()
-    {
-        var mockDisposable = CreateStrictMock<IDisposable>();
-
-        var adapter = new AsyncDisposableAdapter(mockDisposable.Object, idempotent: false);
-
-        Assert.NotNull(adapter);
-    }
-
-    [Fact]
-    public async Task Constructor_WithIdempotentFalse_DisposesEachTime()
-    {
-        var mockDisposable = CreateStrictMock<IDisposable>();
-        mockDisposable.Setup(x => x.Dispose()).Verifiable();
-
-        var adapter = new AsyncDisposableAdapter(mockDisposable.Object, idempotent: false);
-
-        await adapter.DisposeAsync();
-        await adapter.DisposeAsync();
-        await adapter.DisposeAsync();
-
-        mockDisposable.Verify(x => x.Dispose(), Times.Exactly(3));
-    }
-
-    [Fact]
-    public async Task Adapt_WithIdempotentFalse_DisposesEachTime()
-    {
-        var mockDisposable = CreateStrictMock<IDisposable>();
-        mockDisposable.Setup(x => x.Dispose()).Verifiable();
-
-        var adapter = AsyncDisposable.Adapt(mockDisposable.Object, idempotent: false);
-
-        await adapter.DisposeAsync();
-        await adapter.DisposeAsync();
-        await adapter.DisposeAsync();
-
-        mockDisposable.Verify(x => x.Dispose(), Times.Exactly(3));
-    }
-
-#pragma warning restore NCDISP003
-
-    #endregion
-
     #region Helper Classes
 
     private sealed class TestDisposable(Action disposeAction) : IDisposable
