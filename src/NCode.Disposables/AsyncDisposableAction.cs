@@ -22,9 +22,13 @@ namespace NCode.Disposables;
 /// are handled safely using atomic operations.
 /// </para>
 /// </remarks>
-public sealed class AsyncDisposableAction : IAsyncDisposable, IDisposalStatus
+/// <param name="action">The asynchronous delegate to invoke when <see cref="DisposeAsync"/> is called.</param>
+/// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+public sealed class AsyncDisposableAction(Func<ValueTask> action)
+    : IAsyncDisposable,
+        IDisposalStatus
 {
-    private Func<ValueTask>? _action;
+    private Func<ValueTask>? _action = action ?? throw new ArgumentNullException(nameof(action));
 
     /// <summary>
     /// Holds 1 after disposal has been requested and 0 before; <see cref="IsDisposed"/> reads it.
@@ -36,19 +40,6 @@ public sealed class AsyncDisposableAction : IAsyncDisposable, IDisposalStatus
     /// instead of only the first.
     /// </summary>
     internal bool IsRepeatable { get; init; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AsyncDisposableAction"/> class with the specified
-    /// asynchronous dispose action, which is invoked only once.
-    /// </summary>
-    /// <param name="action">The asynchronous delegate to invoke when <see cref="DisposeAsync"/> is called.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
-    public AsyncDisposableAction(Func<ValueTask> action)
-    {
-        ArgumentNullException.ThrowIfNull(action);
-
-        _action = action;
-    }
 
     /// <summary>
     /// Gets a value indicating whether <see cref="DisposeAsync"/> has been called at least once.

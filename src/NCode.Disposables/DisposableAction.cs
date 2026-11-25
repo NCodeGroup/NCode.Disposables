@@ -22,9 +22,11 @@ namespace NCode.Disposables;
 /// are handled safely using atomic operations.
 /// </para>
 /// </remarks>
-public sealed class DisposableAction : IDisposable, IDisposalStatus
+/// <param name="action">The delegate to invoke when <see cref="Dispose"/> is called.</param>
+/// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+public sealed class DisposableAction(Action action) : IDisposable, IDisposalStatus
 {
-    private Action? _action;
+    private Action? _action = action ?? throw new ArgumentNullException(nameof(action));
 
     /// <summary>
     /// Holds 1 after disposal has been requested and 0 before; <see cref="IsDisposed"/> reads it.
@@ -36,19 +38,6 @@ public sealed class DisposableAction : IDisposable, IDisposalStatus
     /// instead of only the first.
     /// </summary>
     internal bool IsRepeatable { get; init; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DisposableAction"/> class with the specified
-    /// dispose action, which is invoked only once.
-    /// </summary>
-    /// <param name="action">The delegate to invoke when <see cref="Dispose"/> is called.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
-    public DisposableAction(Action action)
-    {
-        ArgumentNullException.ThrowIfNull(action);
-
-        _action = action;
-    }
 
     /// <summary>
     /// Gets a value indicating whether <see cref="Dispose"/> has been called at least once.
