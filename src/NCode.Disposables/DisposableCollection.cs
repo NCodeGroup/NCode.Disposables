@@ -72,6 +72,11 @@ public sealed class DisposableCollection : IDisposableCollection, IDisposalStatu
     /// disposing remaining items; <see langword="false"/> (the default) to propagate exceptions.
     /// </param>
     // Callers that pass nothing bind to the constructor without the flag, so this one keeps its default until it is deleted.
+    // ADR-1007: deleted in the next major version.
+    [Obsolete(
+        "Use new DisposableCollection(), or Disposable.CollectionIgnoringExceptions to ignore the exceptions items throw. This constructor is deleted in the next major version.",
+        DiagnosticId = "NCDISP003"
+    )]
 #pragma warning disable RS0027 // optional parameter on an overload with fewer parameters than another
     public DisposableCollection(bool ignoreExceptions = false)
 #pragma warning restore RS0027
@@ -90,6 +95,11 @@ public sealed class DisposableCollection : IDisposableCollection, IDisposalStatu
     /// disposing remaining items; <see langword="false"/> (the default) to propagate exceptions.
     /// </param>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
+    // ADR-1007: deleted in the next major version.
+    [Obsolete(
+        "Use new DisposableCollection(collection), or Disposable.CollectionIgnoringExceptions to ignore the exceptions items throw. This constructor is deleted in the next major version.",
+        DiagnosticId = "NCDISP003"
+    )]
     public DisposableCollection(IEnumerable<IDisposable> collection, bool ignoreExceptions = false)
         : this(collection)
     {

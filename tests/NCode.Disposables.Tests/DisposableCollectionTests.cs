@@ -23,22 +23,6 @@ public sealed class DisposableCollectionTests : IDisposable
     }
 
     [Fact]
-    public void Constructor_WithIgnoreExceptionsFalse_CreatesEmptyCollection()
-    {
-        var collection = new DisposableCollection(ignoreExceptions: false);
-
-        Assert.Empty(collection);
-    }
-
-    [Fact]
-    public void Constructor_WithIgnoreExceptionsTrue_CreatesEmptyCollection()
-    {
-        var collection = new DisposableCollection(ignoreExceptions: true);
-
-        Assert.Empty(collection);
-    }
-
-    [Fact]
     public void Constructor_WithCollection_CopiesElements()
     {
         var disposable1 = new Mock<IDisposable>(MockBehavior.Strict);
@@ -581,7 +565,7 @@ public sealed class DisposableCollectionTests : IDisposable
     [Fact]
     public void Dispose_WhenItemThrows_PropagatesException()
     {
-        var collection = new DisposableCollection(ignoreExceptions: false);
+        var collection = new DisposableCollection();
         var disposable = new Mock<IDisposable>(MockBehavior.Strict);
         disposable.Setup(x => x.Dispose()).Throws(new InvalidOperationException("Test exception"));
         collection.Add(disposable.Object);
@@ -595,7 +579,7 @@ public sealed class DisposableCollectionTests : IDisposable
     public void Dispose_WithIgnoreExceptions_SuppressesExceptions()
     {
         var disposeCount = 0;
-        var collection = new DisposableCollection(ignoreExceptions: true);
+        var collection = Disposable.CollectionIgnoringExceptions();
         var throwingDisposable = new TestDisposable(() =>
         {
             Interlocked.Increment(ref disposeCount);
@@ -615,7 +599,7 @@ public sealed class DisposableCollectionTests : IDisposable
     public void Dispose_WithIgnoreExceptions_DisposesAllEvenWithMultipleExceptions()
     {
         var disposeCount = 0;
-        var collection = new DisposableCollection(ignoreExceptions: true);
+        var collection = Disposable.CollectionIgnoringExceptions();
 
         for (var i = 0; i < 5; i++)
         {
@@ -742,6 +726,91 @@ public sealed class DisposableCollectionTests : IDisposable
 
         Assert.IsAssignableFrom<ICollection<IDisposable>>(collection);
     }
+
+    #endregion
+
+    #region Deprecated Overload Tests
+
+#pragma warning disable NCDISP003 // tests the deprecated overloads until they are deleted
+
+    [Fact]
+    public void Constructor_WithIgnoreExceptionsFalse_CreatesEmptyCollection()
+    {
+        var collection = new DisposableCollection(ignoreExceptions: false);
+
+        Assert.Empty(collection);
+    }
+
+    [Fact]
+    public void Constructor_WithIgnoreExceptionsTrue_CreatesEmptyCollection()
+    {
+        var collection = new DisposableCollection(ignoreExceptions: true);
+
+        Assert.Empty(collection);
+    }
+
+    [Fact]
+    public void Constructor_WithIgnoreExceptionsTrue_IgnoresItemExceptions()
+    {
+        var disposeCount = 0;
+        var collection = new DisposableCollection(ignoreExceptions: true);
+        collection.Add(new TestDisposable(() => Interlocked.Increment(ref disposeCount)));
+        collection.Add(
+            new TestDisposable(() =>
+            {
+                Interlocked.Increment(ref disposeCount);
+                throw new InvalidOperationException("Test exception");
+            })
+        );
+
+        collection.Dispose();
+
+        Assert.Equal(2, disposeCount);
+        Assert.Empty(collection);
+    }
+
+    [Fact]
+    public void Collection_WithIgnoreExceptionsTrue_IgnoresItemExceptions()
+    {
+        var disposeCount = 0;
+        var collection = Disposable.Collection(
+            true,
+            new TestDisposable(() => Interlocked.Increment(ref disposeCount)),
+            new TestDisposable(() =>
+            {
+                Interlocked.Increment(ref disposeCount);
+                throw new InvalidOperationException("Test exception");
+            })
+        );
+
+        collection.Dispose();
+
+        Assert.Equal(2, disposeCount);
+        Assert.Empty(collection);
+    }
+
+    [Fact]
+    public void Collection_WithEnumerableAndIgnoreExceptionsTrue_IgnoresItemExceptions()
+    {
+        var disposeCount = 0;
+        IDisposable[] items =
+        [
+            new TestDisposable(() => Interlocked.Increment(ref disposeCount)),
+            new TestDisposable(() =>
+            {
+                Interlocked.Increment(ref disposeCount);
+                throw new InvalidOperationException("Test exception");
+            }),
+        ];
+        var collection = Disposable.Collection(items, true);
+
+        collection.Dispose();
+
+        Assert.Equal(2, disposeCount);
+        Assert.Empty(collection);
+    }
+
+#pragma warning restore NCDISP003
 
     #endregion
 

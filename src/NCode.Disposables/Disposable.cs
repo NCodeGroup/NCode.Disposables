@@ -475,6 +475,11 @@ public static class Disposable
     /// rethrown, or an <see cref="AggregateException"/> holding every exception is thrown when several items throw.
     /// </para>
     /// </remarks>
+    // ADR-1007: deleted in the next major version.
+    [Obsolete(
+        "Use Disposable.Collection, or Disposable.CollectionIgnoringExceptions to ignore the exceptions items throw. This overload is deleted in the next major version.",
+        DiagnosticId = "NCDISP003"
+    )]
     public static DisposableCollection Collection(
         bool ignoreExceptions,
         params IDisposable[] collection
@@ -509,6 +514,11 @@ public static class Disposable
     /// </para>
     /// </remarks>
     // Callers that pass only the collection bind to this overload, so it keeps its optional parameter.
+    // ADR-1007: deleted in the next major version.
+    [Obsolete(
+        "Use Disposable.Collection, or Disposable.CollectionIgnoringExceptions to ignore the exceptions items throw. This overload is deleted in the next major version.",
+        DiagnosticId = "NCDISP003"
+    )]
 #pragma warning disable RS0027 // optional parameter on an overload with fewer parameters than another
     public static DisposableCollection Collection(
 #pragma warning restore RS0027
