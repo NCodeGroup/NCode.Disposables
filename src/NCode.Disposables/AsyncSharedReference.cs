@@ -60,6 +60,7 @@ public static class AsyncSharedReference
     /// <returns>
     /// A new <see cref="AsyncSharedReferenceLease{T}"/> representing the initial lease on the shared resource.
     /// </returns>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentNullException"><paramref name="onRelease"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
@@ -73,6 +74,7 @@ public static class AsyncSharedReference
     /// </remarks>
     public static AsyncSharedReferenceLease<T> Create<T>(T value, Func<T, ValueTask> onRelease)
     {
+        ArgumentNullException.ThrowIfNull(value);
         ArgumentNullException.ThrowIfNull(onRelease);
 
         var owner = new AsyncSharedReferenceOwner<T>(value, onRelease);

@@ -28,18 +28,13 @@ public class AsyncSharedReferenceTests
     }
 
     [Fact]
-    public async Task Create_WithNullValueAndOnRelease_PassesNullToOnRelease()
+    public void Create_WithCallbackAndNullValue_ThrowsArgumentNullException()
     {
-        object? released = new object();
-        var lease = AsyncSharedReference.Create<object?>(null, value =>
-        {
-            released = value;
-            return ValueTask.CompletedTask;
-        });
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            AsyncSharedReference.Create<object?>(null, _ => ValueTask.CompletedTask)
+        );
 
-        await lease.DisposeAsync();
-
-        Assert.Null(released);
+        Assert.Equal("value", exception.ParamName);
     }
 
     #endregion
