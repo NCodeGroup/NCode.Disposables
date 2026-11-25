@@ -43,3 +43,12 @@ static NCode.Disposables.DisposableExtensions.DisposeAllIgnoringExceptions(this 
 *REMOVED*NCode.Disposables.DisposableCollection.DisposableCollection(bool ignoreExceptions = false) -> void
 *REMOVED*NCode.Disposables.DisposableCollection.DisposableCollection(System.Collections.Generic.IEnumerable<System.IDisposable!>! collection, bool ignoreExceptions = false) -> void
 *REMOVED*NCode.Disposables.DisposableContext.DisposableContext(System.IDisposable! disposable, System.Threading.SynchronizationContext! context, bool async = false) -> void
+*REMOVED*static NCode.Disposables.AsyncDisposable.Adapt(System.IDisposable! disposable, bool idempotent) -> NCode.Disposables.AsyncDisposableAdapter!
+*REMOVED*static NCode.Disposables.AsyncDisposable.Collection(bool ignoreExceptions, params System.IAsyncDisposable![]! collection) -> NCode.Disposables.AsyncDisposableCollection!
+*REMOVED*static NCode.Disposables.AsyncDisposable.Collection(System.Collections.Generic.IEnumerable<System.IAsyncDisposable!>! collection, bool ignoreExceptions = false) -> NCode.Disposables.AsyncDisposableCollection!
+*REMOVED*static NCode.Disposables.AsyncDisposable.Create(System.Action! action, bool idempotent) -> NCode.Disposables.AsyncDisposableAction!
+*REMOVED*static NCode.Disposables.AsyncDisposable.Create(System.Func<System.Threading.Tasks.ValueTask>! action, bool idempotent) -> NCode.Disposables.AsyncDisposableAction!
+*REMOVED*static NCode.Disposables.Disposable.Collection(bool ignoreExceptions, params System.IDisposable![]! collection) -> NCode.Disposables.DisposableCollection!
+*REMOVED*static NCode.Disposables.Disposable.Collection(System.Collections.Generic.IEnumerable<System.IDisposable!>! collection, bool ignoreExceptions = false) -> NCode.Disposables.DisposableCollection!
+*REMOVED*static NCode.Disposables.Disposable.Context(System.IDisposable! disposable, System.Threading.SynchronizationContext! context, bool async = false) -> NCode.Disposables.DisposableContext!
+*REMOVED*static NCode.Disposables.Disposable.Create(System.Action! action, bool idempotent) -> NCode.Disposables.DisposableAction!
