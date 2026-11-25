@@ -368,6 +368,7 @@ public class AsyncDisposableAggregateTests
 
     #region IAsyncDisposableAggregate Interface Tests
 
+#pragma warning disable NCDISP002 // implements the deprecated interface until it is deleted
     [Fact]
     public void ImplementsIAsyncDisposableAggregate()
     {
@@ -375,6 +376,7 @@ public class AsyncDisposableAggregateTests
 
         Assert.IsAssignableFrom<IAsyncDisposableAggregate>(aggregate);
     }
+#pragma warning restore NCDISP002
 
     [Fact]
     public void ImplementsIAsyncDisposable()
