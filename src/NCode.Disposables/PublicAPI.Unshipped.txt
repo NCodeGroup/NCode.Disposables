@@ -41,6 +41,10 @@ NCode.Disposables.AsyncDisposableAggregate.IsDisposed.get -> bool
 NCode.Disposables.AsyncDisposableAggregate.SetDisposableAsync(System.IAsyncDisposable? disposable) -> System.Threading.Tasks.ValueTask
 NCode.Disposables.AsyncDisposableCollection.AddAsync(System.IAsyncDisposable! item) -> System.Threading.Tasks.ValueTask
 NCode.Disposables.AsyncDisposableCollection.IsDisposed.get -> bool
+NCode.Disposables.AsyncValueDisposable<TState>
+NCode.Disposables.AsyncValueDisposable<TState>.AsyncValueDisposable() -> void
+NCode.Disposables.AsyncValueDisposable<TState>.AsyncValueDisposable(System.Func<TState, System.Threading.Tasks.ValueTask>! action, TState state) -> void
+NCode.Disposables.AsyncValueDisposable<TState>.DisposeAsync() -> System.Threading.Tasks.ValueTask
 NCode.Disposables.DisposableAction.IsDisposed.get -> bool
 NCode.Disposables.DisposableAggregate.IsDisposed.get -> bool
 NCode.Disposables.DisposableCollection.IsDisposed.get -> bool
