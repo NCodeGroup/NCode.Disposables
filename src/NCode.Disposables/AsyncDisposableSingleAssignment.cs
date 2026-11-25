@@ -34,7 +34,7 @@ public sealed class AsyncDisposableSingleAssignment : IAsyncDisposable, IDisposa
     private static IAsyncDisposable Sentinel { get; } = new AsyncDisposableEmpty();
 
     /// <summary>
-    /// One once an assignment has been made, zero before.
+    /// Holds 1 after an assignment has been made and 0 before.
     /// </summary>
     private int _assigned;
 

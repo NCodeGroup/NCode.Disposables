@@ -29,7 +29,7 @@ namespace NCode.Disposables;
 public sealed class DisposableCancellation : IDisposable, IDisposalStatus
 {
     /// <summary>
-    /// One once disposal has started, zero before.
+    /// Holds 1 after disposal has started and 0 before.
     /// </summary>
     private int _disposed;
 
