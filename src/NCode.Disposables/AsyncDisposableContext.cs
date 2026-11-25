@@ -30,9 +30,15 @@ public sealed class AsyncDisposableContext(
     SynchronizationContext context
 ) : IAsyncDisposable, IDisposalStatus
 {
+    /// <summary>
+    /// The underlying instance, or <see langword="null"/> once disposal has started.
+    /// </summary>
     private IAsyncDisposable? _disposable = disposable
         ?? throw new ArgumentNullException(nameof(disposable));
 
+    /// <summary>
+    /// Gets the context the disposal is posted to.
+    /// </summary>
     private SynchronizationContext Context { get; } =
         context ?? throw new ArgumentNullException(nameof(context));
 
@@ -70,6 +76,12 @@ public sealed class AsyncDisposableContext(
         await completion.Task.ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Disposes <paramref name="disposable"/> on the context and reports the outcome through <paramref name="completion"/>.
+    /// </summary>
+    /// <param name="disposable">The instance to dispose.</param>
+    /// <param name="completion">The source that receives the outcome of the disposal.</param>
+    /// <returns>A task that completes when the disposal has finished.</returns>
     // Task, not ValueTask: the caller discards it (CA2012), and every exception reaches completion.
     private async Task DisposeOnContextAsync(
         IAsyncDisposable disposable,
