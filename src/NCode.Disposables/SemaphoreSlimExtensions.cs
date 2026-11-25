@@ -8,6 +8,9 @@ namespace NCode.Disposables;
 /// </summary>
 public static class SemaphoreSlimExtensions
 {
+    /// <summary>
+    /// Gets the cached delegate that releases the semaphore when a scope is disposed.
+    /// </summary>
     // ADR-1006: one cached delegate means taking a lock allocates nothing.
     private static Action<SemaphoreSlim> ReleaseAction { get; } =
         static semaphore => semaphore.Release();

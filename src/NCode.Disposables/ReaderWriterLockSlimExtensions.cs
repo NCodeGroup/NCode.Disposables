@@ -8,13 +8,22 @@ namespace NCode.Disposables;
 /// </summary>
 public static class ReaderWriterLockSlimExtensions
 {
+    /// <summary>
+    /// Gets the cached delegate that exits the read lock when a scope is disposed.
+    /// </summary>
     // ADR-1006: one cached delegate per lock mode means taking a lock allocates nothing.
     private static Action<ReaderWriterLockSlim> ExitReadAction { get; } =
         static l => l.ExitReadLock();
 
+    /// <summary>
+    /// Gets the cached delegate that exits the upgradeable read lock when a scope is disposed.
+    /// </summary>
     private static Action<ReaderWriterLockSlim> ExitUpgradeableReadAction { get; } =
         static l => l.ExitUpgradeableReadLock();
 
+    /// <summary>
+    /// Gets the cached delegate that exits the write lock when a scope is disposed.
+    /// </summary>
     private static Action<ReaderWriterLockSlim> ExitWriteAction { get; } =
         static l => l.ExitWriteLock();
 
