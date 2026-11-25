@@ -3,15 +3,8 @@
 
 namespace NCode.Disposables.Tests;
 
-public sealed class AsyncDisposableExtensionsTests : IDisposable
+public sealed class AsyncDisposableExtensionsTests : UnitTestBase
 {
-    private readonly MockRepository _mocks = new(MockBehavior.Strict);
-
-    public void Dispose()
-    {
-        _mocks.Verify();
-    }
-
     #region DisposeAllAsync Tests
 
     [Fact]
@@ -168,7 +161,7 @@ public sealed class AsyncDisposableExtensionsTests : IDisposable
     [Fact]
     public async Task DisposeAllAsync_WithItemImplementingBothInterfaces_CallsDisposeAsyncOnly()
     {
-        var mockDisposable = _mocks.Create<IAsyncDisposable>();
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
         _ = mockDisposable.As<IDisposable>();
         mockDisposable
             .Setup(x => x.DisposeAsync())
@@ -222,37 +215,7 @@ public sealed class AsyncDisposableExtensionsTests : IDisposable
     }
 
     [Fact]
-    public async Task DisposeAllAsync_WithIgnoreExceptions_SuppressesAllExceptions()
-    {
-        var order = string.Empty;
-        var collection = new[]
-        {
-            AsyncDisposable.Create(() =>
-            {
-                order += "1";
-                return ValueTask.CompletedTask;
-            }),
-            AsyncDisposable.Create(() => throw new InvalidOperationException()),
-            AsyncDisposable.Create(() =>
-            {
-                order += "2";
-                return ValueTask.CompletedTask;
-            }),
-            AsyncDisposable.Create(() => throw new InvalidOperationException()),
-            AsyncDisposable.Create(() =>
-            {
-                order += "3";
-                return ValueTask.CompletedTask;
-            }),
-        };
-
-        await collection.DisposeAllAsync(ignoreExceptions: true);
-
-        Assert.Equal("321", order);
-    }
-
-    [Fact]
-    public async Task DisposeAllAsync_WithIgnoreExceptionsFalse_CollectsExceptions()
+    public async Task DisposeAllAsync_WhenItemsThrow_CollectsExceptions()
     {
         var disposeCount = 0;
         var collection = new[]
@@ -285,7 +248,7 @@ public sealed class AsyncDisposableExtensionsTests : IDisposable
         };
 
         await Assert.ThrowsAsync<AggregateException>(async () =>
-            await collection.DisposeAllAsync(ignoreExceptions: false)
+            await collection.DisposeAllAsync()
         );
 
         Assert.Equal(5, disposeCount);
@@ -341,12 +304,46 @@ public sealed class AsyncDisposableExtensionsTests : IDisposable
 
     #endregion
 
+    #region DisposeAllIgnoringExceptionsAsync Tests
+
+    [Fact]
+    public async Task DisposeAllIgnoringExceptionsAsync_WhenItemsThrow_DisposesEveryItem()
+    {
+        var order = string.Empty;
+        var collection = new[]
+        {
+            AsyncDisposable.Create(() =>
+            {
+                order += "1";
+                return ValueTask.CompletedTask;
+            }),
+            AsyncDisposable.Create(() => throw new InvalidOperationException()),
+            AsyncDisposable.Create(() =>
+            {
+                order += "2";
+                return ValueTask.CompletedTask;
+            }),
+            AsyncDisposable.Create(() => throw new InvalidOperationException()),
+            AsyncDisposable.Create(() =>
+            {
+                order += "3";
+                return ValueTask.CompletedTask;
+            }),
+        };
+
+        await collection.DisposeAllIgnoringExceptionsAsync();
+
+        Assert.Equal("321", order);
+    }
+
+    #endregion
+
     #region AsAsyncSharedReference Tests
 
     [Fact]
     public void AsAsyncSharedReference_ReturnsLease()
     {
-        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var disposable = CreateStrictMock<IAsyncDisposable>();
 
         var lease = disposable.Object.AsAsyncSharedReference();
 
@@ -356,20 +353,24 @@ public sealed class AsyncDisposableExtensionsTests : IDisposable
     [Fact]
     public async Task AsAsyncSharedReference_DisposingLease_DisposesUnderlying()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
+        mockDisposable
+            .Setup(x => x.DisposeAsync())
+            .Returns(ValueTask.CompletedTask)
+            .Verifiable(Times.Once());
 
         var lease = mockDisposable.Object.AsAsyncSharedReference();
         await lease.DisposeAsync();
-
-        mockDisposable.Verify(x => x.DisposeAsync(), Times.Once);
     }
 
     [Fact]
     public async Task AsAsyncSharedReference_MultipleLeases_DisposesOnLastRelease()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
+        mockDisposable
+            .Setup(x => x.DisposeAsync())
+            .Returns(ValueTask.CompletedTask)
+            .Verifiable(Times.Once());
 
         var lease1 = mockDisposable.Object.AsAsyncSharedReference();
         var lease2 = lease1.AddReference();
@@ -378,7 +379,6 @@ public sealed class AsyncDisposableExtensionsTests : IDisposable
         mockDisposable.Verify(x => x.DisposeAsync(), Times.Never);
 
         await lease2.DisposeAsync();
-        mockDisposable.Verify(x => x.DisposeAsync(), Times.Once);
     }
 
     [Fact]
@@ -405,6 +405,55 @@ public sealed class AsyncDisposableExtensionsTests : IDisposable
 
         Assert.DoesNotContain(methods, method => method.Name == "AsSharedReference");
     }
+
+    #endregion
+
+    #region Deprecated Overload Tests
+
+#pragma warning disable NCDISP003 // tests the deprecated overloads until they are deleted
+
+    [Fact]
+    public async Task DisposeAllAsync_WithIgnoreExceptionsTrue_IgnoresFailures()
+    {
+        var log = new List<string>();
+        var collection = new[]
+        {
+            AsyncDisposable.Create(() =>
+            {
+                log.Add("first");
+                return ValueTask.CompletedTask;
+            }),
+            AsyncDisposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
+        };
+
+        await collection.DisposeAllAsync(ignoreExceptions: true);
+
+        Assert.Equal(["first"], log);
+    }
+
+    [Fact]
+    public async Task DisposeAllAsync_WithIgnoreExceptionsFalse_RethrowsFailure()
+    {
+        var log = new List<string>();
+        var collection = new[]
+        {
+            AsyncDisposable.Create(() =>
+            {
+                log.Add("first");
+                return ValueTask.CompletedTask;
+            }),
+            AsyncDisposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
+        };
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await collection.DisposeAllAsync(ignoreExceptions: false)
+        );
+
+        Assert.Equal("Dispose failed.", exception.Message);
+        Assert.Equal(["first"], log);
+    }
+
+#pragma warning restore NCDISP003
 
     #endregion
 

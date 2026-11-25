@@ -3,7 +3,7 @@
 
 namespace NCode.Disposables.Tests;
 
-public class DisposableAggregateTests
+public class DisposableAggregateTests : UnitTestBase
 {
     #region Constructor Tests
 
@@ -18,7 +18,7 @@ public class DisposableAggregateTests
     [Fact]
     public void Constructor_WithDisposable_SetsDisposable()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
 
         var aggregate = new DisposableAggregate(mockDisposable.Object);
 
@@ -40,7 +40,7 @@ public class DisposableAggregateTests
     [Fact]
     public void Disposable_Get_ReturnsCurrentValue()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
         var aggregate = new DisposableAggregate(mockDisposable.Object);
 
         var result = aggregate.Disposable;
@@ -51,8 +51,8 @@ public class DisposableAggregateTests
     [Fact]
     public void Disposable_Set_UpdatesValue()
     {
-        var mockDisposable1 = new Mock<IDisposable>(MockBehavior.Strict);
-        var mockDisposable2 = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable1 = CreateStrictMock<IDisposable>();
+        var mockDisposable2 = CreateStrictMock<IDisposable>();
         var aggregate = new DisposableAggregate(mockDisposable1.Object);
 
         aggregate.Disposable = mockDisposable2.Object;
@@ -63,7 +63,7 @@ public class DisposableAggregateTests
     [Fact]
     public void Disposable_SetNull_ClearsValue()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
         var aggregate = new DisposableAggregate(mockDisposable.Object);
 
         aggregate.Disposable = null;
@@ -74,8 +74,8 @@ public class DisposableAggregateTests
     [Fact]
     public void Disposable_SetDoesNotDisposePreviousInstance()
     {
-        var mockDisposable1 = new Mock<IDisposable>(MockBehavior.Strict);
-        var mockDisposable2 = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable1 = CreateStrictMock<IDisposable>();
+        var mockDisposable2 = CreateStrictMock<IDisposable>();
         var aggregate = new DisposableAggregate(mockDisposable1.Object);
 
         aggregate.Disposable = mockDisposable2.Object;
@@ -86,8 +86,8 @@ public class DisposableAggregateTests
     [Fact]
     public void Disposable_GetAfterDispose_ReturnsNull()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
         var aggregate = new DisposableAggregate(mockDisposable.Object);
 
         aggregate.Dispose();
@@ -98,14 +98,13 @@ public class DisposableAggregateTests
     [Fact]
     public void Disposable_SetAfterDispose_DisposesValue()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
         var aggregate = new DisposableAggregate();
 
         aggregate.Dispose();
         aggregate.Disposable = mockDisposable.Object;
 
-        mockDisposable.Verify(x => x.Dispose(), Times.Once);
         Assert.Null(aggregate.Disposable);
     }
 
@@ -149,27 +148,23 @@ public class DisposableAggregateTests
     [Fact]
     public void Dispose_WithDisposable_DisposesUnderlyingInstance()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
         var aggregate = new DisposableAggregate(mockDisposable.Object);
 
         aggregate.Dispose();
-
-        mockDisposable.Verify(x => x.Dispose(), Times.Once);
     }
 
     [Fact]
     public void Dispose_CalledMultipleTimes_DisposesOnlyOnce()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
         var aggregate = new DisposableAggregate(mockDisposable.Object);
 
         aggregate.Dispose();
         aggregate.Dispose();
         aggregate.Dispose();
-
-        mockDisposable.Verify(x => x.Dispose(), Times.Once);
     }
 
     [Fact]
@@ -185,10 +180,11 @@ public class DisposableAggregateTests
     [Fact]
     public void Dispose_WhenUnderlyingDisposeThrows_PropagatesException()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
         mockDisposable
             .Setup(x => x.Dispose())
-            .Throws(new InvalidOperationException("Test exception"));
+            .Throws(new InvalidOperationException("Test exception"))
+            .Verifiable();
         var aggregate = new DisposableAggregate(mockDisposable.Object);
 
         var exception = Assert.Throws<InvalidOperationException>(() => aggregate.Dispose());
@@ -199,10 +195,11 @@ public class DisposableAggregateTests
     [Fact]
     public void Dispose_AfterExceptionFromUnderlying_MarksAsDisposed()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
         mockDisposable
             .Setup(x => x.Dispose())
-            .Throws(new InvalidOperationException("Test exception"));
+            .Throws(new InvalidOperationException("Test exception"))
+            .Verifiable();
         var aggregate = new DisposableAggregate(mockDisposable.Object);
 
         Assert.Throws<InvalidOperationException>(() => aggregate.Dispose());
@@ -214,30 +211,27 @@ public class DisposableAggregateTests
     [Fact]
     public void Dispose_DisposesCurrentValueAtTimeOfCall()
     {
-        var mockDisposable1 = new Mock<IDisposable>(MockBehavior.Strict);
-        var mockDisposable2 = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable2.Setup(x => x.Dispose());
+        var mockDisposable1 = CreateStrictMock<IDisposable>();
+        var mockDisposable2 = CreateStrictMock<IDisposable>();
+        mockDisposable2.Setup(x => x.Dispose()).Verifiable(Times.Once());
         var aggregate = new DisposableAggregate(mockDisposable1.Object);
 
         aggregate.Disposable = mockDisposable2.Object;
         aggregate.Dispose();
 
         mockDisposable1.Verify(x => x.Dispose(), Times.Never);
-        mockDisposable2.Verify(x => x.Dispose(), Times.Once);
     }
 
     [Fact]
     public void Dispose_CanBeUsedWithUsingStatement()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
 
         using (new DisposableAggregate(mockDisposable.Object))
         {
             // Use the aggregate within using block
         }
-
-        mockDisposable.Verify(x => x.Dispose(), Times.Once);
     }
 
     [Fact]
@@ -301,8 +295,8 @@ public class DisposableAggregateTests
         for (var iteration = 0; iteration < iterations; iteration++)
         {
             var aggregate = new DisposableAggregate();
-            var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-            mockDisposable.Setup(x => x.Dispose());
+            var mockDisposable = CreateStrictMock<IDisposable>();
+            mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
 
             var setTask = Task.Run(() => aggregate.Disposable = mockDisposable.Object);
 
@@ -312,7 +306,6 @@ public class DisposableAggregateTests
 
             Assert.True(aggregate.IsDisposed);
             Assert.Null(aggregate.Disposable);
-            mockDisposable.Verify(x => x.Dispose(), Times.Once);
         }
     }
 

@@ -55,7 +55,7 @@ function Write-ApiFile([string]$Path, [string[]]$Lines) {
 $projects = if ($Project) { @($Project | ForEach-Object { (Resolve-Path -LiteralPath $_).Path }) }
 else {
     @(Get-ChildItem -LiteralPath $root -Recurse -File -Filter '*.csproj' |
-            Where-Object { $_.FullName -notmatch '[\\/](bin|obj|node_modules|\.git|\.claude)[\\/]' } |
+            Where-Object { [IO.Path]::GetRelativePath($root, $_.FullName) -notmatch '(^|[\\/])(bin|obj|node_modules|\.git|\.claude)[\\/]' } |
             ForEach-Object FullName)
 }
 $packable = @(foreach ($p in $projects) {

@@ -14,7 +14,8 @@ namespace NCode.Disposables;
 /// </para>
 /// <para>
 /// All factory methods in this class return instances that are idempotent by default, meaning multiple calls to
-/// <see cref="IDisposable.Dispose"/> will only perform the disposal operation once.
+/// <see cref="IDisposable.Dispose"/> will only perform the disposal operation once. <see cref="CreateRepeatable"/>
+/// is the factory that isn't idempotent: it invokes its action on every call.
 /// </para>
 /// </remarks>
 public static class Disposable
@@ -201,6 +202,65 @@ public static class Disposable
     /// <summary>
     /// Creates and returns a new instance of an <see cref="IDisposable"/>
     /// that will invoke the <see cref="IDisposable.Dispose"/> method of an underlying
+    /// resource synchronously from a <see cref="SynchronizationContext"/>.
+    /// </summary>
+    /// <param name="disposable">The underlying <see cref="IDisposable"/> instance to synchronize.</param>
+    /// <param name="context">The <see cref="SynchronizationContext"/> to invoke the operation.</param>
+    /// <returns>A new <see cref="DisposableContext"/> instance that wraps the specified disposable with context-aware disposal.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="disposable"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="context"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// This method is particularly useful for disposing resources that must be cleaned up on a specific thread,
+    /// such as UI components that require disposal on the UI thread.
+    /// </para>
+    /// <para>
+    /// The <see cref="SynchronizationContext.Send"/> method is used, which blocks until disposal is complete.
+    /// <see cref="PostingContext"/> returns immediately instead.
+    /// </para>
+    /// </remarks>
+    public static DisposableContext Context(IDisposable disposable, SynchronizationContext context)
+    {
+        ArgumentNullException.ThrowIfNull(disposable);
+        ArgumentNullException.ThrowIfNull(context);
+
+        return new DisposableContext(disposable, context);
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of an <see cref="IDisposable"/>
+    /// that will invoke the <see cref="IDisposable.Dispose"/> method of an underlying
+    /// resource asynchronously from a <see cref="SynchronizationContext"/>.
+    /// </summary>
+    /// <param name="disposable">The underlying <see cref="IDisposable"/> instance to synchronize.</param>
+    /// <param name="context">The <see cref="SynchronizationContext"/> to invoke the operation.</param>
+    /// <returns>A new <see cref="DisposableContext"/> instance that wraps the specified disposable with context-aware disposal.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="disposable"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="context"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// This method is particularly useful for disposing resources that must be cleaned up on a specific thread,
+    /// such as UI components that require disposal on the UI thread.
+    /// </para>
+    /// <para>
+    /// The <see cref="SynchronizationContext.Post"/> method is used, which returns immediately.
+    /// <c>Context</c> blocks until disposal is complete instead.
+    /// </para>
+    /// </remarks>
+    public static DisposableContext PostingContext(
+        IDisposable disposable,
+        SynchronizationContext context
+    )
+    {
+        ArgumentNullException.ThrowIfNull(disposable);
+        ArgumentNullException.ThrowIfNull(context);
+
+        return new DisposableContext(disposable, context) { IsPosting = true };
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of an <see cref="IDisposable"/>
+    /// that will invoke the <see cref="IDisposable.Dispose"/> method of an underlying
     /// resource using an asynchronous or synchronous operation from a <see cref="SynchronizationContext"/>.
     /// </summary>
     /// <param name="disposable">The underlying <see cref="IDisposable"/> instance to synchronize.</param>
@@ -220,6 +280,12 @@ public static class Disposable
     /// the <see cref="SynchronizationContext.Post"/> method is used, which returns immediately.
     /// </para>
     /// </remarks>
+    // Callers that pass only the disposable and the context bind to the overload without the flag, so this one keeps its default until it is deleted.
+    // ADR-1007: deleted in the next major version.
+    [Obsolete(
+        "Use Disposable.Context(disposable, context) to dispose through Send, or Disposable.PostingContext to dispose through Post. This overload is deleted in the next major version.",
+        DiagnosticId = "NCDISP003"
+    )]
     public static DisposableContext Context(
         IDisposable disposable,
         SynchronizationContext context,
@@ -229,7 +295,7 @@ public static class Disposable
         ArgumentNullException.ThrowIfNull(disposable);
         ArgumentNullException.ThrowIfNull(context);
 
-        return new DisposableContext(disposable, context, async);
+        return async ? PostingContext(disposable, context) : Context(disposable, context);
     }
 
     /// <summary>
@@ -320,6 +386,86 @@ public static class Disposable
     /// <summary>
     /// Creates and returns a new instance of <see cref="DisposableCollection"/>
     /// which contains other <see cref="IDisposable"/> items that will be
+    /// disposed when the collection itself is disposed. The collection is
+    /// initialized from an enumeration of <see cref="IDisposable"/> items.
+    /// </summary>
+    /// <param name="collection">The collection whose elements are copied to the new <see cref="DisposableCollection"/>.</param>
+    /// <returns>A new <see cref="DisposableCollection"/> containing copies of the elements from the specified collection.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// The elements from <paramref name="collection"/> are enumerated and copied during construction.
+    /// Items are disposed in LIFO (last-in, first-out) order when the collection is disposed.
+    /// </para>
+    /// <para>
+    /// When the collection is disposed, every item is still disposed; then the one exception is
+    /// rethrown, or an <see cref="AggregateException"/> holding every exception is thrown when several items throw.
+    /// Use <c>CollectionIgnoringExceptions</c> to ignore the exceptions items throw.
+    /// </para>
+    /// </remarks>
+    public static DisposableCollection Collection(IEnumerable<IDisposable> collection)
+    {
+        ArgumentNullException.ThrowIfNull(collection);
+
+        return new DisposableCollection(collection);
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="DisposableCollection"/>
+    /// which contains other <see cref="IDisposable"/> items that will be
+    /// disposed when the collection itself is disposed, ignoring the exceptions that items throw.
+    /// The collection is initialized from a variable argument array of <see cref="IDisposable"/> items.
+    /// </summary>
+    /// <param name="collection">The collection whose elements are copied to the new <see cref="DisposableCollection"/>.</param>
+    /// <returns>A new <see cref="DisposableCollection"/> containing the specified disposables.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// Items are disposed in LIFO (last-in, first-out) order when the collection is disposed.
+    /// </para>
+    /// <para>
+    /// Disposal continues for all items even if some throw exceptions, and the exceptions are ignored.
+    /// </para>
+    /// </remarks>
+    public static DisposableCollection CollectionIgnoringExceptions(params IDisposable[] collection)
+    {
+        ArgumentNullException.ThrowIfNull(collection);
+
+        var items = collection.AsEnumerable();
+
+        return CollectionIgnoringExceptions(items);
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="DisposableCollection"/>
+    /// which contains other <see cref="IDisposable"/> items that will be
+    /// disposed when the collection itself is disposed, ignoring the exceptions that items throw.
+    /// The collection is initialized from an enumeration of <see cref="IDisposable"/> items.
+    /// </summary>
+    /// <param name="collection">The collection whose elements are copied to the new <see cref="DisposableCollection"/>.</param>
+    /// <returns>A new <see cref="DisposableCollection"/> containing copies of the elements from the specified collection.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// The elements from <paramref name="collection"/> are enumerated and copied during construction.
+    /// Items are disposed in LIFO (last-in, first-out) order when the collection is disposed.
+    /// </para>
+    /// <para>
+    /// Disposal continues for all items even if some throw exceptions, and the exceptions are ignored.
+    /// </para>
+    /// </remarks>
+    public static DisposableCollection CollectionIgnoringExceptions(
+        IEnumerable<IDisposable> collection
+    )
+    {
+        ArgumentNullException.ThrowIfNull(collection);
+
+        return new DisposableCollection(collection) { IgnoresExceptions = true };
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="DisposableCollection"/>
+    /// which contains other <see cref="IDisposable"/> items that will be
     /// disposed when the collection itself is disposed, with an option to ignore exceptions.
     /// </summary>
     /// <param name="ignoreExceptions"><see langword="true"/> to ignore any exceptions thrown while disposing individual items; otherwise, <see langword="false"/> to allow exceptions to propagate.</param>
@@ -336,6 +482,11 @@ public static class Disposable
     /// rethrown, or an <see cref="AggregateException"/> holding every exception is thrown when several items throw.
     /// </para>
     /// </remarks>
+    // ADR-1007: deleted in the next major version.
+    [Obsolete(
+        "Use Disposable.Collection, or Disposable.CollectionIgnoringExceptions to ignore the exceptions items throw. This overload is deleted in the next major version.",
+        DiagnosticId = "NCDISP003"
+    )]
     public static DisposableCollection Collection(
         bool ignoreExceptions,
         params IDisposable[] collection
@@ -343,7 +494,9 @@ public static class Disposable
     {
         ArgumentNullException.ThrowIfNull(collection);
 
-        return Collection(collection.AsEnumerable(), ignoreExceptions);
+        var items = collection.AsEnumerable();
+
+        return ignoreExceptions ? CollectionIgnoringExceptions(items) : Collection(items);
     }
 
     /// <summary>
@@ -368,6 +521,11 @@ public static class Disposable
     /// </para>
     /// </remarks>
     // Callers that pass only the collection bind to this overload, so it keeps its optional parameter.
+    // ADR-1007: deleted in the next major version.
+    [Obsolete(
+        "Use Disposable.Collection, or Disposable.CollectionIgnoringExceptions to ignore the exceptions items throw. This overload is deleted in the next major version.",
+        DiagnosticId = "NCDISP003"
+    )]
 #pragma warning disable RS0027 // optional parameter on an overload with fewer parameters than another
     public static DisposableCollection Collection(
 #pragma warning restore RS0027
@@ -377,7 +535,7 @@ public static class Disposable
     {
         ArgumentNullException.ThrowIfNull(collection);
 
-        return new DisposableCollection(collection, ignoreExceptions);
+        return ignoreExceptions ? CollectionIgnoringExceptions(collection) : Collection(collection);
     }
 
     /// <summary>
@@ -413,11 +571,34 @@ public static class Disposable
     /// When <paramref name="idempotent"/> is <see langword="false"/>, each call to <see cref="IDisposable.Dispose"/>
     /// will invoke the action. Use this with caution as it deviates from the standard dispose pattern.
     /// </remarks>
+    // ADR-1007: deleted in the next major version.
+    [Obsolete(
+        "Use Disposable.Create(action), or Disposable.CreateRepeatable to run the action on every call. This overload is deleted in the next major version.",
+        DiagnosticId = "NCDISP003"
+    )]
     public static DisposableAction Create(Action action, bool idempotent)
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return new DisposableAction(action, idempotent);
+        return idempotent ? Create(action) : CreateRepeatable(action);
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="IDisposable"/> that
+    /// will invoke an <see cref="Action"/> on every call to <see cref="IDisposable.Dispose"/>.
+    /// </summary>
+    /// <param name="action">Specifies the <see cref="Action"/> to invoke each time <see cref="IDisposable.Dispose"/> is called.</param>
+    /// <returns>A new <see cref="IDisposable"/> instance that invokes the specified action on every disposal.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// The returned instance is not idempotent: each call to <see cref="IDisposable.Dispose"/> invokes the action.
+    /// Use this with caution as it deviates from the standard dispose pattern.
+    /// </remarks>
+    public static DisposableAction CreateRepeatable(Action action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        return new DisposableAction(action) { IsRepeatable = true };
     }
 
     /// <summary>

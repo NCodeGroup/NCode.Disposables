@@ -85,6 +85,66 @@ public static class DisposableExtensions
         /// <summary>
         /// Disposes all items in a collection that implement <see cref="IDisposable"/>, processing items in reverse order.
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Items are disposed in reverse order (LIFO), which is typically appropriate for resource cleanup
+        /// scenarios where resources may have dependencies.
+        /// </para>
+        /// <para>
+        /// <b>Important:</b> An item that implements both <see cref="IDisposable"/> and <see cref="IAsyncDisposable"/>
+        /// is disposed through <see cref="IDisposable.Dispose"/>. An item that implements only
+        /// <see cref="IAsyncDisposable"/> is not disposed, and once the other items are disposed an
+        /// <see cref="InvalidOperationException"/> is thrown for it. Use
+        /// <c>DisposeAllAsync()</c> for such items.
+        /// </para>
+        /// <para>
+        /// When multiple items throw exceptions, an <see cref="AggregateException"/> containing all exceptions
+        /// is thrown. If only one item throws, that exception is rethrown directly with its original stack trace
+        /// preserved.
+        /// </para>
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">
+        /// The collection contains an item that implements <see cref="IAsyncDisposable"/> but not
+        /// <see cref="IDisposable"/>.
+        /// </exception>
+        /// <exception cref="AggregateException">Multiple items threw exceptions during disposal.</exception>
+        public void DisposeAll()
+        {
+            DisposeAllCore(collection, ignoreExceptions: false);
+        }
+
+        /// <summary>
+        /// Disposes all items in a collection that implement <see cref="IDisposable"/>, processing items in reverse order
+        /// and ignoring the exceptions that items throw.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Items are disposed in reverse order (LIFO), which is typically appropriate for resource cleanup
+        /// scenarios where resources may have dependencies.
+        /// </para>
+        /// <para>
+        /// Every exception that an item's <see cref="IDisposable.Dispose"/> throws is ignored, so the remaining items
+        /// are still disposed. The <see cref="InvalidOperationException"/> for an item that implements only
+        /// <see cref="IAsyncDisposable"/> is never ignored: that item is not disposed, and once the other items are
+        /// disposed the exception is thrown. Use <c>DisposeAllAsync()</c> for such items.
+        /// </para>
+        /// <para>
+        /// An item that implements both <see cref="IDisposable"/> and <see cref="IAsyncDisposable"/>
+        /// is disposed through <see cref="IDisposable.Dispose"/>.
+        /// </para>
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">
+        /// The collection contains an item that implements <see cref="IAsyncDisposable"/> but not
+        /// <see cref="IDisposable"/>.
+        /// </exception>
+        public void DisposeAllIgnoringExceptions()
+        {
+            DisposeAllCore(collection, ignoreExceptions: true);
+        }
+
+        /// <summary>
+        /// Disposes all items in a collection that implement <see cref="IDisposable"/>, processing items in reverse order.
+        /// </summary>
         /// <param name="ignoreExceptions">
         /// <see langword="true"/> to suppress exceptions thrown by individual items during disposal and continue
         /// disposing remaining items; <see langword="false"/> (the default) to collect and throw exceptions.
@@ -101,7 +161,7 @@ public static class DisposableExtensions
         /// is disposed through <see cref="IDisposable.Dispose"/>. An item that implements only
         /// <see cref="IAsyncDisposable"/> is not disposed, and once the other items are disposed an
         /// <see cref="InvalidOperationException"/> is thrown for it. Use
-        /// <see cref="AsyncDisposableExtensions.DisposeAllAsync"/> for such items.
+        /// <c>DisposeAllAsync()</c> for such items.
         /// </para>
         /// <para>
         /// When <paramref name="ignoreExceptions"/> is <see langword="false"/> and multiple items throw exceptions,
@@ -116,46 +176,77 @@ public static class DisposableExtensions
         /// <exception cref="AggregateException">
         /// Multiple items threw exceptions during disposal and <paramref name="ignoreExceptions"/> is <see langword="false"/>.
         /// </exception>
+        // ADR-1007: deleted in the next major version.
+        [Obsolete(
+            "Use DisposeAll(), or DisposeAllIgnoringExceptions() to ignore the exceptions items throw. This overload is deleted in the next major version.",
+            DiagnosticId = "NCDISP003"
+        )]
         public void DisposeAll(bool ignoreExceptions = false)
         {
-            List<Exception>? exceptions = null;
-
-            foreach (var item in collection.Reverse())
-            {
-                switch (item)
-                {
-                    case IDisposable disposable:
-                        try
-                        {
-                            disposable.Dispose();
-                        }
-                        catch (Exception exception)
-                        {
-                            if (!ignoreExceptions)
-                            {
-                                exceptions ??= [];
-                                exceptions.Add(exception);
-                            }
-                        }
-
-                        break;
-
-                    case IAsyncDisposable:
-                        exceptions ??= [];
-                        exceptions.Add(new InvalidOperationException(AsyncOnlyMessage));
-                        break;
-                }
-            }
-
-            if (exceptions == null)
-                return;
-
-            if (exceptions.Count > 1)
-            {
-                throw new AggregateException(exceptions);
-            }
-
-            ExceptionDispatchInfo.Throw(exceptions[0]);
+            DisposeAllCore(collection, ignoreExceptions);
         }
+    }
+
+    /// <summary>
+    /// Disposes every item of <paramref name="collection"/> that implements <see cref="IDisposable"/>, in reverse order.
+    /// </summary>
+    /// <param name="collection">
+    /// The items to dispose; items that are <see langword="null"/> or implement neither interface are skipped.
+    /// </param>
+    /// <param name="ignoreExceptions">
+    /// <see langword="true"/> to ignore the exceptions items' <see cref="IDisposable.Dispose"/> throw;
+    /// <see langword="false"/> to collect them.
+    /// </param>
+    /// <remarks>
+    /// <para>
+    /// Every item is visited even after one throws. An item that implements only <see cref="IAsyncDisposable"/>
+    /// is not disposed and adds an <see cref="InvalidOperationException"/>, also when
+    /// <paramref name="ignoreExceptions"/> is <see langword="true"/>.
+    /// </para>
+    /// <para>
+    /// After the loop, one collected exception is rethrown with its original stack trace, and several are thrown
+    /// as an <see cref="AggregateException"/>.
+    /// </para>
+    /// </remarks>
+    private static void DisposeAllCore(IEnumerable<object?> collection, bool ignoreExceptions)
+    {
+        List<Exception>? exceptions = null;
+
+        foreach (var item in collection.Reverse())
+        {
+            switch (item)
+            {
+                case IDisposable disposable:
+                    try
+                    {
+                        disposable.Dispose();
+                    }
+                    catch (Exception exception)
+                    {
+                        if (!ignoreExceptions)
+                        {
+                            exceptions ??= [];
+                            exceptions.Add(exception);
+                        }
+                    }
+
+                    break;
+
+                case IAsyncDisposable:
+                    exceptions ??= [];
+                    exceptions.Add(new InvalidOperationException(AsyncOnlyMessage));
+                    break;
+            }
+        }
+
+        if (exceptions == null)
+            return;
+
+        if (exceptions.Count > 1)
+        {
+            throw new AggregateException(exceptions);
+        }
+
+        ExceptionDispatchInfo.Throw(exceptions[0]);
     }
 }

@@ -4,9 +4,10 @@
 
 .DESCRIPTION
     From the project template; template updates replace this file. Proves a commit's packages depend on nothing the
-    clock or the machine supplies. It deletes every bin and obj folder under the root, packs, deletes them again and
-    packs a second time, then compares each package of the first build with the same-named package of the second:
-    the same entry names and the same SHA-256 of each entry's contents. Zip timestamps are never compared.
+    clock or the machine supplies. It deletes every bin and obj folder under the root, except those under its
+    artifacts, node_modules, .git and .claude folders, packs, deletes them again and packs a second time, then
+    compares each package of the first build with the same-named package of the second: the same entry names and the
+    same SHA-256 of each entry's contents. Zip timestamps are never compared.
 
     It prints one line per difference and exits 1, prints how many packages match and exits 0, or prints
     'No packages to compare.' and exits 0 when nothing was packed.
@@ -59,9 +60,7 @@ if (Test-Path -LiteralPath $output) {
 }
 
 foreach ($pass in 'first', 'second') {
-    $skipped = [IO.Path]::DirectorySeparatorChar + 'artifacts' + [IO.Path]::DirectorySeparatorChar,
-        [IO.Path]::DirectorySeparatorChar + 'node_modules' + [IO.Path]::DirectorySeparatorChar,
-        [IO.Path]::DirectorySeparatorChar + '.git' + [IO.Path]::DirectorySeparatorChar
+    $skipped = @('artifacts', 'node_modules', '.git', '.claude' | ForEach-Object { [IO.Path]::DirectorySeparatorChar + $_ + [IO.Path]::DirectorySeparatorChar })
     Get-ChildItem -LiteralPath $root -Directory -Recurse -Force |
         Where-Object { $_.Name -in 'bin', 'obj' } |
         Where-Object {

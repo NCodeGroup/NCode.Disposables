@@ -3,7 +3,7 @@
 
 namespace NCode.Disposables.Tests;
 
-public class DisposableGuardTests
+public class DisposableGuardTests : UnitTestBase
 {
     private const string AlreadyReleasedMessage =
         "Ownership of the resource has already been released.";
@@ -23,7 +23,7 @@ public class DisposableGuardTests
     [Fact]
     public void Constructor_Value_HoldsValue()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
 
         var guard = new DisposableGuard<IDisposable>(mockDisposable.Object);
 
@@ -37,19 +37,17 @@ public class DisposableGuardTests
     [Fact]
     public void Dispose_WithoutRelease_DisposesValue()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
         var guard = new DisposableGuard<IDisposable>(mockDisposable.Object);
 
         guard.Dispose();
-
-        mockDisposable.Verify(x => x.Dispose(), Times.Once);
     }
 
     [Fact]
     public void Dispose_AfterRelease_DoesNotDisposeValue()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
         var guard = new DisposableGuard<IDisposable>(mockDisposable.Object);
         guard.Release();
 
@@ -61,25 +59,21 @@ public class DisposableGuardTests
     [Fact]
     public void Dispose_Twice_DisposesOnce()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
         var guard = new DisposableGuard<IDisposable>(mockDisposable.Object);
 
         guard.Dispose();
         guard.Dispose();
-
-        mockDisposable.Verify(x => x.Dispose(), Times.Once);
     }
 
     [Fact]
     public void UsingDeclaration_WhenScopeThrows_DisposesValue()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
 
         Assert.Throws<InvalidOperationException>(ThrowInScope);
-
-        mockDisposable.Verify(x => x.Dispose(), Times.Once);
 
         void ThrowInScope()
         {
@@ -91,7 +85,7 @@ public class DisposableGuardTests
     [Fact]
     public void UsingDeclaration_WhenReleased_DoesNotDisposeValue()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
 
         IDisposable released;
         using (var guard = new DisposableGuard<IDisposable>(mockDisposable.Object))
@@ -110,7 +104,7 @@ public class DisposableGuardTests
     [Fact]
     public void Release_WhenOwned_ReturnsValue()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
         var guard = new DisposableGuard<IDisposable>(mockDisposable.Object);
 
         var result = guard.Release();
@@ -121,7 +115,7 @@ public class DisposableGuardTests
     [Fact]
     public void Release_Twice_ThrowsInvalidOperationException()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
         var guard = new DisposableGuard<IDisposable>(mockDisposable.Object);
         guard.Release();
 
@@ -133,8 +127,8 @@ public class DisposableGuardTests
     [Fact]
     public void Release_AfterDispose_ThrowsObjectDisposedException()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable();
         var guard = new DisposableGuard<IDisposable>(mockDisposable.Object);
         guard.Dispose();
 
@@ -144,7 +138,7 @@ public class DisposableGuardTests
     [Fact]
     public void Release_AfterReleaseAndDispose_ThrowsInvalidOperationException()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
         var guard = new DisposableGuard<IDisposable>(mockDisposable.Object);
         guard.Release();
         guard.Dispose();
@@ -157,7 +151,7 @@ public class DisposableGuardTests
     {
         var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         using var gate = new ManualResetEventSlim();
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
         mockDisposable
             .Setup(x => x.Dispose())
             .Callback(() =>
@@ -165,7 +159,8 @@ public class DisposableGuardTests
                 entered.SetResult();
                 var released = gate.Wait(TimeSpan.FromSeconds(30));
                 Assert.True(released);
-            });
+            })
+            .Verifiable(Times.Once());
         var guard = new DisposableGuard<IDisposable>(mockDisposable.Object);
 
         var disposeTask = Task.Run(() => guard.Dispose());
@@ -176,8 +171,6 @@ public class DisposableGuardTests
 
         gate.Set();
         await disposeTask;
-
-        mockDisposable.Verify(x => x.Dispose(), Times.Once);
     }
 
     #endregion
@@ -187,7 +180,7 @@ public class DisposableGuardTests
     [Fact]
     public void IsReleased_BeforeRelease_ReturnsFalse()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
         var guard = new DisposableGuard<IDisposable>(mockDisposable.Object);
 
         Assert.False(guard.IsReleased);
@@ -196,7 +189,7 @@ public class DisposableGuardTests
     [Fact]
     public void IsReleased_AfterRelease_ReturnsTrue()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
         var guard = new DisposableGuard<IDisposable>(mockDisposable.Object);
 
         guard.Release();
@@ -207,7 +200,7 @@ public class DisposableGuardTests
     [Fact]
     public void IsReleased_AfterReleaseAndDispose_ReturnsTrue()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
         var guard = new DisposableGuard<IDisposable>(mockDisposable.Object);
         guard.Release();
 
@@ -219,8 +212,8 @@ public class DisposableGuardTests
     [Fact]
     public void IsReleased_AfterDisposeWithoutRelease_ReturnsFalse()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable();
         var guard = new DisposableGuard<IDisposable>(mockDisposable.Object);
 
         guard.Dispose();
@@ -235,7 +228,7 @@ public class DisposableGuardTests
     [Fact]
     public void IsDisposed_BeforeDispose_ReturnsFalse()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
         var guard = new DisposableGuard<IDisposable>(mockDisposable.Object);
 
         Assert.False(guard.IsDisposed);
@@ -244,8 +237,8 @@ public class DisposableGuardTests
     [Fact]
     public void IsDisposed_AfterDispose_ReturnsTrue()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable();
         var guard = new DisposableGuard<IDisposable>(mockDisposable.Object);
 
         guard.Dispose();
@@ -256,7 +249,7 @@ public class DisposableGuardTests
     [Fact]
     public void IsDisposed_AfterReleaseWithoutDispose_ReturnsFalse()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
         var guard = new DisposableGuard<IDisposable>(mockDisposable.Object);
 
         guard.Release();
@@ -267,7 +260,7 @@ public class DisposableGuardTests
     [Fact]
     public void IsDisposed_AfterReleaseAndDispose_ReturnsTrue()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
         var guard = new DisposableGuard<IDisposable>(mockDisposable.Object);
         guard.Release();
 

@@ -25,12 +25,35 @@ public sealed class DisposableContext : IDisposable, IDisposalStatus
 {
     private IDisposable? _disposable;
     private readonly SynchronizationContext _context;
-    private readonly bool _async;
+
+    /// <summary>
+    /// Gets a value indicating whether <see cref="Dispose"/> posts the disposal to the context
+    /// instead of sending it.
+    /// </summary>
+    internal bool IsPosting { get; init; }
 
     /// <summary>
     /// Gets a value indicating whether <see cref="Dispose"/> has been called at least once.
     /// </summary>
     public bool IsDisposed => Volatile.Read(ref _disposable) is null;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DisposableContext"/> class that wraps an
+    /// underlying <see cref="IDisposable"/> resource for disposal via a <see cref="SynchronizationContext"/>,
+    /// which is invoked synchronously via <see cref="SynchronizationContext.Send"/>.
+    /// </summary>
+    /// <param name="disposable">The underlying <see cref="IDisposable"/> instance to wrap.</param>
+    /// <param name="context">The <see cref="SynchronizationContext"/> used to invoke the disposal operation.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="disposable"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="context"/> is <see langword="null"/>.</exception>
+    public DisposableContext(IDisposable disposable, SynchronizationContext context)
+    {
+        ArgumentNullException.ThrowIfNull(disposable);
+        ArgumentNullException.ThrowIfNull(context);
+
+        _disposable = disposable;
+        _context = context;
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DisposableContext"/> class that wraps an
@@ -49,18 +72,19 @@ public sealed class DisposableContext : IDisposable, IDisposalStatus
     /// <see cref="SynchronizationContext.OperationStarted"/> and <see cref="SynchronizationContext.OperationCompleted"/>
     /// to properly track the asynchronous operation.
     /// </remarks>
+    // ADR-1007: deleted in the next major version.
+    [Obsolete(
+        "Use new DisposableContext(disposable, context) to dispose through Send, or Disposable.PostingContext to dispose through Post. This constructor is deleted in the next major version.",
+        DiagnosticId = "NCDISP003"
+    )]
     public DisposableContext(
         IDisposable disposable,
         SynchronizationContext context,
         bool async = false
     )
+        : this(disposable, context)
     {
-        ArgumentNullException.ThrowIfNull(disposable);
-        ArgumentNullException.ThrowIfNull(context);
-
-        _disposable = disposable;
-        _context = context;
-        _async = async;
+        IsPosting = async;
     }
 
     /// <inheritdoc />
@@ -70,9 +94,14 @@ public sealed class DisposableContext : IDisposable, IDisposalStatus
     /// <see cref="SynchronizationContext"/>. This method is idempotent; subsequent calls have no effect.
     /// </para>
     /// <para>
-    /// When async mode is enabled, disposal is posted to the context and this method returns immediately
-    /// without waiting for the disposal to complete. When sync mode is used, this method blocks until
-    /// the disposal completes on the target context.
+    /// A context from <see cref="Disposable.PostingContext"/> posts the disposal to the context and this
+    /// method returns immediately without waiting for the disposal to complete. Any other context sends
+    /// the disposal, and this method blocks until the disposal completes on the target context.
+    /// </para>
+    /// <para>
+    /// When the context's <see cref="SynchronizationContext.Post"/> throws before the disposal runs, this method calls
+    /// <see cref="SynchronizationContext.OperationCompleted"/> and rethrows the exception. The underlying resource
+    /// is not disposed, because it is disposed only on the context.
     /// </para>
     /// </remarks>
     public void Dispose()
@@ -81,10 +110,27 @@ public sealed class DisposableContext : IDisposable, IDisposalStatus
         if (disposable == null)
             return;
 
-        if (_async)
+        if (IsPosting)
         {
+            var callbackStarted = false;
             _context.OperationStarted();
-            _context.Post(AsynchronousCallback, disposable);
+            try
+            {
+                _context.Post(
+                    _ =>
+                    {
+                        Volatile.Write(ref callbackStarted, true);
+                        AsynchronousCallback(disposable);
+                    },
+                    null
+                );
+            }
+            catch when (!Volatile.Read(ref callbackStarted))
+            {
+                // The context refused the callback, so the operation it was told about ends here.
+                _context.OperationCompleted();
+                throw;
+            }
         }
         else
         {

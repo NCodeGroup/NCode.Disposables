@@ -3,7 +3,7 @@
 
 namespace NCode.Disposables.Tests;
 
-public class DisposableTests
+public class DisposableTests : UnitTestBase
 {
     #region Aggregate Tests
 
@@ -32,8 +32,8 @@ public class DisposableTests
     [Fact]
     public void Serial_WithDisposable_HoldsIt()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable();
 
         using var serial = Disposable.Serial(mockDisposable.Object);
 
@@ -61,8 +61,8 @@ public class DisposableTests
     [Fact]
     public void Guard_WithValue_ReturnsGuardOverValue()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable();
 
         using var guard = Disposable.Guard(mockDisposable.Object);
 
@@ -131,6 +131,211 @@ public class DisposableTests
         value.Dispose();
 
         Assert.Equal(expectedState, actualState);
+    }
+
+    #endregion
+
+    #region Collection Tests
+
+    [Fact]
+    public void Collection_WithEnumerable_WhenItemThrows_DisposesEveryItemAndRethrows()
+    {
+        var log = new List<string>();
+        IEnumerable<IDisposable> items =
+        [
+            Disposable.Create(() => log.Add("first")),
+            Disposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
+            Disposable.Create(() => log.Add("third")),
+        ];
+        var collection = Disposable.Collection(items);
+
+        Assert.Throws<InvalidOperationException>(collection.Dispose);
+
+        Assert.Equal(["third", "first"], log);
+    }
+
+    #endregion
+
+    #region CollectionIgnoringExceptions Tests
+
+    [Fact]
+    public void CollectionIgnoringExceptions_WhenItemThrows_DisposesEveryItemWithoutThrowing()
+    {
+        var log = new List<string>();
+        var first = Disposable.Create(() => log.Add("first"));
+        var failing = Disposable.Create(() =>
+            throw new InvalidOperationException("Dispose failed.")
+        );
+        var third = Disposable.Create(() => log.Add("third"));
+        var collection = Disposable.CollectionIgnoringExceptions(first, failing, third);
+
+        collection.Dispose();
+
+        Assert.Equal(["third", "first"], log);
+    }
+
+    [Fact]
+    public void CollectionIgnoringExceptions_WithEnumerable_WhenItemThrows_DisposesEveryItemWithoutThrowing()
+    {
+        var log = new List<string>();
+        IEnumerable<IDisposable> items =
+        [
+            Disposable.Create(() => log.Add("first")),
+            Disposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
+            Disposable.Create(() => log.Add("third")),
+        ];
+        var collection = Disposable.CollectionIgnoringExceptions(items);
+
+        collection.Dispose();
+
+        Assert.Equal(["third", "first"], log);
+    }
+
+    [Fact]
+    public void CollectionIgnoringExceptions_NullCollection_ThrowsArgumentNullException()
+    {
+        var arrayException = Assert.Throws<ArgumentNullException>(() =>
+            Disposable.CollectionIgnoringExceptions((IDisposable[])null!)
+        );
+        var enumerableException = Assert.Throws<ArgumentNullException>(() =>
+            Disposable.CollectionIgnoringExceptions((IEnumerable<IDisposable>)null!)
+        );
+
+        Assert.Equal("collection", arrayException.ParamName);
+        Assert.Equal("collection", enumerableException.ParamName);
+    }
+
+    #endregion
+
+    #region Create Tests
+
+    [Fact]
+    public void Create_WhenDisposedThreeTimes_InvokesActionOnce()
+    {
+        var count = 0;
+        var disposable = Disposable.Create(() => count++);
+
+        disposable.Dispose();
+        disposable.Dispose();
+        disposable.Dispose();
+
+        Assert.Equal(1, count);
+        Assert.True(disposable.IsDisposed);
+    }
+
+    #endregion
+
+    #region CreateRepeatable Tests
+
+    [Fact]
+    public void CreateRepeatable_WhenDisposedThreeTimes_InvokesActionEachTime()
+    {
+        var count = 0;
+        var disposable = Disposable.CreateRepeatable(() => count++);
+
+        disposable.Dispose();
+        disposable.Dispose();
+        disposable.Dispose();
+
+        Assert.Equal(3, count);
+        Assert.True(disposable.IsDisposed);
+    }
+
+    [Fact]
+    public void CreateRepeatable_NullAction_ThrowsArgumentNullException()
+    {
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            Disposable.CreateRepeatable(null!)
+        );
+
+        Assert.Equal("action", exception.ParamName);
+    }
+
+    #endregion
+
+    #region Context Tests
+
+    [Fact]
+    public void Context_WhenDisposed_SendsDisposal()
+    {
+        var context = CreateStrictMock<SynchronizationContext>();
+        context
+            .Setup(x => x.Send(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
+            .Callback((SendOrPostCallback c, object s) => c(s))
+            .Verifiable(Times.Once());
+
+        var item = CreateStrictMock<IDisposable>();
+        item.Setup(x => x.Dispose()).Verifiable(Times.Once());
+
+        var disposable = Disposable.Context(item.Object, context.Object);
+
+        disposable.Dispose();
+
+        Assert.True(disposable.IsDisposed);
+    }
+
+    #endregion
+
+    #region PostingContext Tests
+
+    [Fact]
+    public void PostingContext_WhenDisposed_PostsBetweenOperationStartedAndCompleted()
+    {
+        var callOrder = new List<string>();
+
+        var context = CreateStrictMock<SynchronizationContext>();
+        context
+            .Setup(x => x.OperationStarted())
+            .Callback(() => callOrder.Add("OperationStarted"))
+            .Verifiable();
+        context
+            .Setup(x => x.Post(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
+            .Callback(
+                (SendOrPostCallback c, object s) =>
+                {
+                    callOrder.Add("Post");
+                    c(s);
+                }
+            )
+            .Verifiable();
+        context
+            .Setup(x => x.OperationCompleted())
+            .Callback(() => callOrder.Add("OperationCompleted"))
+            .Verifiable();
+
+        var item = CreateStrictMock<IDisposable>();
+        item.Setup(x => x.Dispose()).Callback(() => callOrder.Add("Dispose")).Verifiable();
+
+        var disposable = Disposable.PostingContext(item.Object, context.Object);
+
+        disposable.Dispose();
+
+        Assert.Equal(["OperationStarted", "Post", "Dispose", "OperationCompleted"], callOrder);
+        Assert.True(disposable.IsDisposed);
+    }
+
+    [Fact]
+    public void PostingContext_NullDisposable_ThrowsArgumentNullException()
+    {
+        var context = CreateStrictMock<SynchronizationContext>();
+
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            Disposable.PostingContext(null!, context.Object)
+        );
+
+        Assert.Equal("disposable", exception.ParamName);
+    }
+
+    [Fact]
+    public void PostingContext_NullContext_ThrowsArgumentNullException()
+    {
+        var item = CreateStrictMock<IDisposable>();
+
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            Disposable.PostingContext(item.Object, null!)
+        );
+
+        Assert.Equal("context", exception.ParamName);
     }
 
     #endregion

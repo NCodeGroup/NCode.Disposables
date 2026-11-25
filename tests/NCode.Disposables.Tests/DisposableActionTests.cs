@@ -24,26 +24,6 @@ public class DisposableActionTests
     }
 
     [Fact]
-    public void Constructor_WithIdempotentTrue_CreatesInstance()
-    {
-        var action = () => { };
-
-        var disposable = new DisposableAction(action, idempotent: true);
-
-        Assert.NotNull(disposable);
-    }
-
-    [Fact]
-    public void Constructor_WithIdempotentFalse_CreatesInstance()
-    {
-        var action = () => { };
-
-        var disposable = new DisposableAction(action, idempotent: false);
-
-        Assert.NotNull(disposable);
-    }
-
-    [Fact]
     public void Constructor_DefaultIdempotent_IsTrue()
     {
         var count = 0;
@@ -74,7 +54,7 @@ public class DisposableActionTests
     public void Dispose_WhenIdempotent_CalledMultipleTimes_InvokesActionOnce()
     {
         var count = 0;
-        var disposable = new DisposableAction(() => count++, idempotent: true);
+        var disposable = new DisposableAction(() => count++);
 
         disposable.Dispose();
         disposable.Dispose();
@@ -87,7 +67,7 @@ public class DisposableActionTests
     public void Dispose_WhenNotIdempotent_CalledMultipleTimes_InvokesActionEachTime()
     {
         var count = 0;
-        var disposable = new DisposableAction(() => count++, idempotent: false);
+        var disposable = Disposable.CreateRepeatable(() => count++);
 
         disposable.Dispose();
         disposable.Dispose();
@@ -112,17 +92,14 @@ public class DisposableActionTests
     public void Dispose_WhenIdempotentAndFirstDisposeThrows_SubsequentCallsDoNotThrow()
     {
         var disposeCount = 0;
-        var disposable = new DisposableAction(
-            () =>
+        var disposable = new DisposableAction(() =>
+        {
+            disposeCount++;
+            if (disposeCount == 1)
             {
-                disposeCount++;
-                if (disposeCount == 1)
-                {
-                    throw new InvalidOperationException("First dispose");
-                }
-            },
-            idempotent: true
-        );
+                throw new InvalidOperationException("First dispose");
+            }
+        });
 
         Assert.Throws<InvalidOperationException>(() => disposable.Dispose());
         disposable.Dispose();
@@ -135,14 +112,11 @@ public class DisposableActionTests
     public void Dispose_WhenNotIdempotentAndActionThrows_SubsequentCallsAlsoThrow()
     {
         var disposeCount = 0;
-        var disposable = new DisposableAction(
-            () =>
-            {
-                disposeCount++;
-                throw new InvalidOperationException("Test exception");
-            },
-            idempotent: false
-        );
+        var disposable = Disposable.CreateRepeatable(() =>
+        {
+            disposeCount++;
+            throw new InvalidOperationException("Test exception");
+        });
 
         Assert.Throws<InvalidOperationException>(() => disposable.Dispose());
         Assert.Throws<InvalidOperationException>(() => disposable.Dispose());
@@ -167,10 +141,7 @@ public class DisposableActionTests
     public async Task Dispose_WhenIdempotent_ConcurrentCalls_InvokesActionOnce()
     {
         var disposeCount = 0;
-        var disposable = new DisposableAction(
-            () => Interlocked.Increment(ref disposeCount),
-            idempotent: true
-        );
+        var disposable = new DisposableAction(() => Interlocked.Increment(ref disposeCount));
 
         const int concurrentCalls = 100;
         var tasks = new Task[concurrentCalls];
@@ -189,10 +160,7 @@ public class DisposableActionTests
     public async Task Dispose_WhenNotIdempotent_ConcurrentCalls_InvokesActionEachTime()
     {
         var disposeCount = 0;
-        var disposable = new DisposableAction(
-            () => Interlocked.Increment(ref disposeCount),
-            idempotent: false
-        );
+        var disposable = Disposable.CreateRepeatable(() => Interlocked.Increment(ref disposeCount));
 
         const int concurrentCalls = 100;
         var tasks = new Task[concurrentCalls];
@@ -232,7 +200,7 @@ public class DisposableActionTests
     [Fact]
     public void IsDisposed_NonIdempotentAfterDispose_ReturnsTrue()
     {
-        var disposable = new DisposableAction(() => { }, idempotent: false);
+        var disposable = Disposable.CreateRepeatable(() => { });
 
         disposable.Dispose();
 
@@ -262,6 +230,60 @@ public class DisposableActionTests
 
         Assert.IsAssignableFrom<IDisposable>(disposable);
     }
+
+    #endregion
+
+    #region Deprecated Overload Tests
+
+#pragma warning disable NCDISP003 // tests the deprecated overloads until they are deleted
+
+    [Fact]
+    public void Constructor_WithIdempotentTrue_CreatesInstance()
+    {
+        var action = () => { };
+
+        var disposable = new DisposableAction(action, idempotent: true);
+
+        Assert.NotNull(disposable);
+    }
+
+    [Fact]
+    public void Constructor_WithIdempotentFalse_CreatesInstance()
+    {
+        var action = () => { };
+
+        var disposable = new DisposableAction(action, idempotent: false);
+
+        Assert.NotNull(disposable);
+    }
+
+    [Fact]
+    public void Constructor_WithIdempotentFalse_InvokesActionEachTime()
+    {
+        var count = 0;
+        var disposable = new DisposableAction(() => count++, idempotent: false);
+
+        disposable.Dispose();
+        disposable.Dispose();
+        disposable.Dispose();
+
+        Assert.Equal(3, count);
+    }
+
+    [Fact]
+    public void Create_WithIdempotentFalse_InvokesActionEachTime()
+    {
+        var count = 0;
+        var disposable = Disposable.Create(() => count++, idempotent: false);
+
+        disposable.Dispose();
+        disposable.Dispose();
+        disposable.Dispose();
+
+        Assert.Equal(3, count);
+    }
+
+#pragma warning restore NCDISP003
 
     #endregion
 }

@@ -45,7 +45,7 @@ public class ReadmeSamplesTests
         once.Dispose();
         once.Dispose(); // count == 1: the action runs on the first call only
 
-        var everyTime = Disposable.Create(() => count++, idempotent: false);
+        var everyTime = Disposable.CreateRepeatable(() => count++);
         everyTime.Dispose();
         everyTime.Dispose(); // count == 3: the action runs on every call
         // end-snippet
@@ -278,7 +278,7 @@ public class ReadmeSamplesTests
             throw new InvalidOperationException("Failed to close.")
         );
         var third = Disposable.Create(() => log.Add("third"));
-        var resources = Disposable.Collection(ignoreExceptions: true, first, failing, third);
+        var resources = Disposable.CollectionIgnoringExceptions(first, failing, third);
 
         resources.Dispose(); // log: "third", "first": the failure is ignored
         // end-snippet

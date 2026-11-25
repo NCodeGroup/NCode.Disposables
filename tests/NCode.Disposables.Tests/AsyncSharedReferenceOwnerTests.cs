@@ -3,7 +3,7 @@
 
 namespace NCode.Disposables.Tests;
 
-public class AsyncSharedReferenceOwnerTests
+public class AsyncSharedReferenceOwnerTests : UnitTestBase
 {
     #region Helper Methods
 
@@ -468,8 +468,11 @@ public class AsyncSharedReferenceOwnerTests
     [Fact]
     public async Task WithAsyncDisposableValue_DisposesUnderlyingResource()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
+        mockDisposable
+            .Setup(x => x.DisposeAsync())
+            .Returns(ValueTask.CompletedTask)
+            .Verifiable(Times.Once());
 
         var owner = new AsyncSharedReferenceOwner<IAsyncDisposable>(
             mockDisposable.Object,
@@ -477,8 +480,6 @@ public class AsyncSharedReferenceOwnerTests
         );
 
         await owner.ReleaseReferenceAsync();
-
-        mockDisposable.Verify(x => x.DisposeAsync(), Times.Once);
     }
 
     #endregion

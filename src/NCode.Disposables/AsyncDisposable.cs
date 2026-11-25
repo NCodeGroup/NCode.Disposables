@@ -37,9 +37,29 @@ public static class AsyncDisposable
     /// will only dispose the underlying instance once; <see langword="false"/> to allow multiple disposals.
     /// </param>
     /// <returns>A new <see cref="AsyncDisposableAdapter"/> instance that wraps the specified disposable.</returns>
+    // ADR-1007: deleted in the next major version.
+    [Obsolete(
+        "Use AsyncDisposable.Adapt(disposable), or AsyncDisposable.AdaptRepeatable to dispose it on every call. This overload is deleted in the next major version.",
+        DiagnosticId = "NCDISP003"
+    )]
     public static AsyncDisposableAdapter Adapt(IDisposable disposable, bool idempotent)
     {
-        return new AsyncDisposableAdapter(disposable, idempotent);
+        return idempotent ? Adapt(disposable) : AdaptRepeatable(disposable);
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="AsyncDisposableAdapter"/> that wraps an existing <see cref="IDisposable"/> instance
+    /// and disposes it on every call to <see cref="IAsyncDisposable.DisposeAsync"/>.
+    /// </summary>
+    /// <param name="disposable">The underlying <see cref="IDisposable"/> instance to adapt.</param>
+    /// <returns>A new <see cref="AsyncDisposableAdapter"/> instance that disposes the specified disposable on every disposal.</returns>
+    /// <remarks>
+    /// The returned instance is not idempotent: each call to <see cref="IAsyncDisposable.DisposeAsync"/> disposes the underlying instance.
+    /// Use this with caution as it deviates from the standard dispose pattern.
+    /// </remarks>
+    public static AsyncDisposableAdapter AdaptRepeatable(IDisposable disposable)
+    {
+        return new AsyncDisposableAdapter(disposable) { IsRepeatable = true };
     }
 
     /// <summary>
@@ -249,6 +269,11 @@ public static class AsyncDisposable
     /// <param name="collection">The <see cref="IAsyncDisposable"/> items to add to the collection.</param>
     /// <returns>A new <see cref="AsyncDisposableCollection"/> containing the specified items.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
+    // ADR-1007: deleted in the next major version.
+    [Obsolete(
+        "Use AsyncDisposable.Collection, or AsyncDisposable.CollectionIgnoringExceptions to ignore the exceptions items throw. This overload is deleted in the next major version.",
+        DiagnosticId = "NCDISP003"
+    )]
     public static AsyncDisposableCollection Collection(
         bool ignoreExceptions,
         params IAsyncDisposable[] collection
@@ -256,7 +281,71 @@ public static class AsyncDisposable
     {
         ArgumentNullException.ThrowIfNull(collection);
 
-        return Collection(collection.AsEnumerable(), ignoreExceptions);
+        var items = collection.AsEnumerable();
+
+        return ignoreExceptions ? CollectionIgnoringExceptions(items) : Collection(items);
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="AsyncDisposableCollection"/> that manages multiple <see cref="IAsyncDisposable"/>
+    /// instances from an enumerable source. All contained items are disposed when the collection is disposed.
+    /// Items are disposed in reverse order of their addition.
+    /// </summary>
+    /// <param name="collection">The enumerable collection of <see cref="IAsyncDisposable"/> items to add.</param>
+    /// <returns>A new <see cref="AsyncDisposableCollection"/> containing the specified items.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// When the collection is disposed, every item is still disposed; then the one exception is
+    /// rethrown, or an <see cref="AggregateException"/> holding every exception is thrown when several items throw.
+    /// Use <c>CollectionIgnoringExceptions</c> to ignore the exceptions items throw.
+    /// </remarks>
+    public static AsyncDisposableCollection Collection(IEnumerable<IAsyncDisposable> collection)
+    {
+        ArgumentNullException.ThrowIfNull(collection);
+
+        return new AsyncDisposableCollection(collection);
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="AsyncDisposableCollection"/> that manages multiple <see cref="IAsyncDisposable"/>
+    /// instances and ignores the exceptions that items throw. All contained items are disposed when the collection
+    /// is disposed. Items are disposed in reverse order of their addition.
+    /// </summary>
+    /// <param name="collection">The <see cref="IAsyncDisposable"/> items to add to the collection.</param>
+    /// <returns>A new <see cref="AsyncDisposableCollection"/> containing the specified items.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// Disposal continues for all items even if some throw exceptions, and the exceptions are ignored.
+    /// </remarks>
+    public static AsyncDisposableCollection CollectionIgnoringExceptions(
+        params IAsyncDisposable[] collection
+    )
+    {
+        ArgumentNullException.ThrowIfNull(collection);
+
+        var items = collection.AsEnumerable();
+
+        return CollectionIgnoringExceptions(items);
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="AsyncDisposableCollection"/> that manages multiple <see cref="IAsyncDisposable"/>
+    /// instances from an enumerable source and ignores the exceptions that items throw. All contained items are
+    /// disposed when the collection is disposed. Items are disposed in reverse order of their addition.
+    /// </summary>
+    /// <param name="collection">The enumerable collection of <see cref="IAsyncDisposable"/> items to add.</param>
+    /// <returns>A new <see cref="AsyncDisposableCollection"/> containing the specified items.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// Disposal continues for all items even if some throw exceptions, and the exceptions are ignored.
+    /// </remarks>
+    public static AsyncDisposableCollection CollectionIgnoringExceptions(
+        IEnumerable<IAsyncDisposable> collection
+    )
+    {
+        ArgumentNullException.ThrowIfNull(collection);
+
+        return new AsyncDisposableCollection(collection) { IgnoresExceptions = true };
     }
 
     /// <summary>
@@ -272,6 +361,11 @@ public static class AsyncDisposable
     /// <returns>A new <see cref="AsyncDisposableCollection"/> containing the specified items.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
     // Callers that pass only the collection bind to this overload, so it keeps its optional parameter.
+    // ADR-1007: deleted in the next major version.
+    [Obsolete(
+        "Use AsyncDisposable.Collection, or AsyncDisposable.CollectionIgnoringExceptions to ignore the exceptions items throw. This overload is deleted in the next major version.",
+        DiagnosticId = "NCDISP003"
+    )]
 #pragma warning disable RS0027 // optional parameter on an overload with fewer parameters than another
     public static AsyncDisposableCollection Collection(
 #pragma warning restore RS0027
@@ -281,7 +375,7 @@ public static class AsyncDisposable
     {
         ArgumentNullException.ThrowIfNull(collection);
 
-        return new AsyncDisposableCollection(collection, ignoreExceptions);
+        return ignoreExceptions ? CollectionIgnoringExceptions(collection) : Collection(collection);
     }
 
     /// <summary>
@@ -309,11 +403,34 @@ public static class AsyncDisposable
     /// </param>
     /// <returns>A new <see cref="AsyncDisposableAction"/> instance that invokes the specified action on disposal.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+    // ADR-1007: deleted in the next major version.
+    [Obsolete(
+        "Use AsyncDisposable.Create(action), or AsyncDisposable.CreateRepeatable to run the action on every call. This overload is deleted in the next major version.",
+        DiagnosticId = "NCDISP003"
+    )]
     public static AsyncDisposableAction Create(Func<ValueTask> action, bool idempotent)
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return new AsyncDisposableAction(action, idempotent);
+        return idempotent ? Create(action) : CreateRepeatable(action);
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="AsyncDisposableAction"/> that invokes the specified asynchronous action
+    /// on every call to <see cref="IAsyncDisposable.DisposeAsync"/>.
+    /// </summary>
+    /// <param name="action">The asynchronous action to invoke each time <see cref="IAsyncDisposable.DisposeAsync"/> is called.</param>
+    /// <returns>A new <see cref="AsyncDisposableAction"/> instance that invokes the specified action on every disposal.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// The returned instance is not idempotent: each call to <see cref="IAsyncDisposable.DisposeAsync"/> invokes the action.
+    /// Use this with caution as it deviates from the standard dispose pattern.
+    /// </remarks>
+    public static AsyncDisposableAction CreateRepeatable(Func<ValueTask> action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        return new AsyncDisposableAction(action) { IsRepeatable = true };
     }
 
     /// <summary>
@@ -351,18 +468,43 @@ public static class AsyncDisposable
     /// <remarks>
     /// The synchronous action is wrapped to complete synchronously via <see cref="ValueTask.CompletedTask"/>.
     /// </remarks>
+    // ADR-1007: deleted in the next major version.
+    [Obsolete(
+        "Use AsyncDisposable.Create(action), or AsyncDisposable.CreateRepeatable to run the action on every call. This overload is deleted in the next major version.",
+        DiagnosticId = "NCDISP003"
+    )]
     public static AsyncDisposableAction Create(Action action, bool idempotent)
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return new AsyncDisposableAction(
-            () =>
-            {
-                action();
-                return ValueTask.CompletedTask;
-            },
-            idempotent
-        );
+        return idempotent ? Create(action) : CreateRepeatable(action);
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="AsyncDisposableAction"/> that invokes the specified synchronous action
+    /// on every call to <see cref="IAsyncDisposable.DisposeAsync"/>.
+    /// </summary>
+    /// <param name="action">The synchronous action to invoke each time <see cref="IAsyncDisposable.DisposeAsync"/> is called.</param>
+    /// <returns>A new <see cref="AsyncDisposableAction"/> instance that invokes the specified action on every disposal.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// The returned instance is not idempotent: each call to <see cref="IAsyncDisposable.DisposeAsync"/> invokes the action.
+    /// Use this with caution as it deviates from the standard dispose pattern.
+    /// </para>
+    /// <para>
+    /// The synchronous action is wrapped to complete synchronously via <see cref="ValueTask.CompletedTask"/>.
+    /// </para>
+    /// </remarks>
+    public static AsyncDisposableAction CreateRepeatable(Action action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        return CreateRepeatable(() =>
+        {
+            action();
+            return ValueTask.CompletedTask;
+        });
     }
 
     // ADR-1005: no Action<…> overloads; they would drop a Task-returning lambda's Task.

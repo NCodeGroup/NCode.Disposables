@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [7.1.0] - 2026-11-24
+
+### Added
+
+- `Disposable.CreateRepeatable`, `AsyncDisposable.CreateRepeatable` and `AsyncDisposable.AdaptRepeatable` run the action or dispose the resource on every call, `Disposable.PostingContext` disposes through the context's `Post`, and `Disposable.CollectionIgnoringExceptions`, `AsyncDisposable.CollectionIgnoringExceptions`, `DisposeAllIgnoringExceptions()` and `DisposeAllIgnoringExceptionsAsync()` ignore the exceptions items throw; the constructors and overloads without a flag, such as `new DisposableAction(action)`, `Disposable.Context(disposable, context)` and `DisposeAll()`, pick the default behavior. ([#68](https://github.com/NCodeGroup/NCode.Disposables/issues/68), [ADR-1007](docs/decisions/1007-behavior-is-chosen-by-a-factory-name-not-a-flag-parameter.md))
+
+### Changed
+
+- The project template is v0.113.3, whose `build/Update-PublicApi.ps1` and `build/dod.ps1` find the projects when they run from a plan's worktree under `.claude/worktrees/`. ([#70](https://github.com/NCodeGroup/NCode.Disposables/issues/70))
+- The tests create every mock from one `MockRepository` per test class, which verifies each expected call when the test ends. ([#67](https://github.com/NCodeGroup/NCode.Disposables/issues/67))
+
+### Deprecated
+
+- The `bool` parameters that pick a behavior report `NCDISP003`: `idempotent` on `Disposable.Create`, `AsyncDisposable.Create`, `AsyncDisposable.Adapt` and the `DisposableAction`, `AsyncDisposableAction` and `AsyncDisposableAdapter` constructors, `async` on `Disposable.Context` and the `DisposableContext` constructor, and `ignoreExceptions` on `Disposable.Collection`, `AsyncDisposable.Collection`, the `DisposableCollection` and `AsyncDisposableCollection` constructors, `DisposeAll` and `DisposeAllAsync`. Use the members named for each behavior, because the next major version deletes these overloads. ([#68](https://github.com/NCodeGroup/NCode.Disposables/issues/68), [ADR-1007](docs/decisions/1007-behavior-is-chosen-by-a-factory-name-not-a-flag-parameter.md))
+
+### Fixed
+
+- `Dispose` on a context from `Disposable.PostingContext`, or from `Disposable.Context` with `async: true`, calls `OperationCompleted` and rethrows when the context's `Post` throws, so the context's count of operations stays balanced. ([#71](https://github.com/NCodeGroup/NCode.Disposables/issues/71))
+
 ## [7.0.0] - 2026-11-24
 
 ### Added
@@ -190,7 +209,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release for .NET Framework 4.5.1: `IDisposable` implementations for common resource management patterns, such as actions, aggregates, collections and shared references.
 
-[Unreleased]: https://github.com/NCodeGroup/NCode.Disposables/compare/v7.0.0...HEAD
+[Unreleased]: https://github.com/NCodeGroup/NCode.Disposables/compare/v7.1.0...HEAD
+[7.1.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v7.0.0...v7.1.0
 [7.0.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v6.0.0...v7.0.0
 [6.0.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v5.3.0...v6.0.0
 [5.3.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v5.2.1...v5.3.0

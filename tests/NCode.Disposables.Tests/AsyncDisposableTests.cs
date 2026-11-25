@@ -3,8 +3,46 @@
 
 namespace NCode.Disposables.Tests;
 
-public class AsyncDisposableTests
+public class AsyncDisposableTests : UnitTestBase
 {
+    #region Adapt Tests
+
+    [Fact]
+    public async Task Adapt_WhenDisposedThreeTimes_DisposesOnce()
+    {
+        var count = 0;
+        var inner = Disposable.CreateRepeatable(() => count++);
+        var adapter = AsyncDisposable.Adapt(inner);
+
+        await adapter.DisposeAsync();
+        await adapter.DisposeAsync();
+        await adapter.DisposeAsync();
+
+        Assert.Equal(1, count);
+        Assert.True(adapter.IsDisposed);
+    }
+
+    #endregion
+
+    #region AdaptRepeatable Tests
+
+    [Fact]
+    public async Task AdaptRepeatable_WhenDisposedThreeTimes_DisposesEachTime()
+    {
+        var count = 0;
+        var inner = Disposable.CreateRepeatable(() => count++);
+        var adapter = AsyncDisposable.AdaptRepeatable(inner);
+
+        await adapter.DisposeAsync();
+        await adapter.DisposeAsync();
+        await adapter.DisposeAsync();
+
+        Assert.Equal(3, count);
+        Assert.True(adapter.IsDisposed);
+    }
+
+    #endregion
+
     #region Aggregate Tests
 
     [Fact]
@@ -32,8 +70,8 @@ public class AsyncDisposableTests
     [Fact]
     public async Task Serial_WithDisposable_HoldsIt()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
+        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask).Verifiable();
 
         await using var serial = AsyncDisposable.Serial(mockDisposable.Object);
 
@@ -61,8 +99,8 @@ public class AsyncDisposableTests
     [Fact]
     public async Task Guard_WithValue_ReturnsGuardOverValue()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
+        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask).Verifiable();
 
         await using var guard = AsyncDisposable.Guard(mockDisposable.Object);
 
@@ -122,8 +160,8 @@ public class AsyncDisposableTests
     [Fact]
     public async Task Context_WithDisposableAndContext_ReturnsContextDisposable()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
+        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask).Verifiable();
         var context = new SynchronizationContext();
 
         await using var contextDisposable = AsyncDisposable.Context(mockDisposable.Object, context);
@@ -134,7 +172,7 @@ public class AsyncDisposableTests
     [Fact]
     public void Context_NullContext_ThrowsArgumentNullException()
     {
-        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IAsyncDisposable>();
 
         var exception = Assert.Throws<ArgumentNullException>(() =>
             AsyncDisposable.Context(mockDisposable.Object, null!)
@@ -222,6 +260,56 @@ public class AsyncDisposableTests
 
     #endregion
 
+    #region CreateRepeatable Tests
+
+    [Fact]
+    public async Task CreateRepeatable_WithFunc_WhenDisposedThreeTimes_InvokesActionEachTime()
+    {
+        var count = 0;
+        var disposable = AsyncDisposable.CreateRepeatable(() =>
+        {
+            count++;
+            return ValueTask.CompletedTask;
+        });
+
+        await disposable.DisposeAsync();
+        await disposable.DisposeAsync();
+        await disposable.DisposeAsync();
+
+        Assert.Equal(3, count);
+        Assert.True(disposable.IsDisposed);
+    }
+
+    [Fact]
+    public async Task CreateRepeatable_WithAction_WhenDisposedThreeTimes_InvokesActionEachTime()
+    {
+        var count = 0;
+        var disposable = AsyncDisposable.CreateRepeatable((Action)(() => count++));
+
+        await disposable.DisposeAsync();
+        await disposable.DisposeAsync();
+        await disposable.DisposeAsync();
+
+        Assert.Equal(3, count);
+        Assert.True(disposable.IsDisposed);
+    }
+
+    [Fact]
+    public void CreateRepeatable_NullAction_ThrowsArgumentNullException()
+    {
+        var funcException = Assert.Throws<ArgumentNullException>(() =>
+            AsyncDisposable.CreateRepeatable((Func<ValueTask>)null!)
+        );
+        var actionException = Assert.Throws<ArgumentNullException>(() =>
+            AsyncDisposable.CreateRepeatable((Action)null!)
+        );
+
+        Assert.Equal("action", funcException.ParamName);
+        Assert.Equal("action", actionException.ParamName);
+    }
+
+    #endregion
+
     #region CreateValue Tests
 
     [Fact]
@@ -251,6 +339,80 @@ public class AsyncDisposableTests
         );
 
         Assert.Equal("action", exception.ParamName);
+    }
+
+    #endregion
+
+    #region Collection Tests
+
+    [Fact]
+    public async Task Collection_WithEnumerable_WhenItemThrows_DisposesEveryItemAndRethrows()
+    {
+        var log = new List<string>();
+        IEnumerable<IAsyncDisposable> items =
+        [
+            AsyncDisposable.Create(() => log.Add("first")),
+            AsyncDisposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
+            AsyncDisposable.Create(() => log.Add("third")),
+        ];
+        var collection = AsyncDisposable.Collection(items);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            collection.DisposeAsync().AsTask()
+        );
+
+        Assert.Equal(["third", "first"], log);
+    }
+
+    #endregion
+
+    #region CollectionIgnoringExceptions Tests
+
+    [Fact]
+    public async Task CollectionIgnoringExceptions_WhenItemThrows_DisposesEveryItemWithoutThrowing()
+    {
+        var log = new List<string>();
+        var first = AsyncDisposable.Create(() => log.Add("first"));
+        var failing = AsyncDisposable.Create(() =>
+            throw new InvalidOperationException("Dispose failed.")
+        );
+        var third = AsyncDisposable.Create(() => log.Add("third"));
+        var collection = AsyncDisposable.CollectionIgnoringExceptions(first, failing, third);
+
+        await collection.DisposeAsync();
+
+        Assert.Equal(["third", "first"], log);
+    }
+
+    [Fact]
+    public async Task CollectionIgnoringExceptions_WithEnumerable_WhenItemThrows_DisposesEveryItemWithoutThrowing()
+    {
+        var log = new List<string>();
+        IEnumerable<IAsyncDisposable> items =
+        [
+            AsyncDisposable.Create(() => log.Add("first")),
+            AsyncDisposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
+            AsyncDisposable.Create(() => log.Add("third")),
+        ];
+        var collection = AsyncDisposable.CollectionIgnoringExceptions(items);
+
+        await collection.DisposeAsync();
+
+        Assert.Equal(["third", "first"], log);
+    }
+
+    [Fact]
+    public void CollectionIgnoringExceptions_NullCollection_ThrowsArgumentNullException()
+    {
+        var arrayException = Assert.Throws<ArgumentNullException>(() =>
+            AsyncDisposable.CollectionIgnoringExceptions((IAsyncDisposable[])null!)
+        );
+        var enumerableException = Assert.Throws<ArgumentNullException>(() =>
+            AsyncDisposable.CollectionIgnoringExceptions((IEnumerable<IAsyncDisposable>)null!)
+        );
+
+        Assert.Equal("collection", arrayException.ParamName);
+        Assert.Equal("collection", enumerableException.ParamName);
     }
 
     #endregion

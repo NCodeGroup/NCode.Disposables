@@ -1,1 +1,29 @@
 #nullable enable
+NCode.Disposables.AsyncDisposableAction.AsyncDisposableAction(System.Func<System.Threading.Tasks.ValueTask>! action) -> void
+NCode.Disposables.AsyncDisposableAdapter.AsyncDisposableAdapter(System.IDisposable! disposable) -> void
+NCode.Disposables.AsyncDisposableCollection.AsyncDisposableCollection() -> void
+NCode.Disposables.AsyncDisposableCollection.AsyncDisposableCollection(System.Collections.Generic.IEnumerable<System.IAsyncDisposable!>! collection) -> void
+NCode.Disposables.AsyncDisposableExtensions.extension(System.Collections.Generic.IEnumerable<object?>!).DisposeAllAsync() -> System.Threading.Tasks.ValueTask
+NCode.Disposables.AsyncDisposableExtensions.extension(System.Collections.Generic.IEnumerable<object?>!).DisposeAllIgnoringExceptionsAsync() -> System.Threading.Tasks.ValueTask
+NCode.Disposables.DisposableAction.DisposableAction(System.Action! action) -> void
+NCode.Disposables.DisposableCollection.DisposableCollection() -> void
+NCode.Disposables.DisposableCollection.DisposableCollection(System.Collections.Generic.IEnumerable<System.IDisposable!>! collection) -> void
+NCode.Disposables.DisposableContext.DisposableContext(System.IDisposable! disposable, System.Threading.SynchronizationContext! context) -> void
+NCode.Disposables.DisposableExtensions.extension(System.Collections.Generic.IEnumerable<object?>!).DisposeAll() -> void
+NCode.Disposables.DisposableExtensions.extension(System.Collections.Generic.IEnumerable<object?>!).DisposeAllIgnoringExceptions() -> void
+static NCode.Disposables.AsyncDisposable.AdaptRepeatable(System.IDisposable! disposable) -> NCode.Disposables.AsyncDisposableAdapter!
+static NCode.Disposables.AsyncDisposable.Collection(System.Collections.Generic.IEnumerable<System.IAsyncDisposable!>! collection) -> NCode.Disposables.AsyncDisposableCollection!
+static NCode.Disposables.AsyncDisposable.CollectionIgnoringExceptions(params System.IAsyncDisposable![]! collection) -> NCode.Disposables.AsyncDisposableCollection!
+static NCode.Disposables.AsyncDisposable.CollectionIgnoringExceptions(System.Collections.Generic.IEnumerable<System.IAsyncDisposable!>! collection) -> NCode.Disposables.AsyncDisposableCollection!
+static NCode.Disposables.AsyncDisposable.CreateRepeatable(System.Action! action) -> NCode.Disposables.AsyncDisposableAction!
+static NCode.Disposables.AsyncDisposable.CreateRepeatable(System.Func<System.Threading.Tasks.ValueTask>! action) -> NCode.Disposables.AsyncDisposableAction!
+static NCode.Disposables.AsyncDisposableExtensions.DisposeAllAsync(this System.Collections.Generic.IEnumerable<object?>! collection) -> System.Threading.Tasks.ValueTask
+static NCode.Disposables.AsyncDisposableExtensions.DisposeAllIgnoringExceptionsAsync(this System.Collections.Generic.IEnumerable<object?>! collection) -> System.Threading.Tasks.ValueTask
+static NCode.Disposables.Disposable.Collection(System.Collections.Generic.IEnumerable<System.IDisposable!>! collection) -> NCode.Disposables.DisposableCollection!
+static NCode.Disposables.Disposable.CollectionIgnoringExceptions(params System.IDisposable![]! collection) -> NCode.Disposables.DisposableCollection!
+static NCode.Disposables.Disposable.CollectionIgnoringExceptions(System.Collections.Generic.IEnumerable<System.IDisposable!>! collection) -> NCode.Disposables.DisposableCollection!
+static NCode.Disposables.Disposable.Context(System.IDisposable! disposable, System.Threading.SynchronizationContext! context) -> NCode.Disposables.DisposableContext!
+static NCode.Disposables.Disposable.CreateRepeatable(System.Action! action) -> NCode.Disposables.DisposableAction!
+static NCode.Disposables.Disposable.PostingContext(System.IDisposable! disposable, System.Threading.SynchronizationContext! context) -> NCode.Disposables.DisposableContext!
+static NCode.Disposables.DisposableExtensions.DisposeAll(this System.Collections.Generic.IEnumerable<object?>! collection) -> void
+static NCode.Disposables.DisposableExtensions.DisposeAllIgnoringExceptions(this System.Collections.Generic.IEnumerable<object?>! collection) -> void

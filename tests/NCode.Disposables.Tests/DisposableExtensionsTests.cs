@@ -3,24 +3,17 @@
 
 namespace NCode.Disposables.Tests;
 
-public sealed class DisposableExtensionsTests : IDisposable
+public sealed class DisposableExtensionsTests : UnitTestBase
 {
     private const string AsyncOnlyMessage =
         "The collection contains an item that implements IAsyncDisposable but not IDisposable; dispose it with DisposeAllAsync.";
-
-    private readonly MockRepository _mocks = new(MockBehavior.Strict);
-
-    public void Dispose()
-    {
-        _mocks.Verify();
-    }
 
     #region DisposeAsyncIfAvailable Tests
 
     [Fact]
     public async Task DisposeAsyncIfAvailable_WhenAsyncDisposable_CallsDisposeAsync()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
         mockDisposable
             .As<IAsyncDisposable>()
             .Setup(x => x.DisposeAsync())
@@ -29,19 +22,16 @@ public sealed class DisposableExtensionsTests : IDisposable
 
         await mockDisposable.Object.DisposeAsyncIfAvailable();
 
-        mockDisposable.Verify();
         mockDisposable.Verify(x => x.Dispose(), Times.Never);
     }
 
     [Fact]
     public async Task DisposeAsyncIfAvailable_WhenNotAsyncDisposable_CallsDispose()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
         mockDisposable.Setup(x => x.Dispose()).Verifiable();
 
         await mockDisposable.Object.DisposeAsyncIfAvailable();
-
-        mockDisposable.Verify();
     }
 
     [Fact]
@@ -59,11 +49,12 @@ public sealed class DisposableExtensionsTests : IDisposable
     [Fact]
     public async Task DisposeAsyncIfAvailable_WhenAsyncDisposeThrows_PropagatesException()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
         mockDisposable
             .As<IAsyncDisposable>()
             .Setup(x => x.DisposeAsync())
-            .ThrowsAsync(new InvalidOperationException("Test exception"));
+            .ThrowsAsync(new InvalidOperationException("Test exception"))
+            .Verifiable();
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             mockDisposable.Object.DisposeAsyncIfAvailable().AsTask()
@@ -75,10 +66,11 @@ public sealed class DisposableExtensionsTests : IDisposable
     [Fact]
     public async Task DisposeAsyncIfAvailable_WhenSyncDisposeThrows_PropagatesException()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
         mockDisposable
             .Setup(x => x.Dispose())
-            .Throws(new InvalidOperationException("Test exception"));
+            .Throws(new InvalidOperationException("Test exception"))
+            .Verifiable();
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             mockDisposable.Object.DisposeAsyncIfAvailable().AsTask()
@@ -94,8 +86,8 @@ public sealed class DisposableExtensionsTests : IDisposable
     [Fact]
     public void AsSharedReference_CreatesLease()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable();
 
         using var lease = mockDisposable.Object.AsSharedReference();
 
@@ -105,23 +97,21 @@ public sealed class DisposableExtensionsTests : IDisposable
     [Fact]
     public void AsSharedReference_DisposesWhenLeaseReleased()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
 
         var lease = mockDisposable.Object.AsSharedReference();
 
         mockDisposable.Verify(x => x.Dispose(), Times.Never);
 
         lease.Dispose();
-
-        mockDisposable.Verify(x => x.Dispose(), Times.Once);
     }
 
     [Fact]
     public void AsSharedReference_MultipleLeases_DisposesOnlyWhenLastReleased()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
 
         var lease1 = mockDisposable.Object.AsSharedReference();
         var lease2 = lease1.AddReference();
@@ -134,7 +124,6 @@ public sealed class DisposableExtensionsTests : IDisposable
         mockDisposable.Verify(x => x.Dispose(), Times.Never);
 
         lease3.Dispose();
-        mockDisposable.Verify(x => x.Dispose(), Times.Once);
     }
 
     [Fact]
@@ -156,7 +145,7 @@ public sealed class DisposableExtensionsTests : IDisposable
     [Fact]
     public void DisposeAll_WithItemImplementingBothInterfaces_CallsDispose()
     {
-        var mockDisposable = _mocks.Create<IDisposable>();
+        var mockDisposable = CreateStrictMock<IDisposable>();
         _ = mockDisposable.As<IAsyncDisposable>();
         mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
         var collection = new object[] { mockDisposable.Object };
@@ -244,24 +233,6 @@ public sealed class DisposableExtensionsTests : IDisposable
     }
 
     [Fact]
-    public void DisposeAll_WithIgnoreExceptions_ContinuesOnError()
-    {
-        var order = string.Empty;
-        var collection = new[]
-        {
-            Disposable.Create(() => order += "1"),
-            Disposable.Create(() => throw new InvalidOperationException()),
-            Disposable.Create(() => order += "2"),
-            Disposable.Create(() => throw new InvalidOperationException()),
-            Disposable.Create(() => order += "3"),
-        };
-
-        collection.DisposeAll(ignoreExceptions: true);
-
-        Assert.Equal("321", order);
-    }
-
-    [Fact]
     public void DisposeAll_WithSingleException_ThrowsOriginalException()
     {
         var order = string.Empty;
@@ -299,26 +270,6 @@ public sealed class DisposableExtensionsTests : IDisposable
     }
 
     [Fact]
-    public void DisposeAll_WithIgnoreExceptionsAndAsyncDisposable_IgnoresOtherFailures()
-    {
-        var log = new List<string>();
-        var collection = new object[]
-        {
-            Disposable.Create(() => log.Add("first")),
-            Disposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
-            AsyncDisposable.Create(() => { }),
-            Disposable.Create(() => log.Add("last")),
-        };
-
-        var exception = Assert.Throws<InvalidOperationException>(() =>
-            collection.DisposeAll(ignoreExceptions: true)
-        );
-
-        Assert.Equal(AsyncOnlyMessage, exception.Message);
-        Assert.Equal(["last", "first"], log);
-    }
-
-    [Fact]
     public void DisposeAll_WithAsyncDisposableAndFailingItem_ThrowsAggregateExceptionInDisposalOrder()
     {
         var collection = new object[]
@@ -334,24 +285,84 @@ public sealed class DisposableExtensionsTests : IDisposable
         Assert.IsType<ArgumentException>(exception.InnerExceptions[1]);
     }
 
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void DisposeAll_WithAsyncDisposable_ThrowsInvalidOperationException(
-        bool ignoreExceptions
-    )
+    [Fact]
+    public void DisposeAll_WithAsyncDisposable_ThrowsInvalidOperationException()
+    {
+        var collection = new object[] { AsyncDisposable.Create(() => { }) };
+
+        var exception = Assert.Throws<InvalidOperationException>(() => collection.DisposeAll());
+
+        Assert.Equal(AsyncOnlyMessage, exception.Message);
+    }
+
+    [Fact]
+    public void DisposeAll_WithOneShotItem_InvokesActionOnce()
+    {
+        var disposeCount = 0;
+        IDisposable disposable = Disposable.Create(() => disposeCount++);
+        var collection = new[] { disposable };
+
+        collection.DisposeAll();
+
+        Assert.Equal(1, disposeCount);
+    }
+
+    #endregion
+
+    #region DisposeAllIgnoringExceptions Tests
+
+    [Fact]
+    public void DisposeAllIgnoringExceptions_WhenItemsThrow_DisposesEveryItem()
+    {
+        var order = string.Empty;
+        var collection = new[]
+        {
+            Disposable.Create(() => order += "1"),
+            Disposable.Create(() => throw new InvalidOperationException()),
+            Disposable.Create(() => order += "2"),
+            Disposable.Create(() => throw new InvalidOperationException()),
+            Disposable.Create(() => order += "3"),
+        };
+
+        collection.DisposeAllIgnoringExceptions();
+
+        Assert.Equal("321", order);
+    }
+
+    [Fact]
+    public void DisposeAllIgnoringExceptions_WithAsyncDisposable_ThrowsOnlyInvalidOperationException()
+    {
+        var log = new List<string>();
+        var collection = new object[]
+        {
+            Disposable.Create(() => log.Add("first")),
+            Disposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
+            AsyncDisposable.Create(() => { }),
+            Disposable.Create(() => log.Add("last")),
+        };
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            collection.DisposeAllIgnoringExceptions()
+        );
+
+        Assert.Equal(AsyncOnlyMessage, exception.Message);
+        Assert.Equal(["last", "first"], log);
+    }
+
+    [Fact]
+    public void DisposeAllIgnoringExceptions_WithAsyncDisposable_ThrowsInvalidOperationException()
     {
         var collection = new object[] { AsyncDisposable.Create(() => { }) };
 
         var exception = Assert.Throws<InvalidOperationException>(() =>
-            collection.DisposeAll(ignoreExceptions)
+            collection.DisposeAllIgnoringExceptions()
         );
 
         Assert.Equal(AsyncOnlyMessage, exception.Message);
     }
 
     [Fact]
-    public void DisposeAll_WithAsyncDisposable_DisposesRemainingItems()
+    public void DisposeAllIgnoringExceptions_WithAsyncDisposable_DisposesRemainingItems()
     {
         var disposed = false;
         var collection = new object[]
@@ -360,27 +371,52 @@ public sealed class DisposableExtensionsTests : IDisposable
             AsyncDisposable.Create(() => { }),
         };
 
-        Assert.Throws<InvalidOperationException>(() =>
-            collection.DisposeAll(ignoreExceptions: true)
-        );
+        Assert.Throws<InvalidOperationException>(() => collection.DisposeAllIgnoringExceptions());
 
         // The sync disposable is still disposed because it comes after the async one in reverse order
         Assert.True(disposed);
     }
 
+    #endregion
+
+    #region Deprecated Overload Tests
+
+#pragma warning disable NCDISP003 // tests the deprecated overloads until they are deleted
+
     [Fact]
-    public void DisposeAll_CalledTwice_DisposesEachTime()
+    public void DisposeAll_WithIgnoreExceptionsTrue_IgnoresFailures()
     {
-        var disposeCount = 0;
-        IDisposable disposable = Disposable.Create(() => disposeCount++);
-        var collection = new[] { disposable };
+        var log = new List<string>();
+        var collection = new[]
+        {
+            Disposable.Create(() => log.Add("first")),
+            Disposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
+        };
 
-        collection.DisposeAll();
+        collection.DisposeAll(ignoreExceptions: true);
 
-        // Note: DisposableAction is one-shot, so second call doesn't increment
-        // The extension method itself doesn't track previous calls
-        Assert.Equal(1, disposeCount);
+        Assert.Equal(["first"], log);
     }
+
+    [Fact]
+    public void DisposeAll_WithIgnoreExceptionsFalse_RethrowsFailure()
+    {
+        var log = new List<string>();
+        var collection = new[]
+        {
+            Disposable.Create(() => log.Add("first")),
+            Disposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
+        };
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            collection.DisposeAll(ignoreExceptions: false)
+        );
+
+        Assert.Equal("Dispose failed.", exception.Message);
+        Assert.Equal(["first"], log);
+    }
+
+#pragma warning restore NCDISP003
 
     #endregion
 
