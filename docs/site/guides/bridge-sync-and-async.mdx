@@ -1,0 +1,58 @@
+---
+title: Bridge sync and async disposal
+description: Hand an IDisposable to code that takes an IAsyncDisposable, and dispose whatever you hold with the best method it offers.
+---
+
+import { Pitfalls } from '@ncodegroup/docs/components';
+
+Code that disposes asynchronously takes an `IAsyncDisposable`, and a lot of existing code still holds an `IDisposable`. This page shows how to adapt one to the other, how to adapt for every call, how to dispose whatever you hold with the best method it offers, how a collection treats an item that implements both, and what to watch for.
+
+## Adapt an IDisposable
+
+`AsyncDisposable.Adapt` wraps an `IDisposable` so that `DisposeAsync` disposes it. The resource is disposed once, however often `DisposeAsync` is called.
+
+```cs snippet=Adapt
+```
+
+## Adapt for every call
+
+`AsyncDisposable.AdaptRepeatable` wraps a disposable that you want to run on every call, so each `DisposeAsync` disposes it again.
+
+```cs snippet=SiteBridgeSyncAndAsyncRepeatable
+```
+
+## Dispose with the best method available
+
+`DisposeAsyncIfAvailable` disposes an `IDisposable` through `DisposeAsync` when it also implements `IAsyncDisposable`, and through `Dispose` when it does not. It does nothing for `null`.
+
+```cs snippet=DisposeAsyncIfAvailable
+```
+
+## Items that implement both
+
+A collection disposes each item through the interface its own disposal uses: synchronous disposal goes through `IDisposable`, and asynchronous disposal goes through `IAsyncDisposable`.
+
+```cs snippet=SiteBridgeSyncAndAsyncBothForms
+```
+
+So a synchronous collection of a stream never calls the stream's `DisposeAsync`:
+
+```cs snippet=CollectionStream
+```
+
+See [synchronous and asynchronous disposal](/concepts/sync-and-async/).
+
+## Pitfalls
+
+<Pitfalls>
+
+- **Adapting `null`.**
+  - *You write* `AsyncDisposable.Adapt(maybeNull)`.
+  - *What happens:* it throws `ArgumentNullException`, as [ADR-1008](https://github.com/NCodeGroup/NCode.Disposables/blob/main/docs/decisions/1008-a-disposable-that-wraps-a-resource-rejects-a-null-resource.md) records.
+  - *Write instead:* `await maybeNull.DisposeAsyncIfAvailable()`, which does nothing for `null`.
+- **Disposing a stream through a synchronous collection.**
+  - *You write* `Disposable.Collection(stream)`.
+  - *What happens:* `Dispose` runs, never `DisposeAsync`, so the stream flushes synchronously and blocks the thread on its I/O.
+  - *Write instead:* `AsyncDisposable.Collection(stream)` with `await using`.
+
+</Pitfalls>
