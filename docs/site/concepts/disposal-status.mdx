@@ -7,7 +7,7 @@ A disposable can report whether it was disposed, and a holder that was disposed 
 
 ## Ask whether it is disposed
 
-Every disposable class that keeps disposal state implements `IDisposalStatus`, whose `IsDisposed` is true once disposal has started. The structs, which are the value disposables, the lock scopes and the leases, keep no state and don't implement it, nor do the empty disposables. `Disposable.Flag()` only records its disposal, so it is the way to observe one. [ADR-1005](https://github.com/NCodeGroup/NCode.Disposables/blob/main/docs/decisions/1005-disposables-are-concrete-sealed-types-that-report-their-disposal-status.md) records the decision.
+Every disposable class that keeps disposal state implements `IDisposalStatus`, whose `IsDisposed` is true once disposal has started. The structs, which are the value disposables, the lock scopes and the leases, keep no state and don't implement it, nor do the empty disposables. `Disposable.Flag()` disposes nothing: it only records that it was disposed, in `IsDisposed`. [ADR-1005](https://github.com/NCodeGroup/NCode.Disposables/blob/main/docs/decisions/1005-disposables-are-concrete-sealed-types-that-report-their-disposal-status.md) records the decision.
 
 ```cs snippet=DisposalStatus
 ```
