@@ -1,0 +1,287 @@
+{
+  "$comment": "The API map on /reference/api-map/, drawn by ApiMap.astro. Every line of src/NCode.Disposables/PublicAPI.Shipped.txt is in exactly one entry's api, which build/Assert-ApiMap.ps1 checks. Text fields take code and [links](/x/).",
+  "groups": [
+    {
+      "id": "factories",
+      "title": "Factories"
+    },
+    {
+      "id": "actions",
+      "title": "Actions and empty disposables"
+    },
+    {
+      "id": "holders",
+      "title": "Holders"
+    },
+    {
+      "id": "shared",
+      "title": "Shared references"
+    },
+    {
+      "id": "others",
+      "title": "Cancellation, contexts and status"
+    },
+    {
+      "id": "extensions",
+      "title": "Extensions"
+    }
+  ],
+  "entries": [
+    {
+      "id": "disposable",
+      "group": "factories",
+      "type": "Disposable",
+      "member": null,
+      "signatures": [
+        "public static class Disposable"
+      ],
+      "summary": "The factory for the synchronous disposables: each member returns the concrete type it creates.",
+      "page": "/start/which-disposable/",
+      "api": [
+        "NCode.Disposables.Disposable"
+      ]
+    },
+    {
+      "id": "disposable-empty",
+      "group": "factories",
+      "type": "Disposable",
+      "member": "Empty",
+      "signatures": [
+        "public static DisposableEmpty Empty { get; }"
+      ],
+      "summary": "The shared instance whose `Dispose` does nothing, `DisposableEmpty.Singleton`.",
+      "page": "/guides/run-code-on-dispose/",
+      "api": [
+        "static NCode.Disposables.Disposable.Empty.get -> NCode.Disposables.DisposableEmpty!"
+      ]
+    },
+    {
+      "id": "disposable-create",
+      "group": "factories",
+      "type": "Disposable",
+      "member": "Create",
+      "signatures": [
+        "public static DisposableAction Create(Action action)",
+        "public static DisposableAction Create<T>(Action<T> action, T arg)",
+        "public static DisposableAction Create<TResult>(Func<TResult> action)",
+        "public static DisposableAction Create<T, TResult>(Func<T, TResult> action, T arg)"
+      ],
+      "summary": "Runs the action on the first `Dispose` only, even when several threads dispose at once. Overloads pass up to eight arguments, and a `Func` overload discards its result.",
+      "page": "/guides/run-code-on-dispose/",
+      "api": [
+        "static NCode.Disposables.Disposable.Create(System.Action! action) -> NCode.Disposables.DisposableAction!",
+        "static NCode.Disposables.Disposable.Create<T, TResult>(System.Func<T, TResult>! action, T arg) -> NCode.Disposables.DisposableAction!",
+        "static NCode.Disposables.Disposable.Create<T>(System.Action<T>! action, T arg) -> NCode.Disposables.DisposableAction!",
+        "static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6, T7, T8, TResult>(System.Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8) -> NCode.Disposables.DisposableAction!",
+        "static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6, T7, T8>(System.Action<T1, T2, T3, T4, T5, T6, T7, T8>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8) -> NCode.Disposables.DisposableAction!",
+        "static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6, T7, TResult>(System.Func<T1, T2, T3, T4, T5, T6, T7, TResult>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7) -> NCode.Disposables.DisposableAction!",
+        "static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6, T7>(System.Action<T1, T2, T3, T4, T5, T6, T7>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7) -> NCode.Disposables.DisposableAction!",
+        "static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6, TResult>(System.Func<T1, T2, T3, T4, T5, T6, TResult>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6) -> NCode.Disposables.DisposableAction!",
+        "static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, T6>(System.Action<T1, T2, T3, T4, T5, T6>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6) -> NCode.Disposables.DisposableAction!",
+        "static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5, TResult>(System.Func<T1, T2, T3, T4, T5, TResult>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5) -> NCode.Disposables.DisposableAction!",
+        "static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, T5>(System.Action<T1, T2, T3, T4, T5>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5) -> NCode.Disposables.DisposableAction!",
+        "static NCode.Disposables.Disposable.Create<T1, T2, T3, T4, TResult>(System.Func<T1, T2, T3, T4, TResult>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4) -> NCode.Disposables.DisposableAction!",
+        "static NCode.Disposables.Disposable.Create<T1, T2, T3, T4>(System.Action<T1, T2, T3, T4>! action, T1 arg1, T2 arg2, T3 arg3, T4 arg4) -> NCode.Disposables.DisposableAction!",
+        "static NCode.Disposables.Disposable.Create<T1, T2, T3, TResult>(System.Func<T1, T2, T3, TResult>! action, T1 arg1, T2 arg2, T3 arg3) -> NCode.Disposables.DisposableAction!",
+        "static NCode.Disposables.Disposable.Create<T1, T2, T3>(System.Action<T1, T2, T3>! action, T1 arg1, T2 arg2, T3 arg3) -> NCode.Disposables.DisposableAction!",
+        "static NCode.Disposables.Disposable.Create<T1, T2, TResult>(System.Func<T1, T2, TResult>! action, T1 arg1, T2 arg2) -> NCode.Disposables.DisposableAction!",
+        "static NCode.Disposables.Disposable.Create<T1, T2>(System.Action<T1, T2>! action, T1 arg1, T2 arg2) -> NCode.Disposables.DisposableAction!",
+        "static NCode.Disposables.Disposable.Create<TResult>(System.Func<TResult>! action) -> NCode.Disposables.DisposableAction!"
+      ]
+    },
+    {
+      "id": "disposable-createrepeatable",
+      "group": "factories",
+      "type": "Disposable",
+      "member": "CreateRepeatable",
+      "signatures": [
+        "public static DisposableAction CreateRepeatable(Action action)"
+      ],
+      "summary": "Runs the action on every `Dispose` call.",
+      "page": "/guides/run-code-on-dispose/",
+      "api": [
+        "static NCode.Disposables.Disposable.CreateRepeatable(System.Action! action) -> NCode.Disposables.DisposableAction!"
+      ]
+    },
+    {
+      "id": "disposable-createvalue",
+      "group": "factories",
+      "type": "Disposable",
+      "member": "CreateValue",
+      "signatures": [
+        "public static ValueDisposable<TState> CreateValue<TState>(Action<TState> action, TState state)"
+      ],
+      "summary": "A struct that allocates nothing and runs the action with its state on every dispose of every copy.",
+      "page": "/guides/run-code-on-dispose/",
+      "api": [
+        "static NCode.Disposables.Disposable.CreateValue<TState>(System.Action<TState>! action, TState state) -> NCode.Disposables.ValueDisposable<TState>"
+      ]
+    },
+    {
+      "id": "disposable-aggregate",
+      "group": "factories",
+      "type": "Disposable",
+      "member": "Aggregate",
+      "signatures": [
+        "public static DisposableAggregate Aggregate(IDisposable? disposable)",
+        "public static DisposableAggregate Aggregate()"
+      ],
+      "summary": "Holds one resource you can replace; replacing it does not dispose the old one.",
+      "page": "/guides/hold-a-changing-resource/",
+      "api": [
+        "static NCode.Disposables.Disposable.Aggregate() -> NCode.Disposables.DisposableAggregate!",
+        "static NCode.Disposables.Disposable.Aggregate(System.IDisposable? disposable) -> NCode.Disposables.DisposableAggregate!"
+      ]
+    },
+    {
+      "id": "disposable-serial",
+      "group": "factories",
+      "type": "Disposable",
+      "member": "Serial",
+      "signatures": [
+        "public static DisposableSerial Serial()",
+        "public static DisposableSerial Serial(IDisposable? disposable)"
+      ],
+      "summary": "Holds one resource and disposes it when another replaces it.",
+      "page": "/guides/hold-a-changing-resource/",
+      "api": [
+        "static NCode.Disposables.Disposable.Serial() -> NCode.Disposables.DisposableSerial!",
+        "static NCode.Disposables.Disposable.Serial(System.IDisposable? disposable) -> NCode.Disposables.DisposableSerial!"
+      ]
+    },
+    {
+      "id": "disposable-singleassignment",
+      "group": "factories",
+      "type": "Disposable",
+      "member": "SingleAssignment",
+      "signatures": [
+        "public static DisposableSingleAssignment SingleAssignment()"
+      ],
+      "summary": "Takes one resource, once; a second assignment throws `InvalidOperationException`.",
+      "page": "/guides/hold-a-changing-resource/",
+      "api": [
+        "static NCode.Disposables.Disposable.SingleAssignment() -> NCode.Disposables.DisposableSingleAssignment!"
+      ]
+    },
+    {
+      "id": "disposable-guard",
+      "group": "factories",
+      "type": "Disposable",
+      "member": "Guard",
+      "signatures": [
+        "public static DisposableGuard<T> Guard<T>(T value) where T : IDisposable"
+      ],
+      "summary": "Disposes the value when the scope ends unless `Release()` hands it on first.",
+      "page": "/guides/hand-on-ownership/",
+      "api": [
+        "static NCode.Disposables.Disposable.Guard<T>(T value) -> NCode.Disposables.DisposableGuard<T>!"
+      ]
+    },
+    {
+      "id": "disposable-cancellation",
+      "group": "factories",
+      "type": "Disposable",
+      "member": "Cancellation",
+      "signatures": [
+        "public static DisposableCancellation Cancellation()",
+        "public static DisposableCancellation Cancellation(CancellationTokenSource source)"
+      ],
+      "summary": "Cancels a token on dispose; a source it created is then disposed, a source you pass in is not.",
+      "page": "/guides/cancel-on-dispose/",
+      "api": [
+        "static NCode.Disposables.Disposable.Cancellation() -> NCode.Disposables.DisposableCancellation!",
+        "static NCode.Disposables.Disposable.Cancellation(System.Threading.CancellationTokenSource! source) -> NCode.Disposables.DisposableCancellation!"
+      ]
+    },
+    {
+      "id": "disposable-flag",
+      "group": "factories",
+      "type": "Disposable",
+      "member": "Flag",
+      "signatures": [
+        "public static DisposableFlag Flag()"
+      ],
+      "summary": "Records only that it was disposed, in `IsDisposed`.",
+      "page": "/concepts/disposal-status/",
+      "api": [
+        "static NCode.Disposables.Disposable.Flag() -> NCode.Disposables.DisposableFlag!"
+      ]
+    },
+    {
+      "id": "disposable-collection",
+      "group": "factories",
+      "type": "Disposable",
+      "member": "Collection",
+      "signatures": [
+        "public static DisposableCollection Collection(params IDisposable[] collection)",
+        "public static DisposableCollection Collection(IEnumerable<IDisposable> collection)"
+      ],
+      "summary": "Disposes its items in reverse order on the first `Dispose`; one failure is rethrown, several as one `AggregateException`.",
+      "page": "/guides/dispose-many-resources/",
+      "api": [
+        "static NCode.Disposables.Disposable.Collection(params System.IDisposable![]! collection) -> NCode.Disposables.DisposableCollection!",
+        "static NCode.Disposables.Disposable.Collection(System.Collections.Generic.IEnumerable<System.IDisposable!>! collection) -> NCode.Disposables.DisposableCollection!"
+      ]
+    },
+    {
+      "id": "disposable-collectionignoringexceptions",
+      "group": "factories",
+      "type": "Disposable",
+      "member": "CollectionIgnoringExceptions",
+      "signatures": [
+        "public static DisposableCollection CollectionIgnoringExceptions(params IDisposable[] collection)",
+        "public static DisposableCollection CollectionIgnoringExceptions(IEnumerable<IDisposable> collection)"
+      ],
+      "summary": "As `Collection`, but ignores the exceptions its items throw.",
+      "page": "/guides/dispose-many-resources/",
+      "api": [
+        "static NCode.Disposables.Disposable.CollectionIgnoringExceptions(params System.IDisposable![]! collection) -> NCode.Disposables.DisposableCollection!",
+        "static NCode.Disposables.Disposable.CollectionIgnoringExceptions(System.Collections.Generic.IEnumerable<System.IDisposable!>! collection) -> NCode.Disposables.DisposableCollection!"
+      ]
+    },
+    {
+      "id": "disposable-context",
+      "group": "factories",
+      "type": "Disposable",
+      "member": "Context",
+      "signatures": [
+        "public static DisposableContext Context(IDisposable disposable, SynchronizationContext context)"
+      ],
+      "summary": "Disposes the resource once on the context, through `Send`, and returns once it is disposed.",
+      "page": "/guides/dispose-on-a-context/",
+      "api": [
+        "static NCode.Disposables.Disposable.Context(System.IDisposable! disposable, System.Threading.SynchronizationContext! context) -> NCode.Disposables.DisposableContext!"
+      ]
+    },
+    {
+      "id": "disposable-postingcontext",
+      "group": "factories",
+      "type": "Disposable",
+      "member": "PostingContext",
+      "signatures": [
+        "public static DisposableContext PostingContext(IDisposable disposable, SynchronizationContext context)"
+      ],
+      "summary": "Disposes the resource once on the context, through `Post`, and returns at once.",
+      "page": "/guides/dispose-on-a-context/",
+      "api": [
+        "static NCode.Disposables.Disposable.PostingContext(System.IDisposable! disposable, System.Threading.SynchronizationContext! context) -> NCode.Disposables.DisposableContext!"
+      ]
+    },
+    {
+      "id": "disposable-shared",
+      "group": "factories",
+      "type": "Disposable",
+      "member": "Shared",
+      "signatures": [
+        "public static SharedReferenceLease<T> Shared<T>(T value) where T : IDisposable",
+        "public static SharedReferenceLease<T> Shared<T>(T value, Action<T> onRelease)"
+      ],
+      "summary": "Calls `SharedReference.Create`: the first lease on a reference-counted resource.",
+      "page": "/guides/share-a-resource/",
+      "api": [
+        "static NCode.Disposables.Disposable.Shared<T>(T value, System.Action<T>! onRelease) -> NCode.Disposables.SharedReferenceLease<T>",
+        "static NCode.Disposables.Disposable.Shared<T>(T value) -> NCode.Disposables.SharedReferenceLease<T>"
+      ]
+    }
+  ]
+}
