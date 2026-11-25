@@ -1,0 +1,44 @@
+---
+title: API map
+description: Every public type and member, with its signature, what it does and the page that explains it.
+---
+
+import ApiMap from '@site/components/ApiMap.astro';
+
+This page lists every public type and member of the one package `NCode.Disposables`, whose types are all in the namespace `NCode.Disposables`. The gate fails when this map and the package's `PublicAPI.Shipped.txt` differ, so every member that ships has an entry.
+
+## Factories
+
+<ApiMap group="factories" />
+
+## Actions and empty disposables
+
+<ApiMap group="actions" />
+
+## Holders
+
+<ApiMap group="holders" />
+
+## Shared references
+
+<ApiMap group="shared" />
+
+## Cancellation, contexts and status
+
+<ApiMap group="others" />
+
+## Extensions
+
+<ApiMap group="extensions" />
+
+## Extension members
+
+`DisposableExtensions`, `AsyncDisposableExtensions`, `SemaphoreSlimExtensions` and `ReaderWriterLockSlimExtensions` are C# 14 `extension` blocks compiled to ordinary static extension methods, so a project on an earlier C# version calls them the same way, or in their static form, `DisposableExtensions.DisposeAll(items)`.
+
+## Package
+
+```sh
+dotnet add package NCode.Disposables
+```
+
+This is one package, with no dependencies, and nuget.org lists its target framework on its [Frameworks tab](https://www.nuget.org/packages/NCode.Disposables#supportedframeworks-body-tab).
