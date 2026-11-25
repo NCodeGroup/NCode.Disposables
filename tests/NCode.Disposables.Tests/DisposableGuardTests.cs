@@ -152,6 +152,34 @@ public class DisposableGuardTests
         Assert.Throws<InvalidOperationException>(() => guard.Release());
     }
 
+    [Fact]
+    public async Task Release_WhileDisposeRuns_ThrowsObjectDisposedException()
+    {
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var gate = new ManualResetEventSlim();
+        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        mockDisposable
+            .Setup(x => x.Dispose())
+            .Callback(() =>
+            {
+                entered.SetResult();
+                var released = gate.Wait(TimeSpan.FromSeconds(30));
+                Assert.True(released);
+            });
+        var guard = new DisposableGuard<IDisposable>(mockDisposable.Object);
+
+        var disposeTask = Task.Run(() => guard.Dispose());
+        await entered.Task;
+
+        Assert.Throws<ObjectDisposedException>(() => guard.Release());
+        Assert.False(disposeTask.IsCompleted);
+
+        gate.Set();
+        await disposeTask;
+
+        mockDisposable.Verify(x => x.Dispose(), Times.Once);
+    }
+
     #endregion
 
     #region IsReleased Property Tests
