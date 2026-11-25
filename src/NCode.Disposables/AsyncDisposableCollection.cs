@@ -99,7 +99,7 @@ public sealed class AsyncDisposableCollection : IAsyncDisposableCollection
             return;
         }
 
-        await _list.DisposeAllAsync(_ignoreExceptions);
+        await _list.DisposeAllAsync(_ignoreExceptions).ConfigureAwait(false);
         _list.Clear();
     }
 

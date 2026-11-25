@@ -84,3 +84,7 @@ trim_trailing_whitespace = false
 # Web Files
 [*.{htm,html,cshtml,js,ts,css,scss}]
 indent_size = 2
+
+[src/**.cs]
+# The library is consumed by UI apps: never resume on the caller's SynchronizationContext.
+dotnet_diagnostic.CA2007.severity = error

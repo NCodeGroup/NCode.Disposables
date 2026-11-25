@@ -95,7 +95,7 @@ public sealed class AsyncDisposableAggregate : IAsyncDisposableAggregate
     {
         var disposable = Interlocked.Exchange(ref _disposable, Sentinel);
         if (disposable is not null)
-            await disposable.DisposeAsync();
+            await disposable.DisposeAsync().ConfigureAwait(false);
     }
 
     private IAsyncDisposable? ThrowIfDisposed(IAsyncDisposable? disposable)
