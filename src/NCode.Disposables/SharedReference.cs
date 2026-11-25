@@ -35,6 +35,7 @@ public static class SharedReference
     /// <returns>
     /// A new <see cref="SharedReferenceLease{T}"/> representing the initial lease on the shared resource.
     /// </returns>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// The returned lease holds an initial reference to the resource. Additional references can be obtained
     /// by calling <see cref="SharedReferenceLease{T}.AddReference"/> on any active lease.
@@ -42,6 +43,8 @@ public static class SharedReference
     public static SharedReferenceLease<T> Create<T>(T value)
         where T : IDisposable
     {
+        ArgumentNullException.ThrowIfNull(value);
+
         return Create(value, Dispose);
     }
 
@@ -57,6 +60,7 @@ public static class SharedReference
     /// <returns>
     /// A new <see cref="SharedReferenceLease{T}"/> representing the initial lease on the shared resource.
     /// </returns>
+    /// <exception cref="ArgumentNullException"><paramref name="onRelease"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// Use this overload when the shared resource does not implement <see cref="IDisposable"/>
@@ -69,6 +73,8 @@ public static class SharedReference
     /// </remarks>
     public static SharedReferenceLease<T> Create<T>(T value, Action<T> onRelease)
     {
+        ArgumentNullException.ThrowIfNull(onRelease);
+
         var owner = new SharedReferenceOwner<T>(value, onRelease);
         try
         {
