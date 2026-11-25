@@ -22,18 +22,38 @@ namespace NCode.Disposables;
 /// </remarks>
 public sealed class AsyncDisposableSingleAssignment : IAsyncDisposable, IDisposalStatus
 {
+    /// <summary>
+    /// The message of the exception a second assignment throws.
+    /// </summary>
     private const string AlreadyAssignedMessage =
         "The disposable is already assigned; a single-assignment disposable takes one resource.";
 
+    /// <summary>
+    /// Gets the marker stored in place of the assigned instance once the holder is disposed.
+    /// </summary>
     private static IAsyncDisposable Sentinel { get; } = new AsyncDisposableEmpty();
 
+    /// <summary>
+    /// One once an assignment has been made, zero before.
+    /// </summary>
     private int _assigned;
+
+    /// <summary>
+    /// The assigned instance, <see langword="null"/> before assignment, or <see cref="Sentinel"/> once the holder is disposed.
+    /// </summary>
     private IAsyncDisposable? _disposable;
 
     /// <summary>
     /// Gets a value indicating whether <see cref="DisposeAsync"/> has been called at least once.
     /// </summary>
-    public bool IsDisposed => ReferenceEquals(Volatile.Read(ref _disposable), Sentinel);
+    public bool IsDisposed
+    {
+        get
+        {
+            var current = Volatile.Read(ref _disposable);
+            return ReferenceEquals(current, Sentinel);
+        }
+    }
 
     /// <summary>
     /// Gets a value indicating whether a disposable has been assigned.
