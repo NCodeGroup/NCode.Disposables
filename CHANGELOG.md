@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Package validation compares each package with the published 8.0.0 package.
 - The package's project website on nuget.org is the documentation site, and both READMEs link to it. ([ADR-1013](docs/decisions/1013-the-documentation-site-is-served-at-disposables-ncode-io.md))
 
 ## [8.0.0] - 2026-11-24
