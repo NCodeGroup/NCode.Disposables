@@ -107,7 +107,8 @@ public class DisposableCancellationTests
 
         cancellation.Dispose();
 
-        _ = source.Token.WaitHandle;
+        var exception = Record.Exception(() => source.Token.WaitHandle);
+        Assert.Null(exception);
     }
 
     [Fact]
