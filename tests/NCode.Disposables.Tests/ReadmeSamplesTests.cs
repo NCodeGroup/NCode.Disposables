@@ -341,6 +341,62 @@ public class ReadmeSamplesTests
 
     #endregion
 
+    #region Guard Tests
+
+    [Fact]
+    public void GuardDisposableSample_Runs()
+    {
+        // begin-snippet: GuardDisposable
+        var log = new List<string>();
+
+        DisposableAction Connect(bool handshakeFails)
+        {
+            using var guard = Disposable.Guard(
+                Disposable.Create(() => log.Add("connection closed"))
+            );
+
+            if (handshakeFails)
+                throw new InvalidOperationException("Handshake failed."); // the guard closes the connection
+
+            return guard.Release(); // the caller owns the connection now
+        }
+
+        using (Connect(handshakeFails: false)) { }
+
+        try
+        {
+            Connect(handshakeFails: true);
+        }
+        catch (InvalidOperationException)
+        {
+            log.Add("handshake failed");
+        }
+
+        // log: "connection closed", "connection closed", "handshake failed"
+        // end-snippet
+
+        Assert.Equal(["connection closed", "connection closed", "handshake failed"], log);
+    }
+
+    #endregion
+
+    #region Cancellation Tests
+
+    [Fact]
+    public void CancellationDisposableSample_Runs()
+    {
+        // begin-snippet: CancellationDisposable
+        using var cancellation = Disposable.Cancellation();
+        var work = Task.Delay(Timeout.Infinite, cancellation.Token);
+        cancellation.Dispose(); // cancels the token, then disposes the source it created
+        // work.IsCanceled == true
+        // end-snippet
+
+        Assert.True(work.IsCanceled);
+    }
+
+    #endregion
+
     #region Context Tests
 
     [Fact]

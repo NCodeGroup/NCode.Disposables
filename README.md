@@ -307,6 +307,54 @@ await using (var lease = stream.AsAsyncSharedReference())
 
 On a type that implements both `IDisposable` and `IAsyncDisposable`, such as a `MemoryStream`, `AsSharedReference()` returns a `SharedReferenceLease<T>`, which disposes the resource with `Dispose`, and `AsAsyncSharedReference()` returns an `AsyncSharedReferenceLease<T>`, which disposes it with `DisposeAsync`.
 
+### Handing on ownership with a guard
+
+`Disposable.Guard` disposes a resource when the scope ends, unless `Release()` hands it on first, so a factory can't leak what it built when a later step throws. `AsyncDisposable.Guard` does the same for an `IAsyncDisposable`:
+
+<!-- snippet: GuardDisposable -->
+```cs
+var log = new List<string>();
+
+DisposableAction Connect(bool handshakeFails)
+{
+    using var guard = Disposable.Guard(
+        Disposable.Create(() => log.Add("connection closed"))
+    );
+
+    if (handshakeFails)
+        throw new InvalidOperationException("Handshake failed."); // the guard closes the connection
+
+    return guard.Release(); // the caller owns the connection now
+}
+
+using (Connect(handshakeFails: false)) { }
+
+try
+{
+    Connect(handshakeFails: true);
+}
+catch (InvalidOperationException)
+{
+    log.Add("handshake failed");
+}
+
+// log: "connection closed", "connection closed", "handshake failed"
+```
+<!-- endSnippet -->
+
+### Cancelling on dispose
+
+`Disposable.Cancellation()` cancels its token when disposed, then disposes the `CancellationTokenSource` it created; `Disposable.Cancellation(source)` only cancels a source you own. `AsyncDisposable.Cancellation` cancels with `CancelAsync`:
+
+<!-- snippet: CancellationDisposable -->
+```cs
+using var cancellation = Disposable.Cancellation();
+var work = Task.Delay(Timeout.Infinite, cancellation.Token);
+cancellation.Dispose(); // cancels the token, then disposes the source it created
+// work.IsCanceled == true
+```
+<!-- endSnippet -->
+
 ### Disposing on a synchronization context
 
 `Disposable.Context` disposes a resource on a `SynchronizationContext`, such as a UI thread's. By default `Dispose` calls the context's `Send` and returns once the resource is disposed; with `async: true` it calls `Post` and returns at once, telling the context through `OperationStarted` and `OperationCompleted`. The resource is disposed once, however often `Dispose` is called:
