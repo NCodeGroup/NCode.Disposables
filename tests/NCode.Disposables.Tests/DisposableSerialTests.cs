@@ -3,7 +3,7 @@
 
 namespace NCode.Disposables.Tests;
 
-public class DisposableSerialTests
+public class DisposableSerialTests : UnitTestBase
 {
     #region Constructor Tests
 
@@ -19,7 +19,7 @@ public class DisposableSerialTests
     [Fact]
     public void Constructor_WithDisposable_HoldsIt()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
 
         var serial = new DisposableSerial(mockDisposable.Object);
 
@@ -55,21 +55,20 @@ public class DisposableSerialTests
     [Fact]
     public void Disposable_Set_DisposesPrevious()
     {
-        var mockFirst = new Mock<IDisposable>(MockBehavior.Strict);
-        mockFirst.Setup(x => x.Dispose());
-        var mockSecond = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockFirst = CreateStrictMock<IDisposable>();
+        mockFirst.Setup(x => x.Dispose()).Verifiable(Times.Once());
+        var mockSecond = CreateStrictMock<IDisposable>();
         var serial = new DisposableSerial(mockFirst.Object);
 
         serial.Disposable = mockSecond.Object;
 
         Assert.Same(mockSecond.Object, serial.Disposable);
-        mockFirst.Verify(x => x.Dispose(), Times.Once);
     }
 
     [Fact]
     public void Disposable_SetSameInstance_DoesNotDisposeIt()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockDisposable = CreateStrictMock<IDisposable>();
         var serial = new DisposableSerial(mockDisposable.Object);
 
         serial.Disposable = mockDisposable.Object;
@@ -80,20 +79,18 @@ public class DisposableSerialTests
     [Fact]
     public void Disposable_SetNull_DisposesPrevious()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
         var serial = new DisposableSerial(mockDisposable.Object);
 
         serial.Disposable = null;
-
-        mockDisposable.Verify(x => x.Dispose(), Times.Once);
     }
 
     [Fact]
     public void Disposable_SetNull_HoldsNull()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable();
         var serial = new DisposableSerial(mockDisposable.Object);
 
         serial.Disposable = null;
@@ -104,22 +101,21 @@ public class DisposableSerialTests
     [Fact]
     public void Disposable_SetAfterDispose_DisposesValue()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
         var serial = new DisposableSerial();
         serial.Dispose();
 
         serial.Disposable = mockDisposable.Object;
 
         Assert.Null(serial.Disposable);
-        mockDisposable.Verify(x => x.Dispose(), Times.Once);
     }
 
     [Fact]
     public void Disposable_GetAfterDispose_ReturnsNull()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable();
         var serial = new DisposableSerial(mockDisposable.Object);
         serial.Dispose();
 
@@ -133,26 +129,22 @@ public class DisposableSerialTests
     [Fact]
     public void Dispose_WhenHoldingValue_DisposesIt()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
         var serial = new DisposableSerial(mockDisposable.Object);
 
         serial.Dispose();
-
-        mockDisposable.Verify(x => x.Dispose(), Times.Once);
     }
 
     [Fact]
     public void Dispose_Twice_DisposesOnce()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
         var serial = new DisposableSerial(mockDisposable.Object);
 
         serial.Dispose();
         serial.Dispose();
-
-        mockDisposable.Verify(x => x.Dispose(), Times.Once);
     }
 
     [Fact]
@@ -160,7 +152,7 @@ public class DisposableSerialTests
     {
         var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         using var release = new ManualResetEventSlim();
-        var mockInitial = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockInitial = CreateStrictMock<IDisposable>();
         mockInitial
             .Setup(x => x.Dispose())
             .Callback(() =>
@@ -168,9 +160,10 @@ public class DisposableSerialTests
                 entered.SetResult();
                 var released = release.Wait(TimeSpan.FromSeconds(30));
                 Assert.True(released);
-            });
-        var mockValue = new Mock<IDisposable>(MockBehavior.Strict);
-        mockValue.Setup(x => x.Dispose());
+            })
+            .Verifiable();
+        var mockValue = CreateStrictMock<IDisposable>();
+        mockValue.Setup(x => x.Dispose()).Verifiable(Times.Once());
         var serial = new DisposableSerial(mockInitial.Object);
 
         var setTask = Task.Run(() => serial.Disposable = mockValue.Object);
@@ -178,7 +171,6 @@ public class DisposableSerialTests
 
         serial.Dispose();
 
-        mockValue.Verify(x => x.Dispose(), Times.Once);
         Assert.False(setTask.IsCompleted);
 
         release.Set();
@@ -192,10 +184,10 @@ public class DisposableSerialTests
 
         for (var iteration = 0; iteration < iterations; iteration++)
         {
-            var mockInitial = new Mock<IDisposable>(MockBehavior.Strict);
-            mockInitial.Setup(x => x.Dispose());
-            var mockValue = new Mock<IDisposable>(MockBehavior.Strict);
-            mockValue.Setup(x => x.Dispose());
+            var mockInitial = CreateStrictMock<IDisposable>();
+            mockInitial.Setup(x => x.Dispose()).Verifiable(Times.Once());
+            var mockValue = CreateStrictMock<IDisposable>();
+            mockValue.Setup(x => x.Dispose()).Verifiable(Times.Once());
             var serial = new DisposableSerial(mockInitial.Object);
 
             var setTask = Task.Run(() => serial.Disposable = mockValue.Object);
@@ -206,8 +198,6 @@ public class DisposableSerialTests
 
             Assert.True(serial.IsDisposed);
             Assert.Null(serial.Disposable);
-            mockInitial.Verify(x => x.Dispose(), Times.Once);
-            mockValue.Verify(x => x.Dispose(), Times.Once);
         }
     }
 
