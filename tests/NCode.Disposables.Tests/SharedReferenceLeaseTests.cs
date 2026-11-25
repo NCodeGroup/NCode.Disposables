@@ -3,7 +3,7 @@
 
 namespace NCode.Disposables.Tests;
 
-public class SharedReferenceLeaseTests
+public class SharedReferenceLeaseTests : UnitTestBase
 {
     #region Constructor Tests
 
@@ -19,7 +19,7 @@ public class SharedReferenceLeaseTests
     [Fact]
     public void Constructor_WithOwner_CreatesActiveLease()
     {
-        var mockOwner = new Mock<ISharedReferenceOwner<object>>(MockBehavior.Strict);
+        var mockOwner = CreateStrictMock<ISharedReferenceOwner<object>>();
 
         var lease = new SharedReferenceLease<object>(mockOwner.Object);
 
@@ -42,7 +42,7 @@ public class SharedReferenceLeaseTests
     [Fact]
     public void IsActive_WithOwner_ReturnsTrue()
     {
-        var mockOwner = new Mock<ISharedReferenceOwner<object>>(MockBehavior.Strict);
+        var mockOwner = CreateStrictMock<ISharedReferenceOwner<object>>();
 
         var lease = new SharedReferenceLease<object>(mockOwner.Object);
 
@@ -57,14 +57,13 @@ public class SharedReferenceLeaseTests
     public void Value_WithActiveLease_ReturnsOwnerValue()
     {
         var value = new object();
-        var mockOwner = new Mock<ISharedReferenceOwner<object>>(MockBehavior.Strict);
-        mockOwner.Setup(x => x.Value).Returns(value);
+        var mockOwner = CreateStrictMock<ISharedReferenceOwner<object>>();
+        mockOwner.Setup(x => x.Value).Returns(value).Verifiable(Times.Once());
         var lease = new SharedReferenceLease<object>(mockOwner.Object);
 
         var result = lease.Value;
 
         Assert.Same(value, result);
-        mockOwner.Verify(x => x.Value, Times.Once);
     }
 
     [Fact]
@@ -81,8 +80,8 @@ public class SharedReferenceLeaseTests
     public void Value_WithValueType_ReturnsCorrectValue()
     {
         const int value = 42;
-        var mockOwner = new Mock<ISharedReferenceOwner<int>>(MockBehavior.Strict);
-        mockOwner.Setup(x => x.Value).Returns(value);
+        var mockOwner = CreateStrictMock<ISharedReferenceOwner<int>>();
+        mockOwner.Setup(x => x.Value).Returns(value).Verifiable();
         var lease = new SharedReferenceLease<int>(mockOwner.Object);
 
         var result = lease.Value;
@@ -97,15 +96,14 @@ public class SharedReferenceLeaseTests
     [Fact]
     public void AddReference_WithActiveLease_ReturnsNewLease()
     {
-        var mockOwner = new Mock<ISharedReferenceOwner<object>>(MockBehavior.Strict);
+        var mockOwner = CreateStrictMock<ISharedReferenceOwner<object>>();
         var newReference = new SharedReferenceLease<object>(mockOwner.Object);
-        mockOwner.Setup(x => x.AddReference()).Returns(newReference);
+        mockOwner.Setup(x => x.AddReference()).Returns(newReference).Verifiable(Times.Once());
         var lease = new SharedReferenceLease<object>(mockOwner.Object);
 
         var reference = lease.AddReference();
 
         Assert.Same(mockOwner.Object, reference.OwnerOrNull);
-        mockOwner.Verify(x => x.AddReference(), Times.Once);
     }
 
     [Fact]
@@ -121,9 +119,9 @@ public class SharedReferenceLeaseTests
     [Fact]
     public void AddReference_CalledMultipleTimes_ReturnsNewLeaseEachTime()
     {
-        var mockOwner = new Mock<ISharedReferenceOwner<object>>(MockBehavior.Strict);
+        var mockOwner = CreateStrictMock<ISharedReferenceOwner<object>>();
         var newReference = new SharedReferenceLease<object>(mockOwner.Object);
-        mockOwner.Setup(x => x.AddReference()).Returns(newReference);
+        mockOwner.Setup(x => x.AddReference()).Returns(newReference).Verifiable();
         var lease = new SharedReferenceLease<object>(mockOwner.Object);
 
         var reference1 = lease.AddReference();
@@ -143,9 +141,9 @@ public class SharedReferenceLeaseTests
     [Fact]
     public void TryAddReference_WithActiveLease_ReturnsTrueAndNewLease()
     {
-        var mockOwner = new Mock<ISharedReferenceOwner<object>>(MockBehavior.Strict);
+        var mockOwner = CreateStrictMock<ISharedReferenceOwner<object>>();
         var newReference = new SharedReferenceLease<object>(mockOwner.Object);
-        mockOwner.Setup(x => x.TryAddReference(out newReference)).Returns(true);
+        mockOwner.Setup(x => x.TryAddReference(out newReference)).Returns(true).Verifiable();
         var lease = new SharedReferenceLease<object>(mockOwner.Object);
 
         var result = lease.TryAddReference(out var reference);
@@ -169,9 +167,9 @@ public class SharedReferenceLeaseTests
     [Fact]
     public void TryAddReference_WhenOwnerReturnsFalse_ReturnsFalseAndDefaultLease()
     {
-        var mockOwner = new Mock<ISharedReferenceOwner<object>>(MockBehavior.Strict);
+        var mockOwner = CreateStrictMock<ISharedReferenceOwner<object>>();
         var outRef = new SharedReferenceLease<object>();
-        mockOwner.Setup(x => x.TryAddReference(out outRef)).Returns(false);
+        mockOwner.Setup(x => x.TryAddReference(out outRef)).Returns(false).Verifiable();
         var lease = new SharedReferenceLease<object>(mockOwner.Object);
 
         var result = lease.TryAddReference(out var reference);
@@ -187,13 +185,11 @@ public class SharedReferenceLeaseTests
     [Fact]
     public void Dispose_WithActiveLease_ReleasesReference()
     {
-        var mockOwner = new Mock<ISharedReferenceOwner<object>>(MockBehavior.Strict);
-        mockOwner.Setup(x => x.ReleaseReference()).Returns(0);
+        var mockOwner = CreateStrictMock<ISharedReferenceOwner<object>>();
+        mockOwner.Setup(x => x.ReleaseReference()).Returns(0).Verifiable(Times.Once());
         var lease = new SharedReferenceLease<object>(mockOwner.Object);
 
         lease.Dispose();
-
-        mockOwner.Verify(x => x.ReleaseReference(), Times.Once);
     }
 
     [Fact]
@@ -210,8 +206,8 @@ public class SharedReferenceLeaseTests
     public void Dispose_CalledMultipleTimes_ReleasesReferenceMultipleTimes()
     {
         // Note: This is the documented behavior - struct leases are NOT idempotent-safe
-        var mockOwner = new Mock<ISharedReferenceOwner<object>>(MockBehavior.Strict);
-        mockOwner.Setup(x => x.ReleaseReference()).Returns(0);
+        var mockOwner = CreateStrictMock<ISharedReferenceOwner<object>>();
+        mockOwner.Setup(x => x.ReleaseReference()).Returns(0).Verifiable();
         var lease = new SharedReferenceLease<object>(mockOwner.Object);
 
         lease.Dispose();
@@ -224,34 +220,30 @@ public class SharedReferenceLeaseTests
     [Fact]
     public void Dispose_ReturnsRemainingReferenceCount()
     {
-        var mockOwner = new Mock<ISharedReferenceOwner<object>>(MockBehavior.Strict);
-        mockOwner.Setup(x => x.ReleaseReference()).Returns(5);
+        var mockOwner = CreateStrictMock<ISharedReferenceOwner<object>>();
+        mockOwner.Setup(x => x.ReleaseReference()).Returns(5).Verifiable(Times.Once());
         var lease = new SharedReferenceLease<object>(mockOwner.Object);
 
         lease.Dispose();
-
-        mockOwner.Verify(x => x.ReleaseReference(), Times.Once);
     }
 
     [Fact]
     public void Dispose_CanBeUsedWithUsingStatement()
     {
-        var mockOwner = new Mock<ISharedReferenceOwner<object>>(MockBehavior.Strict);
-        mockOwner.Setup(x => x.ReleaseReference()).Returns(0);
+        var mockOwner = CreateStrictMock<ISharedReferenceOwner<object>>();
+        mockOwner.Setup(x => x.ReleaseReference()).Returns(0).Verifiable(Times.Once());
 
         using (var lease = new SharedReferenceLease<object>(mockOwner.Object))
         {
             Assert.True(lease.IsActive);
         }
-
-        mockOwner.Verify(x => x.ReleaseReference(), Times.Once);
     }
 
     [Fact]
     public void Dispose_CanBeUsedWithUsingDeclaration()
     {
-        var mockOwner = new Mock<ISharedReferenceOwner<object>>(MockBehavior.Strict);
-        mockOwner.Setup(x => x.ReleaseReference()).Returns(0);
+        var mockOwner = CreateStrictMock<ISharedReferenceOwner<object>>();
+        mockOwner.Setup(x => x.ReleaseReference()).Returns(0).Verifiable(Times.Once());
 
         void TestMethod()
         {
@@ -260,8 +252,6 @@ public class SharedReferenceLeaseTests
         }
 
         TestMethod();
-
-        mockOwner.Verify(x => x.ReleaseReference(), Times.Once);
     }
 
     #endregion
@@ -290,8 +280,8 @@ public class SharedReferenceLeaseTests
     [Fact]
     public void Default_CanAssignToDefault()
     {
-        var mockOwner = new Mock<ISharedReferenceOwner<object>>(MockBehavior.Strict);
-        mockOwner.Setup(x => x.ReleaseReference()).Returns(0);
+        var mockOwner = CreateStrictMock<ISharedReferenceOwner<object>>();
+        mockOwner.Setup(x => x.ReleaseReference()).Returns(0).Verifiable();
         var lease = new SharedReferenceLease<object>(mockOwner.Object);
 
         Assert.True(lease.IsActive);
@@ -322,9 +312,9 @@ public class SharedReferenceLeaseTests
     public void GenericType_WorksWithValueTypes()
     {
         const int value = 42;
-        var mockOwner = new Mock<ISharedReferenceOwner<int>>(MockBehavior.Strict);
-        mockOwner.Setup(x => x.Value).Returns(value);
-        mockOwner.Setup(x => x.ReleaseReference()).Returns(0);
+        var mockOwner = CreateStrictMock<ISharedReferenceOwner<int>>();
+        mockOwner.Setup(x => x.Value).Returns(value).Verifiable();
+        mockOwner.Setup(x => x.ReleaseReference()).Returns(0).Verifiable();
 
         using var lease = new SharedReferenceLease<int>(mockOwner.Object);
 
@@ -336,9 +326,9 @@ public class SharedReferenceLeaseTests
     public void GenericType_WorksWithReferenceTypes()
     {
         const string value = "test";
-        var mockOwner = new Mock<ISharedReferenceOwner<string>>(MockBehavior.Strict);
-        mockOwner.Setup(x => x.Value).Returns(value);
-        mockOwner.Setup(x => x.ReleaseReference()).Returns(0);
+        var mockOwner = CreateStrictMock<ISharedReferenceOwner<string>>();
+        mockOwner.Setup(x => x.Value).Returns(value).Verifiable();
+        mockOwner.Setup(x => x.ReleaseReference()).Returns(0).Verifiable();
 
         using var lease = new SharedReferenceLease<string>(mockOwner.Object);
 
@@ -349,10 +339,10 @@ public class SharedReferenceLeaseTests
     [Fact]
     public void GenericType_WorksWithDisposableTypes()
     {
-        var mockValue = new Mock<IDisposable>(MockBehavior.Strict);
-        var mockOwner = new Mock<ISharedReferenceOwner<IDisposable>>(MockBehavior.Strict);
-        mockOwner.Setup(x => x.Value).Returns(mockValue.Object);
-        mockOwner.Setup(x => x.ReleaseReference()).Returns(0);
+        var mockValue = CreateStrictMock<IDisposable>();
+        var mockOwner = CreateStrictMock<ISharedReferenceOwner<IDisposable>>();
+        mockOwner.Setup(x => x.Value).Returns(mockValue.Object).Verifiable();
+        mockOwner.Setup(x => x.ReleaseReference()).Returns(0).Verifiable();
 
         using var lease = new SharedReferenceLease<IDisposable>(mockOwner.Object);
 

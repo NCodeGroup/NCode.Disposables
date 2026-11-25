@@ -3,7 +3,7 @@
 
 namespace NCode.Disposables.Tests;
 
-public class AsyncSharedReferenceLeaseTests
+public class AsyncSharedReferenceLeaseTests : UnitTestBase
 {
     #region Default Value Tests
 
@@ -80,7 +80,7 @@ public class AsyncSharedReferenceLeaseTests
     [Fact]
     public void Constructor_WithOwner_SetsOwner()
     {
-        var mockOwner = new Mock<IAsyncSharedReferenceOwner<object>>(MockBehavior.Strict);
+        var mockOwner = CreateStrictMock<IAsyncSharedReferenceOwner<object>>();
 
         var lease = new AsyncSharedReferenceLease<object>(mockOwner.Object);
 
@@ -90,7 +90,7 @@ public class AsyncSharedReferenceLeaseTests
     [Fact]
     public void Constructor_WithOwner_IsActiveReturnsTrue()
     {
-        var mockOwner = new Mock<IAsyncSharedReferenceOwner<object>>(MockBehavior.Strict);
+        var mockOwner = CreateStrictMock<IAsyncSharedReferenceOwner<object>>();
 
         var lease = new AsyncSharedReferenceLease<object>(mockOwner.Object);
 
@@ -104,7 +104,7 @@ public class AsyncSharedReferenceLeaseTests
     [Fact]
     public void IsActive_WithOwner_ReturnsTrue()
     {
-        var mockOwner = new Mock<IAsyncSharedReferenceOwner<object>>(MockBehavior.Strict);
+        var mockOwner = CreateStrictMock<IAsyncSharedReferenceOwner<object>>();
 
         var lease = new AsyncSharedReferenceLease<object>(mockOwner.Object);
 
@@ -127,14 +127,13 @@ public class AsyncSharedReferenceLeaseTests
     public void Value_WhenActive_ReturnsOwnerValue()
     {
         var value = new object();
-        var mockOwner = new Mock<IAsyncSharedReferenceOwner<object>>(MockBehavior.Strict);
-        mockOwner.Setup(x => x.Value).Returns(value);
+        var mockOwner = CreateStrictMock<IAsyncSharedReferenceOwner<object>>();
+        mockOwner.Setup(x => x.Value).Returns(value).Verifiable(Times.Once());
         var lease = new AsyncSharedReferenceLease<object>(mockOwner.Object);
 
         var result = lease.Value;
 
         Assert.Same(value, result);
-        mockOwner.Verify(x => x.Value, Times.Once);
     }
 
     [Fact]
@@ -150,8 +149,8 @@ public class AsyncSharedReferenceLeaseTests
     [Fact]
     public void Value_WhenOwnerThrowsObjectDisposedException_PropagatesException()
     {
-        var mockOwner = new Mock<IAsyncSharedReferenceOwner<object>>(MockBehavior.Strict);
-        mockOwner.Setup(x => x.Value).Throws(new ObjectDisposedException("Test"));
+        var mockOwner = CreateStrictMock<IAsyncSharedReferenceOwner<object>>();
+        mockOwner.Setup(x => x.Value).Throws(new ObjectDisposedException("Test")).Verifiable();
         var lease = new AsyncSharedReferenceLease<object>(mockOwner.Object);
 
         Assert.Throws<ObjectDisposedException>(() => lease.Value);
@@ -164,15 +163,14 @@ public class AsyncSharedReferenceLeaseTests
     [Fact]
     public void AddReference_WhenActive_ReturnsNewLease()
     {
-        var mockOwner = new Mock<IAsyncSharedReferenceOwner<object>>(MockBehavior.Strict);
+        var mockOwner = CreateStrictMock<IAsyncSharedReferenceOwner<object>>();
         var newReference = new AsyncSharedReferenceLease<object>(mockOwner.Object);
-        mockOwner.Setup(x => x.AddReference()).Returns(newReference);
+        mockOwner.Setup(x => x.AddReference()).Returns(newReference).Verifiable(Times.Once());
         var lease = new AsyncSharedReferenceLease<object>(mockOwner.Object);
 
         var reference = lease.AddReference();
 
         Assert.Same(mockOwner.Object, reference.OwnerOrNull);
-        mockOwner.Verify(x => x.AddReference(), Times.Once);
     }
 
     [Fact]
@@ -188,8 +186,11 @@ public class AsyncSharedReferenceLeaseTests
     [Fact]
     public void AddReference_WhenOwnerThrowsObjectDisposedException_PropagatesException()
     {
-        var mockOwner = new Mock<IAsyncSharedReferenceOwner<object>>(MockBehavior.Strict);
-        mockOwner.Setup(x => x.AddReference()).Throws(new ObjectDisposedException("Test"));
+        var mockOwner = CreateStrictMock<IAsyncSharedReferenceOwner<object>>();
+        mockOwner
+            .Setup(x => x.AddReference())
+            .Throws(new ObjectDisposedException("Test"))
+            .Verifiable();
         var lease = new AsyncSharedReferenceLease<object>(mockOwner.Object);
 
         Assert.Throws<ObjectDisposedException>(() => lease.AddReference());
@@ -202,9 +203,9 @@ public class AsyncSharedReferenceLeaseTests
     [Fact]
     public void TryAddReference_WhenActiveAndOwnerReturnsTrue_ReturnsTrueWithNewLease()
     {
-        var mockOwner = new Mock<IAsyncSharedReferenceOwner<object>>(MockBehavior.Strict);
+        var mockOwner = CreateStrictMock<IAsyncSharedReferenceOwner<object>>();
         var newReference = new AsyncSharedReferenceLease<object>(mockOwner.Object);
-        mockOwner.Setup(x => x.TryAddReference(out newReference)).Returns(true);
+        mockOwner.Setup(x => x.TryAddReference(out newReference)).Returns(true).Verifiable();
         var lease = new AsyncSharedReferenceLease<object>(mockOwner.Object);
 
         var result = lease.TryAddReference(out var reference);
@@ -216,9 +217,9 @@ public class AsyncSharedReferenceLeaseTests
     [Fact]
     public void TryAddReference_WhenActiveAndOwnerReturnsFalse_ReturnsFalseWithDefault()
     {
-        var mockOwner = new Mock<IAsyncSharedReferenceOwner<object>>(MockBehavior.Strict);
+        var mockOwner = CreateStrictMock<IAsyncSharedReferenceOwner<object>>();
         var defaultReference = default(AsyncSharedReferenceLease<object>);
-        mockOwner.Setup(x => x.TryAddReference(out defaultReference)).Returns(false);
+        mockOwner.Setup(x => x.TryAddReference(out defaultReference)).Returns(false).Verifiable();
         var lease = new AsyncSharedReferenceLease<object>(mockOwner.Object);
 
         var result = lease.TryAddReference(out var reference);
@@ -246,13 +247,11 @@ public class AsyncSharedReferenceLeaseTests
     [Fact]
     public async Task DisposeAsync_WhenActive_CallsOwnerReleaseReferenceAsync()
     {
-        var mockOwner = new Mock<IAsyncSharedReferenceOwner<object>>(MockBehavior.Strict);
-        mockOwner.Setup(x => x.ReleaseReferenceAsync()).ReturnsAsync(0);
+        var mockOwner = CreateStrictMock<IAsyncSharedReferenceOwner<object>>();
+        mockOwner.Setup(x => x.ReleaseReferenceAsync()).ReturnsAsync(0).Verifiable(Times.Once());
         var lease = new AsyncSharedReferenceLease<object>(mockOwner.Object);
 
         await lease.DisposeAsync();
-
-        mockOwner.Verify(x => x.ReleaseReferenceAsync(), Times.Once);
     }
 
     [Fact]
@@ -268,22 +267,20 @@ public class AsyncSharedReferenceLeaseTests
     [Fact]
     public async Task DisposeAsync_CanBeUsedWithAwaitUsing()
     {
-        var mockOwner = new Mock<IAsyncSharedReferenceOwner<object>>(MockBehavior.Strict);
-        mockOwner.Setup(x => x.ReleaseReferenceAsync()).ReturnsAsync(0);
+        var mockOwner = CreateStrictMock<IAsyncSharedReferenceOwner<object>>();
+        mockOwner.Setup(x => x.ReleaseReferenceAsync()).ReturnsAsync(0).Verifiable(Times.Once());
 
         await using (new AsyncSharedReferenceLease<object>(mockOwner.Object))
         {
             // Use the lease within await using block
         }
-
-        mockOwner.Verify(x => x.ReleaseReferenceAsync(), Times.Once);
     }
 
     [Fact]
     public async Task DisposeAsync_CalledMultipleTimes_CallsOwnerEachTime()
     {
-        var mockOwner = new Mock<IAsyncSharedReferenceOwner<object>>(MockBehavior.Strict);
-        mockOwner.Setup(x => x.ReleaseReferenceAsync()).ReturnsAsync(0);
+        var mockOwner = CreateStrictMock<IAsyncSharedReferenceOwner<object>>();
+        mockOwner.Setup(x => x.ReleaseReferenceAsync()).ReturnsAsync(0).Verifiable();
         var lease = new AsyncSharedReferenceLease<object>(mockOwner.Object);
 
         await lease.DisposeAsync();
@@ -318,7 +315,7 @@ public class AsyncSharedReferenceLeaseTests
     [Fact]
     public void Struct_CopyRetainsOwner()
     {
-        var mockOwner = new Mock<IAsyncSharedReferenceOwner<object>>(MockBehavior.Strict);
+        var mockOwner = CreateStrictMock<IAsyncSharedReferenceOwner<object>>();
         var lease1 = new AsyncSharedReferenceLease<object>(mockOwner.Object);
 
         var lease2 = lease1;
