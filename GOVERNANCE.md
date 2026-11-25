@@ -5,11 +5,9 @@ what and how decisions are made.
 
 ## Roles
 
-[//]: # "Maintainers: name each maintainer in the Who column, such as @octocat."
-
 | Role | Who | Responsibilities |
 | --- | --- | --- |
-| Maintainer | The repository's owners | Sets direction, triages issues, reviews and merges pull requests, approves each publication in the `nuget` environment, answers vulnerability reports, owns the repository's settings and the nuget.org packages |
+| Maintainer | [@polewskm](https://github.com/polewskm) | Sets direction, triages issues, reviews and merges pull requests, approves each publication in the `nuget` environment, answers vulnerability reports, owns the repository's settings and the nuget.org packages |
 | Contributor | Anyone | Opens issues and pull requests, under [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md) |
 | Automation | `ncode-review[bot]`, `ncode-review-approver[bot]`, Dependabot, GitHub Actions | Reviews and approves a clean pull request, as `ncode-review-approver[bot]` where NCode Review's approver is set up, whose approval meets the ruleset's required approval ([ADR-0036](docs/decisions/project-template/0036-a-required-approval-is-met-by-ncode-reviews-approver-app.md)), proposes dependency updates, runs CI, tags and publishes releases where `AGENTS.md`'s Landing section sets `release: tag+release`; never merges a pull request except the pin bump `code-review-auto-merge.yml` merges once the required checks pass and, where the ruleset requires an approval, a maintainer approves it |
 
@@ -37,12 +35,11 @@ The repository, its issues, decision records, build, release automation and docu
 GitHub organization that owns it, so anyone given access can carry
 on with no knowledge held elsewhere. nuget.org publishing uses trusted publishing, with no stored API key to hand over.
 
-[//]: # "Maintainers: name the owners, and keep the list current."
-
-Owners today: the repository's owners and the owners of the nuget.org packages. Continuity
-needs at least two people who can administer both; until there are
-two, it is incomplete, and the OpenSSF Best Practices silver level can't be claimed
-([docs/best-practices-badge.md](docs/best-practices-badge.md)).
+Owners today: [@polewskm](https://github.com/polewskm) is the one owner of the NCodeGroup GitHub organization, and
+the nuget.org account [NCode](https://www.nuget.org/profiles/NCode) owns the package. Continuity needs at least two
+people who can administer both; until there are two, it is incomplete, and the OpenSSF Best Practices silver level
+can't be claimed ([docs/best-practices-badge.md](docs/best-practices-badge.md)). This list changes in the same pull
+request as the ownership it describes.
 
 ## Changing This Document
 
