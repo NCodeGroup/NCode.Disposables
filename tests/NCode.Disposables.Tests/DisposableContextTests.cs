@@ -181,6 +181,29 @@ public class DisposableContextTests : UnitTestBase
         Assert.Throws<InvalidOperationException>(() => disposable.Dispose());
     }
 
+    [Fact]
+    public void Dispose_Posting_WhenPostThrows_CompletesOperationAndPropagatesException()
+    {
+        const string message = "Post failed";
+
+        var context = CreateStrictMock<SynchronizationContext>();
+        context.Setup(x => x.OperationStarted()).Verifiable(Times.Once());
+        context
+            .Setup(x => x.Post(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
+            .Throws(new InvalidOperationException(message))
+            .Verifiable();
+        context.Setup(x => x.OperationCompleted()).Verifiable(Times.Once());
+
+        var item = CreateStrictMock<IDisposable>();
+
+        var disposable = Disposable.PostingContext(item.Object, context.Object);
+
+        var exception = Assert.Throws<InvalidOperationException>(() => disposable.Dispose());
+
+        Assert.Equal(message, exception.Message);
+        Assert.True(disposable.IsDisposed);
+    }
+
     #endregion
 
     #region Idempotent Dispose Tests
