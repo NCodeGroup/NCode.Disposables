@@ -367,7 +367,7 @@ public static class Disposable
     /// rethrown, or an <see cref="AggregateException"/> holding every exception is thrown when several items throw.
     /// </para>
     /// </remarks>
-    // The parameter shape shipped in 6.x; 7.0 changes only the return type.
+    // Callers that pass only the collection bind to this overload, so it keeps its optional parameter.
 #pragma warning disable RS0027 // optional parameter on an overload with fewer parameters than another
     public static DisposableCollection Collection(
 #pragma warning restore RS0027
