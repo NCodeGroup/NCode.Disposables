@@ -1,20 +1,60 @@
 # Assurance Case
 
 This page states NCode.Disposables's security requirements, the threats it considers, and why the design and the way it
-is built meet them. [architecture.md](architecture.md) describes the components; [README.md](../README.md) is the
-user-facing summary.
+is built meet them. [architecture.md](architecture.md) describes the components; [README.md](../README.md#thread-safety) is
+the user-facing summary.
 
 ## Security Requirements
 
 [//]: # "Maintainers: list what the project is expected to do as R1, R2, ..., and what users must not rely on."
 
-Not written yet.
+What the library is expected to do:
+
+1. **R1.** A disposable that keeps state runs its cleanup at most once, even when several threads dispose it at once;
+   only an action or adapter from `CreateRepeatable` or `AdaptRepeatable` runs it on every call.
+2. **R2.** A shared resource's release action runs once, on the thread that releases the last lease. Once the count
+   reaches zero, `Value` and `AddReference` throw `ObjectDisposedException` and `TryAddReference` returns `false`, so a
+   released resource is never handed out again.
+3. **R3.** A resource handed to a holder or collection after it is disposed is disposed instead of kept
+   ([ADR-1004](decisions/1004-a-resource-handed-to-a-disposed-holder-is-disposed.md)); `AsyncDisposableAggregate`'s
+   setter and `AsyncDisposableCollection.Add` throw `ObjectDisposedException` instead, and `SetDisposableAsync` and
+   `AddAsync` dispose it.
+4. **R4.** Disposing a collection, or `DisposeAll`, disposes every item in reverse order even when one throws, then
+   rethrows the one exception or throws an `AggregateException` holding all of them.
+5. **R5.** A factory, constructor or extension rejects a `null` argument with `ArgumentNullException`
+   ([ADR-1008](decisions/1008-a-disposable-that-wraps-a-resource-rejects-a-null-resource.md)); a second assignment of a
+   single-assignment holder throws `InvalidOperationException`, and so does `Release()` on a guard already released.
+6. **R6.** `DisposableContext` calls `OperationCompleted` for each `OperationStarted`, also when the context's `Post`
+   throws, and rethrows.
+7. **R7.** The package consumers install is built from this repository's reviewed code, and they can check that.
+
+What it does not do, and users must not rely on: dispose anything the caller never disposes, since it has no
+finalizers; make a second dispose of a struct safe, since a lease, a value disposable or a lock scope releases again on
+every dispose
+([ADR-1006](decisions/1006-value-disposables-and-lock-scopes-are-non-idempotent-structs.md)); make the caller's own
+resource thread-safe; or stop a cleanup delegate the caller supplies from throwing, blocking or deadlocking.
 
 ## Threat Model
 
 [//]: # "Maintainers: add a table (Threat, In scope, Countered by) and state the trust boundary."
 
-Not written yet.
+| Threat | In scope | Countered by |
+| --- | --- | --- |
+| Cleanup runs twice when threads race to dispose | Yes | R1, R2: `Interlocked.Exchange` and `Interlocked.CompareExchange` take the action or state once |
+| A released shared resource is used or leased again | Yes | R2: a compare-and-swap loop on the count refuses a lease at zero |
+| A resource handed to a disposed holder leaks | Yes | R3 |
+| One failing item leaves the rest undisposed | Yes | R4 |
+| A `null` argument or a second assignment corrupts a holder's state | Yes | R5 |
+| A context's count of pending operations is left unbalanced | Yes | R6 |
+| A tampered or substituted package | Yes | R7, below |
+| A struct disposed twice | No | Documented misuse (ADR-1006, the lease's remarks) |
+| A cleanup delegate that throws, blocks or misbehaves | No | It runs with the caller's privileges; the library rethrows what it throws |
+| A caller that never disposes | No | No finalizer to rely on |
+
+**Trust boundary.** The library runs inside the caller's process with the caller's privileges, and every input is an
+object the caller passes: delegates, disposables, cancellation tokens, locks and synchronization contexts. It parses no
+data, does no I/O, starts no threads, has no `unsafe` code and depends on no other package, so its attack surface is its
+public API.
 
 ## Secure Design Principles Applied
 
