@@ -13,9 +13,11 @@ public class AsyncDisposableGuardTests
     [Fact]
     public void Constructor_Null_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        var exception = Assert.Throws<ArgumentNullException>(() =>
             new AsyncDisposableGuard<IAsyncDisposable>(null!)
         );
+
+        Assert.Equal("value", exception.ParamName);
     }
 
     [Fact]
@@ -108,7 +110,7 @@ public class AsyncDisposableGuardTests
     #region Release Tests
 
     [Fact]
-    public void Release_ReturnsValue()
+    public void Release_WhenOwned_ReturnsValue()
     {
         var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
         var guard = new AsyncDisposableGuard<IAsyncDisposable>(mockDisposable.Object);

@@ -13,7 +13,11 @@ public class DisposableGuardTests
     [Fact]
     public void Constructor_Null_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => new DisposableGuard<IDisposable>(null!));
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            new DisposableGuard<IDisposable>(null!)
+        );
+
+        Assert.Equal("value", exception.ParamName);
     }
 
     [Fact]
@@ -104,7 +108,7 @@ public class DisposableGuardTests
     #region Release Tests
 
     [Fact]
-    public void Release_ReturnsValue()
+    public void Release_WhenOwned_ReturnsValue()
     {
         var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
         var guard = new DisposableGuard<IDisposable>(mockDisposable.Object);
