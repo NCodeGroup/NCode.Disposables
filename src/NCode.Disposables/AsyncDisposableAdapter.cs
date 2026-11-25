@@ -34,7 +34,7 @@ public sealed class AsyncDisposableAdapter(IDisposable disposable, bool idempote
     private readonly bool _idempotent = idempotent;
 
     /// <summary>
-    /// One once disposal has been requested, zero before; <see cref="IsDisposed"/> reads it.
+    /// Holds 1 after disposal has been requested and 0 before; <see cref="IsDisposed"/> reads it.
     /// </summary>
     private int _disposed;
 
