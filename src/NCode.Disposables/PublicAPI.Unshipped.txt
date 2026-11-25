@@ -1,1 +1,5 @@
 #nullable enable
+NCode.Disposables.DisposableExtensions.extension(System.Collections.Generic.IEnumerable<object?>!).DisposeAll() -> void
+NCode.Disposables.DisposableExtensions.extension(System.Collections.Generic.IEnumerable<object?>!).DisposeAllIgnoringExceptions() -> void
+static NCode.Disposables.DisposableExtensions.DisposeAll(this System.Collections.Generic.IEnumerable<object?>! collection) -> void
+static NCode.Disposables.DisposableExtensions.DisposeAllIgnoringExceptions(this System.Collections.Generic.IEnumerable<object?>! collection) -> void

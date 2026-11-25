@@ -98,7 +98,14 @@ public sealed class DisposableCollection : IDisposableCollection, IDisposalStatu
             _list.Clear();
         }
 
-        items.DisposeAll(_ignoreExceptions);
+        if (_ignoreExceptions)
+        {
+            items.DisposeAllIgnoringExceptions();
+        }
+        else
+        {
+            items.DisposeAll();
+        }
     }
 
     /// <summary>

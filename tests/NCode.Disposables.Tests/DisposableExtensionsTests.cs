@@ -244,24 +244,6 @@ public sealed class DisposableExtensionsTests : IDisposable
     }
 
     [Fact]
-    public void DisposeAll_WithIgnoreExceptions_ContinuesOnError()
-    {
-        var order = string.Empty;
-        var collection = new[]
-        {
-            Disposable.Create(() => order += "1"),
-            Disposable.Create(() => throw new InvalidOperationException()),
-            Disposable.Create(() => order += "2"),
-            Disposable.Create(() => throw new InvalidOperationException()),
-            Disposable.Create(() => order += "3"),
-        };
-
-        collection.DisposeAll(ignoreExceptions: true);
-
-        Assert.Equal("321", order);
-    }
-
-    [Fact]
     public void DisposeAll_WithSingleException_ThrowsOriginalException()
     {
         var order = string.Empty;
@@ -299,26 +281,6 @@ public sealed class DisposableExtensionsTests : IDisposable
     }
 
     [Fact]
-    public void DisposeAll_WithIgnoreExceptionsAndAsyncDisposable_IgnoresOtherFailures()
-    {
-        var log = new List<string>();
-        var collection = new object[]
-        {
-            Disposable.Create(() => log.Add("first")),
-            Disposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
-            AsyncDisposable.Create(() => { }),
-            Disposable.Create(() => log.Add("last")),
-        };
-
-        var exception = Assert.Throws<InvalidOperationException>(() =>
-            collection.DisposeAll(ignoreExceptions: true)
-        );
-
-        Assert.Equal(AsyncOnlyMessage, exception.Message);
-        Assert.Equal(["last", "first"], log);
-    }
-
-    [Fact]
     public void DisposeAll_WithAsyncDisposableAndFailingItem_ThrowsAggregateExceptionInDisposalOrder()
     {
         var collection = new object[]
@@ -334,38 +296,14 @@ public sealed class DisposableExtensionsTests : IDisposable
         Assert.IsType<ArgumentException>(exception.InnerExceptions[1]);
     }
 
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void DisposeAll_WithAsyncDisposable_ThrowsInvalidOperationException(
-        bool ignoreExceptions
-    )
+    [Fact]
+    public void DisposeAll_WithAsyncDisposable_ThrowsInvalidOperationException()
     {
         var collection = new object[] { AsyncDisposable.Create(() => { }) };
 
-        var exception = Assert.Throws<InvalidOperationException>(() =>
-            collection.DisposeAll(ignoreExceptions)
-        );
+        var exception = Assert.Throws<InvalidOperationException>(() => collection.DisposeAll());
 
         Assert.Equal(AsyncOnlyMessage, exception.Message);
-    }
-
-    [Fact]
-    public void DisposeAll_WithAsyncDisposable_DisposesRemainingItems()
-    {
-        var disposed = false;
-        var collection = new object[]
-        {
-            Disposable.Create(() => disposed = true),
-            AsyncDisposable.Create(() => { }),
-        };
-
-        Assert.Throws<InvalidOperationException>(() =>
-            collection.DisposeAll(ignoreExceptions: true)
-        );
-
-        // The sync disposable is still disposed because it comes after the async one in reverse order
-        Assert.True(disposed);
     }
 
     [Fact]
@@ -381,6 +319,117 @@ public sealed class DisposableExtensionsTests : IDisposable
         // The extension method itself doesn't track previous calls
         Assert.Equal(1, disposeCount);
     }
+
+    #endregion
+
+    #region DisposeAllIgnoringExceptions Tests
+
+    [Fact]
+    public void DisposeAllIgnoringExceptions_WhenItemsThrow_DisposesEveryItem()
+    {
+        var order = string.Empty;
+        var collection = new[]
+        {
+            Disposable.Create(() => order += "1"),
+            Disposable.Create(() => throw new InvalidOperationException()),
+            Disposable.Create(() => order += "2"),
+            Disposable.Create(() => throw new InvalidOperationException()),
+            Disposable.Create(() => order += "3"),
+        };
+
+        collection.DisposeAllIgnoringExceptions();
+
+        Assert.Equal("321", order);
+    }
+
+    [Fact]
+    public void DisposeAllIgnoringExceptions_WithAsyncDisposable_ThrowsOnlyInvalidOperationException()
+    {
+        var log = new List<string>();
+        var collection = new object[]
+        {
+            Disposable.Create(() => log.Add("first")),
+            Disposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
+            AsyncDisposable.Create(() => { }),
+            Disposable.Create(() => log.Add("last")),
+        };
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            collection.DisposeAllIgnoringExceptions()
+        );
+
+        Assert.Equal(AsyncOnlyMessage, exception.Message);
+        Assert.Equal(["last", "first"], log);
+    }
+
+    [Fact]
+    public void DisposeAllIgnoringExceptions_WithAsyncDisposable_ThrowsInvalidOperationException()
+    {
+        var collection = new object[] { AsyncDisposable.Create(() => { }) };
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            collection.DisposeAllIgnoringExceptions()
+        );
+
+        Assert.Equal(AsyncOnlyMessage, exception.Message);
+    }
+
+    [Fact]
+    public void DisposeAllIgnoringExceptions_WithAsyncDisposable_DisposesRemainingItems()
+    {
+        var disposed = false;
+        var collection = new object[]
+        {
+            Disposable.Create(() => disposed = true),
+            AsyncDisposable.Create(() => { }),
+        };
+
+        Assert.Throws<InvalidOperationException>(() => collection.DisposeAllIgnoringExceptions());
+
+        // The sync disposable is still disposed because it comes after the async one in reverse order
+        Assert.True(disposed);
+    }
+
+    #endregion
+
+    #region Deprecated Overload Tests
+
+#pragma warning disable NCDISP003 // tests the deprecated overloads until they are deleted
+
+    [Fact]
+    public void DisposeAll_WithIgnoreExceptionsTrue_IgnoresFailures()
+    {
+        var log = new List<string>();
+        var collection = new[]
+        {
+            Disposable.Create(() => log.Add("first")),
+            Disposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
+        };
+
+        collection.DisposeAll(ignoreExceptions: true);
+
+        Assert.Equal(["first"], log);
+    }
+
+    [Fact]
+    public void DisposeAll_WithIgnoreExceptionsFalse_RethrowsFailure()
+    {
+        var log = new List<string>();
+        var collection = new[]
+        {
+            Disposable.Create(() => log.Add("first")),
+            Disposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
+        };
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            collection.DisposeAll(ignoreExceptions: false)
+        );
+
+        Assert.Equal("Dispose failed.", exception.Message);
+        Assert.Equal(["first"], log);
+    }
+
+#pragma warning restore NCDISP003
 
     #endregion
 
