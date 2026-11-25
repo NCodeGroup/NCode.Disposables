@@ -105,8 +105,6 @@ public sealed class DisposableSerial : IDisposable, IDisposalStatus
     /// </remarks>
     public IDisposable? Disposable
     {
-        // Lock-free: retry the CompareExchange, backing off with SpinWait, until no other thread changed the field in between.
-
         get
         {
             var current = Volatile.Read(ref _disposable);
@@ -114,6 +112,7 @@ public sealed class DisposableSerial : IDisposable, IDisposalStatus
         }
         set
         {
+            // Lock-free: retry the CompareExchange, backing off with SpinWait, until no other thread changed the field in between.
             var spinWait = new SpinWait();
             while (true)
             {

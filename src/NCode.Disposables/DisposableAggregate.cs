@@ -94,8 +94,6 @@ public sealed class DisposableAggregate : IDisposableAggregate, IDisposalStatus
     /// </remarks>
     public IDisposable? Disposable
     {
-        // Lock-free: retry the CompareExchange, backing off with SpinWait, until no other thread changed the field in between.
-
         get
         {
             var current = Volatile.Read(ref _disposable);
@@ -103,6 +101,7 @@ public sealed class DisposableAggregate : IDisposableAggregate, IDisposalStatus
         }
         set
         {
+            // Lock-free: retry the CompareExchange, backing off with SpinWait, until no other thread changed the field in between.
             var spinWait = new SpinWait();
             while (true)
             {
