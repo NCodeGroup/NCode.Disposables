@@ -100,6 +100,22 @@ await using (AsyncDisposable.Create(async () => await writer.FlushAsync()))
 ```
 <!-- endSnippet -->
 
+`AsyncDisposable.Create` also passes up to eight arguments to a `Func<…, ValueTask>`, so a static lambda needs no closure:
+
+<!-- snippet: AsyncActionWithState -->
+```cs
+var stream = new MemoryStream();
+var writer = new StreamWriter(stream);
+
+await using (AsyncDisposable.Create(static w => new ValueTask(w.FlushAsync()), writer))
+{
+    await writer.WriteAsync("hello");
+}
+
+// stream.Length == 5
+```
+<!-- endSnippet -->
+
 ### Running an action without allocating
 
 `Disposable.CreateValue` and `AsyncDisposable.CreateValue` return a struct that runs a static delegate with a state value. It allocates nothing, but every dispose of every copy runs the action again, so dispose it once, through `using`:
@@ -388,7 +404,7 @@ IDisposalStatus status = cleanup; // every disposable that keeps state reports i
 
 ### Disposing on a synchronization context
 
-`Disposable.Context` disposes a resource on a `SynchronizationContext`, such as a UI thread's. By default `Dispose` calls the context's `Send` and returns once the resource is disposed; with `async: true` it calls `Post` and returns at once, telling the context through `OperationStarted` and `OperationCompleted`. The resource is disposed once, however often `Dispose` is called:
+`Disposable.Context` and `AsyncDisposable.Context` dispose a resource on a `SynchronizationContext`, such as a UI thread's. By default `Dispose` calls the context's `Send` and returns once the resource is disposed; with `async: true` it calls `Post` and returns at once, telling the context through `OperationStarted` and `OperationCompleted`. The resource is disposed once, however often `Dispose` is called:
 
 <!-- snippet: ContextDisposable -->
 ```cs
@@ -398,6 +414,18 @@ var control = Disposable.Create(() => log.Add("control disposed"));
 // uiContext is the SynchronizationContext captured on the UI thread.
 var disposable = Disposable.Context(control, uiContext);
 disposable.Dispose(); // Send: returns once the UI thread has disposed the control
+```
+<!-- endSnippet -->
+
+`AsyncDisposable.Context` posts the disposal to the context and completes once it has run there:
+
+<!-- snippet: AsyncContextDisposable -->
+```cs
+var log = new List<string>();
+var viewModel = AsyncDisposable.Create(() => log.Add("view model disposed"));
+
+// uiContext is the SynchronizationContext captured on the UI thread.
+await AsyncDisposable.Context(viewModel, uiContext).DisposeAsync(); // Post: completes once the UI thread has disposed it
 ```
 <!-- endSnippet -->
 

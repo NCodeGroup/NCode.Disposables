@@ -88,6 +88,24 @@ public class ReadmeSamplesTests
         Assert.Equal(5, stream.Length);
     }
 
+    [Fact]
+    public async Task AsyncActionWithStateSample_Runs()
+    {
+        // begin-snippet: AsyncActionWithState
+        var stream = new MemoryStream();
+        var writer = new StreamWriter(stream);
+
+        await using (AsyncDisposable.Create(static w => new ValueTask(w.FlushAsync()), writer))
+        {
+            await writer.WriteAsync("hello");
+        }
+
+        // stream.Length == 5
+        // end-snippet
+
+        Assert.Equal(5, stream.Length);
+    }
+
     #endregion
 
     #region Empty Tests
@@ -457,6 +475,23 @@ public class ReadmeSamplesTests
         Assert.Equal(1, uiContext.SendCount);
     }
 
+    [Fact]
+    public async Task AsyncContextDisposableSample_Runs()
+    {
+        var uiContext = new RecordingSynchronizationContext();
+
+        // begin-snippet: AsyncContextDisposable
+        var log = new List<string>();
+        var viewModel = AsyncDisposable.Create(() => log.Add("view model disposed"));
+
+        // uiContext is the SynchronizationContext captured on the UI thread.
+        await AsyncDisposable.Context(viewModel, uiContext).DisposeAsync(); // Post: completes once the UI thread has disposed it
+        // end-snippet
+
+        Assert.Equal(["view model disposed"], log);
+        Assert.Equal(1, uiContext.PostCount);
+    }
+
     #endregion
 
     #region Lock Tests
@@ -588,6 +623,14 @@ public class ReadmeSamplesTests
         public override void Send(SendOrPostCallback d, object? state)
         {
             SendCount++;
+            d(state);
+        }
+
+        public int PostCount { get; private set; }
+
+        public override void Post(SendOrPostCallback d, object? state)
+        {
+            PostCount++;
             d(state);
         }
     }
