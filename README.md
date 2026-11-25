@@ -446,7 +446,7 @@ await disposable.DisposeAsync(); // Post: completes once the UI thread has dispo
 ```
 <!-- endSnippet -->
 
-When the context's `Post` throws, `DisposeAsync` calls `OperationCompleted` and throws that exception. It doesn't dispose the resource on the calling thread, because a resource such as a UI control must be disposed on its context.
+When the context's `Post` throws, `Dispose` on a `PostingContext` and `DisposeAsync` call `OperationCompleted` and throw that exception. It doesn't dispose the resource on the calling thread, because a resource such as a UI control must be disposed on its context.
 
 ### Scoping a lock
 

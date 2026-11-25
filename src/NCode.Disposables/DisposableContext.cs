@@ -98,6 +98,11 @@ public sealed class DisposableContext : IDisposable, IDisposalStatus
     /// method returns immediately without waiting for the disposal to complete. Any other context sends
     /// the disposal, and this method blocks until the disposal completes on the target context.
     /// </para>
+    /// <para>
+    /// When the context's <see cref="SynchronizationContext.Post"/> throws before the disposal runs, this method calls
+    /// <see cref="SynchronizationContext.OperationCompleted"/> and rethrows the exception. The underlying resource
+    /// is not disposed, because it is disposed only on the context.
+    /// </para>
     /// </remarks>
     public void Dispose()
     {
@@ -107,8 +112,25 @@ public sealed class DisposableContext : IDisposable, IDisposalStatus
 
         if (IsPosting)
         {
+            var callbackStarted = false;
             _context.OperationStarted();
-            _context.Post(AsynchronousCallback, disposable);
+            try
+            {
+                _context.Post(
+                    _ =>
+                    {
+                        Volatile.Write(ref callbackStarted, true);
+                        AsynchronousCallback(disposable);
+                    },
+                    null
+                );
+            }
+            catch when (!Volatile.Read(ref callbackStarted))
+            {
+                // The context refused the callback, so the operation it was told about ends here.
+                _context.OperationCompleted();
+                throw;
+            }
         }
         else
         {
