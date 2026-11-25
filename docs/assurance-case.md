@@ -61,13 +61,32 @@ public API.
 [//]: # "Maintainers: say how the design applies economy of mechanism, fail-safe defaults, complete mediation, least
 privilege and open design."
 
-Not written yet.
+- **Economy of mechanism:** one assembly with no package dependency, no I/O, no threads and no `unsafe` or native
+  code; each disposable is a small sealed type that does one job
+  ([ADR-1005](decisions/1005-disposables-are-concrete-sealed-types-that-report-their-disposal-status.md)).
+- **Fail-safe defaults:** a disposable runs its cleanup once unless a factory named for the other behavior, such as
+  `CreateRepeatable`, creates it
+  ([ADR-1007](decisions/1007-behavior-is-chosen-by-a-factory-name-not-a-flag-parameter.md)); a resource handed to a
+  disposed holder is disposed, not dropped (R3); a `null` resource is rejected, not ignored (R5).
+- **Complete mediation:** every member of a collection takes one lock and enumeration walks a snapshot; the holders
+  swap their resource with atomic operations; every lease goes through its owner's atomic count, which refuses a new
+  lease at zero (R1, R2).
+- **Least common mechanism:** the library keeps no mutable static state, only immutable singletons, sentinels and
+  cached delegates, so no two instances share state; it awaits with `ConfigureAwait(false)`, so it never resumes on
+  the caller's synchronization context.
+- **Open design:** the code, the tests, the decision records and this case are public.
 
 ## Common Weaknesses Countered
 
 [//]: # "Maintainers: list the CWE ids the design counters, each with the requirement that counters it."
 
-Not written yet.
+- **CWE-675, multiple operations on a resource in a single-operation context:** R1, R2.
+- **CWE-416, use after free, as use of a released shared resource:** R2.
+- **CWE-362 / CWE-367, race condition and time-of-check to time-of-use:** R1, R2, R3.
+- **CWE-772 / CWE-404, missing release of a resource and improper shutdown:** R3, R4.
+- **CWE-460, improper cleanup on a thrown exception:** R4, R6.
+- **CWE-476, null pointer dereference:** R5.
+- **CWE-494 / CWE-829, untrusted code or inclusion:** R7.
 
 ## Evidence
 
