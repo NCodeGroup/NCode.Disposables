@@ -1,0 +1,54 @@
+{
+  "$schema": "https://raw.githubusercontent.com/NCodeGroup/docs/main/schema/site.config.schema.json",
+  "title": "NCode.Disposables",
+  "description": "Building blocks for IDisposable and IAsyncDisposable in .NET: run code on dispose, dispose many resources in reverse order, replace, guard and share resources, cancel on dispose, scope a lock and dispose on a synchronization context.",
+  "product": "Disposables",
+  "mark": "ncode",
+  "repository": {
+    "url": "https://github.com/NCodeGroup/NCode.Disposables",
+    "branch": "main"
+  },
+  "site": {
+    "url": "https://disposables.ncode.io"
+  },
+  "sidebar": [
+    {
+      "label": "Start",
+      "items": [
+        { "slug": "index", "label": "Overview" },
+        "start/quick-start",
+        "start/which-disposable"
+      ]
+    },
+    {
+      "label": "Guides",
+      "collapsed": true,
+      "items": [
+        { "slug": "guides/run-code-on-dispose", "label": "Run code on dispose" },
+        { "slug": "guides/dispose-many-resources", "label": "Dispose many together" },
+        { "slug": "guides/hold-a-changing-resource", "label": "Hold a changing resource" },
+        { "slug": "guides/hand-on-ownership", "label": "Hand on ownership" },
+        { "slug": "guides/share-a-resource", "label": "Share through leases" },
+        { "slug": "guides/cancel-on-dispose", "label": "Cancel on dispose" },
+        { "slug": "guides/scope-a-lock", "label": "Scope a lock" },
+        { "slug": "guides/dispose-on-a-context", "label": "Dispose on a context" },
+        { "slug": "guides/bridge-sync-and-async", "label": "Bridge sync and async" }
+      ]
+    },
+    {
+      "label": "Concepts",
+      "items": [
+        "concepts/disposal-status",
+        "concepts/once-or-every-time",
+        "concepts/sync-and-async"
+      ]
+    },
+    { "label": "Reference", "items": ["reference/behavior", "reference/api-map"] }
+  ],
+  "social": [
+    { "label": "GitHub", "href": "https://github.com/NCodeGroup/NCode.Disposables" },
+    { "label": "NuGet", "href": "https://www.nuget.org/packages/NCode.Disposables/" }
+  ],
+  "samples": ["tests/**/*.cs"],
+  "requiredHeadings": [{ "pages": ["guides/*"], "headings": ["## Pitfalls"] }]
+}
