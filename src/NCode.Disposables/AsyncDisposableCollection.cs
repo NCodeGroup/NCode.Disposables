@@ -66,51 +66,6 @@ public sealed class AsyncDisposableCollection
         _list = [.. collection];
     }
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AsyncDisposableCollection"/> class with an empty collection.
-    /// </summary>
-    /// <param name="ignoreExceptions">
-    /// <see langword="true"/> to suppress exceptions thrown by individual items during disposal and continue
-    /// disposing remaining items; <see langword="false"/> (the default) to propagate exceptions.
-    /// </param>
-    // Callers that pass nothing bind to the constructor without the flag, so this one keeps its default until it is deleted.
-    // ADR-1007: deleted in the next major version.
-    [Obsolete(
-        "Use new AsyncDisposableCollection(), or AsyncDisposable.CollectionIgnoringExceptions to ignore the exceptions items throw. This constructor is deleted in the next major version.",
-        DiagnosticId = "NCDISP003"
-    )]
-#pragma warning disable RS0027 // optional parameter on an overload with fewer parameters than another
-    public AsyncDisposableCollection(bool ignoreExceptions = false)
-#pragma warning restore RS0027
-        : this()
-    {
-        IgnoresExceptions = ignoreExceptions;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AsyncDisposableCollection"/> class with elements
-    /// copied from the specified collection.
-    /// </summary>
-    /// <param name="collection">The collection whose elements are copied to the new collection.</param>
-    /// <param name="ignoreExceptions">
-    /// <see langword="true"/> to suppress exceptions thrown by individual items during disposal and continue
-    /// disposing remaining items; <see langword="false"/> (the default) to propagate exceptions.
-    /// </param>
-    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
-    // ADR-1007: deleted in the next major version.
-    [Obsolete(
-        "Use new AsyncDisposableCollection(collection), or AsyncDisposable.CollectionIgnoringExceptions to ignore the exceptions items throw. This constructor is deleted in the next major version.",
-        DiagnosticId = "NCDISP003"
-    )]
-    public AsyncDisposableCollection(
-        IEnumerable<IAsyncDisposable> collection,
-        bool ignoreExceptions = false
-    )
-        : this(collection)
-    {
-        IgnoresExceptions = ignoreExceptions;
-    }
-
     /// <inheritdoc />
     /// <remarks>
     /// <para>
