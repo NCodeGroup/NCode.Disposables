@@ -82,6 +82,7 @@ public interface ISharedReferenceOwner<T>
 /// <param name="onRelease">
 /// The callback to invoke when the reference count reaches zero to release the underlying resource.
 /// </param>
+/// <exception cref="ArgumentNullException"><paramref name="onRelease"/> is <see langword="null"/>.</exception>
 /// <remarks>
 /// <para>
 /// This class is the composition root for shared reference management. The initial reference count is 1,
@@ -93,6 +94,12 @@ public interface ISharedReferenceOwner<T>
 /// </remarks>
 public sealed class SharedReferenceOwner<T>(T value, Action<T> onRelease) : ISharedReferenceOwner<T>
 {
+    /// <summary>
+    /// Gets the callback that releases the resource when the reference count reaches zero.
+    /// </summary>
+    private Action<T> OnRelease { get; } =
+        onRelease ?? throw new ArgumentNullException(nameof(onRelease));
+
     private int _count = 1;
 
     /// <inheritdoc />
@@ -164,7 +171,7 @@ public sealed class SharedReferenceOwner<T>(T value, Action<T> onRelease) : ISha
             {
                 if (newCount == 0)
                 {
-                    onRelease(value);
+                    OnRelease(value);
                 }
 
                 return newCount;

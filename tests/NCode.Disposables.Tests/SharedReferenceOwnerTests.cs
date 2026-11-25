@@ -54,6 +54,24 @@ public class SharedReferenceOwnerTests : UnitTestBase
         Assert.Equal(1, releaseCount);
     }
 
+    [Fact]
+    public void Constructor_WithNullValue_Succeeds()
+    {
+        var owner = new SharedReferenceOwner<object?>(null, _ => { });
+
+        Assert.Null(owner.Value);
+    }
+
+    [Fact]
+    public void Constructor_WithNullOnRelease_ThrowsArgumentNullException()
+    {
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            new SharedReferenceOwner<object>(new object(), null!)
+        );
+
+        Assert.Equal("onRelease", exception.ParamName);
+    }
+
     #endregion
 
     #region Value Tests

@@ -125,8 +125,8 @@ flowchart LR
 The package does no I/O and starts no threads, and it keeps no mutable static state: its only static values are the
 `Singleton` instances of the empty disposables, the holders' private `Sentinel` markers and the lock scopes' cached
 release delegates, none of which changes once created. It shows people no text: the exceptions it throws on purpose are
-`ArgumentNullException`, `ObjectDisposedException` and `InvalidOperationException` and, from the lock scopes,
-`OperationCanceledException`, for developers.
+`ArgumentNullException`, `ArgumentException`, `ObjectDisposedException` and `InvalidOperationException` and, from the
+lock scopes, `OperationCanceledException`, for developers.
 
 ## Design Rules
 

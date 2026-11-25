@@ -138,6 +138,16 @@ public sealed class DisposableExtensionsTests : UnitTestBase
         Assert.False(resource.DisposeAsyncCalled);
     }
 
+    [Fact]
+    public void AsSharedReference_WithNull_ThrowsArgumentNullException()
+    {
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            ((IDisposable)null!).AsSharedReference()
+        );
+
+        Assert.Equal("value", exception.ParamName);
+    }
+
     #endregion
 
     #region DisposeAll Tests

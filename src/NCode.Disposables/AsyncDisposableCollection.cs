@@ -59,11 +59,17 @@ public sealed class AsyncDisposableCollection
     /// </summary>
     /// <param name="collection">The collection whose elements are copied to the new collection.</param>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="collection"/> contains a <see langword="null"/> item.</exception>
     public AsyncDisposableCollection(IEnumerable<IAsyncDisposable> collection)
     {
         ArgumentNullException.ThrowIfNull(collection);
 
         _list = [.. collection];
+
+        if (_list.Exists(static item => item is null))
+        {
+            throw new ArgumentException("The collection contains a null item.", nameof(collection));
+        }
     }
 
     /// <inheritdoc />

@@ -326,6 +326,7 @@ public static class Disposable
     /// <param name="collection">The collection whose elements are copied to the new <see cref="DisposableCollection"/>.</param>
     /// <returns>A new <see cref="DisposableCollection"/> containing the specified disposables.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="collection"/> contains a <see langword="null"/> item.</exception>
     /// <remarks>
     /// <para>
     /// Items are disposed in LIFO (last-in, first-out) order when the collection is disposed.
@@ -352,6 +353,7 @@ public static class Disposable
     /// <param name="collection">The collection whose elements are copied to the new <see cref="DisposableCollection"/>.</param>
     /// <returns>A new <see cref="DisposableCollection"/> containing copies of the elements from the specified collection.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="collection"/> contains a <see langword="null"/> item.</exception>
     /// <remarks>
     /// <para>
     /// The elements from <paramref name="collection"/> are enumerated and copied during construction.
@@ -379,6 +381,7 @@ public static class Disposable
     /// <param name="collection">The collection whose elements are copied to the new <see cref="DisposableCollection"/>.</param>
     /// <returns>A new <see cref="DisposableCollection"/> containing the specified disposables.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="collection"/> contains a <see langword="null"/> item.</exception>
     /// <remarks>
     /// <para>
     /// Items are disposed in LIFO (last-in, first-out) order when the collection is disposed.
@@ -405,6 +408,7 @@ public static class Disposable
     /// <param name="collection">The collection whose elements are copied to the new <see cref="DisposableCollection"/>.</param>
     /// <returns>A new <see cref="DisposableCollection"/> containing copies of the elements from the specified collection.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="collection"/> contains a <see langword="null"/> item.</exception>
     /// <remarks>
     /// <para>
     /// The elements from <paramref name="collection"/> are enumerated and copied during construction.

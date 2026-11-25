@@ -72,8 +72,11 @@ public static class DisposableExtensions
         /// gets a lease that disposes it synchronously; call <c>AsAsyncSharedReference()</c> for one that disposes it
         /// asynchronously.
         /// </remarks>
+        /// <exception cref="ArgumentNullException">The resource is <see langword="null"/>.</exception>
         public SharedReferenceLease<T> AsSharedReference()
         {
+            ArgumentNullException.ThrowIfNull(value);
+
             return SharedReference.Create(value);
         }
     }

@@ -7,8 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [9.0.0] - 2026-11-25
+
 ### Changed
 
+- **Breaking:** `SharedReference.Create(value, onRelease)` and `AsyncSharedReference.Create(value, onRelease)` throw `ArgumentNullException` for a `null` value or release callback, `SharedReference.Create(value)`, `AsyncSharedReference.Create(value)`, `AsSharedReference()` and `AsAsyncSharedReference()` for a `null` resource, and the `SharedReferenceOwner<T>` and `AsyncSharedReferenceOwner<T>` constructors for a `null` release callback; the owner constructors keep accepting a `null` value. Before, a `null` release callback or resource threw `NullReferenceException` only when the last lease was released, and `Create(value, onRelease)` handed a `null` value to the release callback; pass the value and the release callback to share. ([#89](https://github.com/NCodeGroup/NCode.Disposables/issues/89), [ADR-1008](docs/decisions/1008-a-disposable-that-wraps-a-resource-rejects-a-null-resource.md))
+- **Breaking:** The `DisposableCollection` and `AsyncDisposableCollection` constructors, and so the `Collection` and `CollectionIgnoringExceptions` factories of `Disposable` and `AsyncDisposable`, throw `ArgumentException` for an initial collection that holds a `null` item, which `Add` already rejects, instead of keeping it; leave `null` out of the items. ([#89](https://github.com/NCodeGroup/NCode.Disposables/issues/89), [ADR-1008](docs/decisions/1008-a-disposable-that-wraps-a-resource-rejects-a-null-resource.md))
 - Package validation compares each package with the published 8.0.1 package.
 - `docs/assurance-case.md` states the library's security requirements, its threat model and trust boundary, the secure design principles it applies and the weaknesses it counters, with the tests behind them.
 
@@ -236,7 +240,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release for .NET Framework 4.5.1: `IDisposable` implementations for common resource management patterns, such as actions, aggregates, collections and shared references.
 
-[Unreleased]: https://github.com/NCodeGroup/NCode.Disposables/compare/v8.0.1...HEAD
+[Unreleased]: https://github.com/NCodeGroup/NCode.Disposables/compare/v9.0.0...HEAD
+[9.0.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v8.0.1...v9.0.0
 [8.0.1]: https://github.com/NCodeGroup/NCode.Disposables/compare/v8.0.0...v8.0.1
 [8.0.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v7.1.0...v8.0.0
 [7.1.0]: https://github.com/NCodeGroup/NCode.Disposables/compare/v7.0.0...v7.1.0
