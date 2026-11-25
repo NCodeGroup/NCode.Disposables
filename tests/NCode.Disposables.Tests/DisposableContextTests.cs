@@ -308,12 +308,12 @@ public class DisposableContextTests : UnitTestBase
     public void Dispose_Async_WhenDisposeThrows_PropagatesException()
     {
         var context = CreateStrictMock<SynchronizationContext>();
-        context.Setup(x => x.OperationStarted()).Verifiable();
+        context.Setup(x => x.OperationStarted()).Verifiable(Times.Once());
         context
             .Setup(x => x.Post(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
             .Callback((SendOrPostCallback c, object s) => c(s))
             .Verifiable();
-        context.Setup(x => x.OperationCompleted()).Verifiable();
+        context.Setup(x => x.OperationCompleted()).Verifiable(Times.Once());
 
         var item = CreateStrictMock<IDisposable>();
         item.Setup(x => x.Dispose())
