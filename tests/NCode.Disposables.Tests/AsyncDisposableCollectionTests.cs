@@ -184,13 +184,37 @@ public class AsyncDisposableCollectionTests
     }
 
     [Fact]
+    public async Task AddAsync_WhileDisposeAsyncRuns_DisposesItemAtOnce()
+    {
+        var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var mockFirst = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        mockFirst.Setup(x => x.DisposeAsync()).Returns(() => new ValueTask(gate.Task));
+        var mockLate = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        mockLate.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var collection = new AsyncDisposableCollection([mockFirst.Object]);
+
+        var disposeTask = collection.DisposeAsync().AsTask();
+        Assert.False(disposeTask.IsCompleted);
+
+        await collection.AddAsync(mockLate.Object);
+
+        mockLate.Verify(x => x.DisposeAsync(), Times.Once);
+        Assert.Empty(collection);
+
+        gate.SetResult();
+        await disposeTask;
+    }
+
+    [Fact]
     public async Task AddAsync_Null_ThrowsArgumentNullException()
     {
         var collection = new AsyncDisposableCollection();
 
-        await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+        var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
             await collection.AddAsync(null!)
         );
+
+        Assert.Equal("item", exception.ParamName);
     }
 
     #endregion

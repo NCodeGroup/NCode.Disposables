@@ -146,6 +146,36 @@ public sealed class DisposableCollectionTests : IDisposable
     }
 
     [Fact]
+    public async Task Add_WhileDisposeRuns_DisposesItemAtOnce()
+    {
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var release = new ManualResetEventSlim();
+        var mockFirst = new Mock<IDisposable>(MockBehavior.Strict);
+        mockFirst
+            .Setup(x => x.Dispose())
+            .Callback(() =>
+            {
+                entered.SetResult();
+                var released = release.Wait(TimeSpan.FromSeconds(30));
+                Assert.True(released);
+            });
+        var mockLate = new Mock<IDisposable>(MockBehavior.Strict);
+        mockLate.Setup(x => x.Dispose());
+        var collection = new DisposableCollection([mockFirst.Object]);
+
+        var disposeTask = Task.Run(collection.Dispose);
+        await entered.Task;
+
+        collection.Add(mockLate.Object);
+
+        mockLate.Verify(x => x.Dispose(), Times.Once);
+        Assert.Empty(collection);
+
+        release.Set();
+        await disposeTask;
+    }
+
+    [Fact]
     public async Task Add_ConcurrentCalls_AddsEveryItem()
     {
         var collection = new DisposableCollection();
