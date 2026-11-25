@@ -3,15 +3,8 @@
 
 namespace NCode.Disposables.Tests;
 
-public sealed class DisposableCollectionTests : IDisposable
+public sealed class DisposableCollectionTests : UnitTestBase
 {
-    private readonly MockRepository _mocks = new(MockBehavior.Strict);
-
-    public void Dispose()
-    {
-        _mocks.Verify();
-    }
-
     #region Constructor Tests
 
     [Fact]
@@ -25,8 +18,8 @@ public sealed class DisposableCollectionTests : IDisposable
     [Fact]
     public void Constructor_WithCollection_CopiesElements()
     {
-        var disposable1 = new Mock<IDisposable>(MockBehavior.Strict);
-        var disposable2 = new Mock<IDisposable>(MockBehavior.Strict);
+        var disposable1 = CreateStrictMock<IDisposable>();
+        var disposable2 = CreateStrictMock<IDisposable>();
         IDisposable[] items = [disposable1.Object, disposable2.Object];
 
         var collection = new DisposableCollection(items);
@@ -60,7 +53,7 @@ public sealed class DisposableCollectionTests : IDisposable
     public void Add_WithValidItem_AddsToCollection()
     {
         var collection = new DisposableCollection();
-        var disposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var disposable = CreateStrictMock<IDisposable>();
 
         collection.Add(disposable.Object);
 
@@ -72,9 +65,9 @@ public sealed class DisposableCollectionTests : IDisposable
     public void Add_MultipleItems_AddsAllToCollection()
     {
         var collection = new DisposableCollection();
-        var disposable1 = new Mock<IDisposable>(MockBehavior.Strict);
-        var disposable2 = new Mock<IDisposable>(MockBehavior.Strict);
-        var disposable3 = new Mock<IDisposable>(MockBehavior.Strict);
+        var disposable1 = CreateStrictMock<IDisposable>();
+        var disposable2 = CreateStrictMock<IDisposable>();
+        var disposable3 = CreateStrictMock<IDisposable>();
 
         collection.Add(disposable1.Object);
         collection.Add(disposable2.Object);
@@ -95,7 +88,7 @@ public sealed class DisposableCollectionTests : IDisposable
     public void Add_SameItemTwice_AddsBothInstances()
     {
         var collection = new DisposableCollection();
-        var disposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var disposable = CreateStrictMock<IDisposable>();
 
         collection.Add(disposable.Object);
         collection.Add(disposable.Object);
@@ -107,21 +100,19 @@ public sealed class DisposableCollectionTests : IDisposable
     public void Add_AfterDispose_DisposesItem()
     {
         var collection = new DisposableCollection();
-        var disposable = new Mock<IDisposable>(MockBehavior.Strict);
-        disposable.Setup(x => x.Dispose());
+        var disposable = CreateStrictMock<IDisposable>();
+        disposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
         collection.Dispose();
 
         collection.Add(disposable.Object);
-
-        disposable.Verify(x => x.Dispose(), Times.Once);
     }
 
     [Fact]
     public void Add_AfterDispose_DoesNotAddItem()
     {
         var collection = new DisposableCollection();
-        var disposable = new Mock<IDisposable>(MockBehavior.Strict);
-        disposable.Setup(x => x.Dispose());
+        var disposable = CreateStrictMock<IDisposable>();
+        disposable.Setup(x => x.Dispose()).Verifiable();
         collection.Dispose();
 
         collection.Add(disposable.Object);
@@ -134,7 +125,7 @@ public sealed class DisposableCollectionTests : IDisposable
     {
         var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         using var release = new ManualResetEventSlim();
-        var mockFirst = new Mock<IDisposable>(MockBehavior.Strict);
+        var mockFirst = CreateStrictMock<IDisposable>();
         mockFirst
             .Setup(x => x.Dispose())
             .Callback(() =>
@@ -142,9 +133,10 @@ public sealed class DisposableCollectionTests : IDisposable
                 entered.SetResult();
                 var released = release.Wait(TimeSpan.FromSeconds(30));
                 Assert.True(released);
-            });
-        var mockLate = new Mock<IDisposable>(MockBehavior.Strict);
-        mockLate.Setup(x => x.Dispose());
+            })
+            .Verifiable();
+        var mockLate = CreateStrictMock<IDisposable>();
+        mockLate.Setup(x => x.Dispose()).Verifiable(Times.Once());
         var collection = new DisposableCollection([mockFirst.Object]);
 
         var disposeTask = Task.Run(collection.Dispose);
@@ -152,7 +144,6 @@ public sealed class DisposableCollectionTests : IDisposable
 
         collection.Add(mockLate.Object);
 
-        mockLate.Verify(x => x.Dispose(), Times.Once);
         Assert.Empty(collection);
 
         release.Set();
@@ -169,7 +160,7 @@ public sealed class DisposableCollectionTests : IDisposable
 
         for (var i = 0; i < concurrentCalls; i++)
         {
-            var disposable = new Mock<IDisposable>(MockBehavior.Strict);
+            var disposable = CreateStrictMock<IDisposable>();
             tasks[i] = Task.Run(() => collection.Add(disposable.Object));
         }
 
@@ -186,7 +177,7 @@ public sealed class DisposableCollectionTests : IDisposable
     public void Remove_ExistingItem_RemovesAndReturnsTrue()
     {
         var collection = new DisposableCollection();
-        var disposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var disposable = CreateStrictMock<IDisposable>();
         collection.Add(disposable.Object);
 
         var result = collection.Remove(disposable.Object);
@@ -199,7 +190,7 @@ public sealed class DisposableCollectionTests : IDisposable
     public void Remove_NonExistingItem_ReturnsFalse()
     {
         var collection = new DisposableCollection();
-        var disposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var disposable = CreateStrictMock<IDisposable>();
 
         var result = collection.Remove(disposable.Object);
 
@@ -218,7 +209,7 @@ public sealed class DisposableCollectionTests : IDisposable
     public void Remove_DoesNotDisposeRemovedItem()
     {
         var collection = new DisposableCollection();
-        var disposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var disposable = CreateStrictMock<IDisposable>();
         collection.Add(disposable.Object);
 
         collection.Remove(disposable.Object);
@@ -231,7 +222,7 @@ public sealed class DisposableCollectionTests : IDisposable
     public void Remove_DuplicateItem_RemovesOnlyFirst()
     {
         var collection = new DisposableCollection();
-        var disposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var disposable = CreateStrictMock<IDisposable>();
         collection.Add(disposable.Object);
         collection.Add(disposable.Object);
 
@@ -249,8 +240,8 @@ public sealed class DisposableCollectionTests : IDisposable
     public void Clear_WithItems_RemovesAllItems()
     {
         var collection = new DisposableCollection();
-        var disposable1 = new Mock<IDisposable>(MockBehavior.Strict);
-        var disposable2 = new Mock<IDisposable>(MockBehavior.Strict);
+        var disposable1 = CreateStrictMock<IDisposable>();
+        var disposable2 = CreateStrictMock<IDisposable>();
         collection.Add(disposable1.Object);
         collection.Add(disposable2.Object);
 
@@ -273,7 +264,7 @@ public sealed class DisposableCollectionTests : IDisposable
     public void Clear_DoesNotDisposeItems()
     {
         var collection = new DisposableCollection();
-        var disposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var disposable = CreateStrictMock<IDisposable>();
         collection.Add(disposable.Object);
 
         collection.Clear();
@@ -290,7 +281,7 @@ public sealed class DisposableCollectionTests : IDisposable
     public void Contains_ExistingItem_ReturnsTrue()
     {
         var collection = new DisposableCollection();
-        var disposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var disposable = CreateStrictMock<IDisposable>();
         collection.Add(disposable.Object);
 
         var result = collection.Contains(disposable.Object);
@@ -302,7 +293,7 @@ public sealed class DisposableCollectionTests : IDisposable
     public void Contains_NonExistingItem_ReturnsFalse()
     {
         var collection = new DisposableCollection();
-        var disposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var disposable = CreateStrictMock<IDisposable>();
 
         var result = collection.Contains(disposable.Object);
 
@@ -333,8 +324,8 @@ public sealed class DisposableCollectionTests : IDisposable
     public void Count_WithItems_ReturnsCorrectCount()
     {
         var collection = new DisposableCollection();
-        var disposable1 = new Mock<IDisposable>(MockBehavior.Strict);
-        var disposable2 = new Mock<IDisposable>(MockBehavior.Strict);
+        var disposable1 = CreateStrictMock<IDisposable>();
+        var disposable2 = CreateStrictMock<IDisposable>();
         collection.Add(disposable1.Object);
         collection.Add(disposable2.Object);
 
@@ -345,8 +336,8 @@ public sealed class DisposableCollectionTests : IDisposable
     public void Count_AfterDispose_ReturnsZero()
     {
         var collection = new DisposableCollection();
-        var disposable = new Mock<IDisposable>(MockBehavior.Strict);
-        disposable.Setup(x => x.Dispose());
+        var disposable = CreateStrictMock<IDisposable>();
+        disposable.Setup(x => x.Dispose()).Verifiable();
         collection.Add(disposable.Object);
 
         collection.Dispose();
@@ -374,8 +365,8 @@ public sealed class DisposableCollectionTests : IDisposable
     public void CopyTo_WithValidArray_CopiesElements()
     {
         var collection = new DisposableCollection();
-        var disposable1 = new Mock<IDisposable>(MockBehavior.Strict);
-        var disposable2 = new Mock<IDisposable>(MockBehavior.Strict);
+        var disposable1 = CreateStrictMock<IDisposable>();
+        var disposable2 = CreateStrictMock<IDisposable>();
         collection.Add(disposable1.Object);
         collection.Add(disposable2.Object);
         var array = new IDisposable[2];
@@ -390,7 +381,7 @@ public sealed class DisposableCollectionTests : IDisposable
     public void CopyTo_WithOffset_CopiesAtCorrectPosition()
     {
         var collection = new DisposableCollection();
-        var disposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var disposable = CreateStrictMock<IDisposable>();
         collection.Add(disposable.Object);
         var array = new IDisposable[3];
 
@@ -427,8 +418,8 @@ public sealed class DisposableCollectionTests : IDisposable
     public void GetEnumerator_WithItems_EnumeratesAllItems()
     {
         var collection = new DisposableCollection();
-        var disposable1 = new Mock<IDisposable>(MockBehavior.Strict);
-        var disposable2 = new Mock<IDisposable>(MockBehavior.Strict);
+        var disposable1 = CreateStrictMock<IDisposable>();
+        var disposable2 = CreateStrictMock<IDisposable>();
         collection.Add(disposable1.Object);
         collection.Add(disposable2.Object);
 
@@ -443,7 +434,7 @@ public sealed class DisposableCollectionTests : IDisposable
     public void GetEnumerator_NonGeneric_EnumeratesAllItems()
     {
         var collection = new DisposableCollection();
-        var disposable = new Mock<IDisposable>(MockBehavior.Strict);
+        var disposable = CreateStrictMock<IDisposable>();
         collection.Add(disposable.Object);
 
         var enumerable = (System.Collections.IEnumerable)collection;
@@ -457,8 +448,8 @@ public sealed class DisposableCollectionTests : IDisposable
     public void GetEnumerator_AddWhileEnumerating_DoesNotThrow()
     {
         var collection = new DisposableCollection();
-        var disposable1 = new Mock<IDisposable>(MockBehavior.Strict);
-        var disposable2 = new Mock<IDisposable>(MockBehavior.Strict);
+        var disposable1 = CreateStrictMock<IDisposable>();
+        var disposable2 = CreateStrictMock<IDisposable>();
         collection.Add(disposable1.Object);
 
         var count = 0;
@@ -479,7 +470,7 @@ public sealed class DisposableCollectionTests : IDisposable
     [Fact]
     public void Dispose_WithItemImplementingBothInterfaces_CallsDispose()
     {
-        var mockDisposable = _mocks.Create<IDisposable>();
+        var mockDisposable = CreateStrictMock<IDisposable>();
         _ = mockDisposable.As<IAsyncDisposable>();
         mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
         var collection = new DisposableCollection([mockDisposable.Object]);
@@ -501,17 +492,14 @@ public sealed class DisposableCollectionTests : IDisposable
     public void Dispose_WithItems_DisposesAllItems()
     {
         var collection = new DisposableCollection();
-        var disposable1 = new Mock<IDisposable>(MockBehavior.Strict);
-        var disposable2 = new Mock<IDisposable>(MockBehavior.Strict);
-        disposable1.Setup(x => x.Dispose());
-        disposable2.Setup(x => x.Dispose());
+        var disposable1 = CreateStrictMock<IDisposable>();
+        var disposable2 = CreateStrictMock<IDisposable>();
+        disposable1.Setup(x => x.Dispose()).Verifiable(Times.Once());
+        disposable2.Setup(x => x.Dispose()).Verifiable(Times.Once());
         collection.Add(disposable1.Object);
         collection.Add(disposable2.Object);
 
         collection.Dispose();
-
-        disposable1.Verify(x => x.Dispose(), Times.Once);
-        disposable2.Verify(x => x.Dispose(), Times.Once);
     }
 
     [Fact]
@@ -524,8 +512,8 @@ public sealed class DisposableCollectionTests : IDisposable
         for (var i = 1; i <= count; ++i)
         {
             var local = i;
-            var disposable = new Mock<IDisposable>(MockBehavior.Strict);
-            disposable.Setup(x => x.Dispose()).Callback(() => order += local);
+            var disposable = CreateStrictMock<IDisposable>();
+            disposable.Setup(x => x.Dispose()).Callback(() => order += local).Verifiable();
             collection.Add(disposable.Object);
         }
 
@@ -538,8 +526,8 @@ public sealed class DisposableCollectionTests : IDisposable
     public void Dispose_ClearsCollectionAfterDispose()
     {
         var collection = new DisposableCollection();
-        var disposable = new Mock<IDisposable>(MockBehavior.Strict);
-        disposable.Setup(x => x.Dispose());
+        var disposable = CreateStrictMock<IDisposable>();
+        disposable.Setup(x => x.Dispose()).Verifiable();
         collection.Add(disposable.Object);
 
         collection.Dispose();
@@ -551,23 +539,24 @@ public sealed class DisposableCollectionTests : IDisposable
     public void Dispose_CalledMultipleTimes_DisposesOnlyOnce()
     {
         var collection = new DisposableCollection();
-        var disposable = new Mock<IDisposable>(MockBehavior.Strict);
-        disposable.Setup(x => x.Dispose());
+        var disposable = CreateStrictMock<IDisposable>();
+        disposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
         collection.Add(disposable.Object);
 
         collection.Dispose();
         collection.Dispose();
         collection.Dispose();
-
-        disposable.Verify(x => x.Dispose(), Times.Once);
     }
 
     [Fact]
     public void Dispose_WhenItemThrows_PropagatesException()
     {
         var collection = new DisposableCollection();
-        var disposable = new Mock<IDisposable>(MockBehavior.Strict);
-        disposable.Setup(x => x.Dispose()).Throws(new InvalidOperationException("Test exception"));
+        var disposable = CreateStrictMock<IDisposable>();
+        disposable
+            .Setup(x => x.Dispose())
+            .Throws(new InvalidOperationException("Test exception"))
+            .Verifiable();
         collection.Add(disposable.Object);
 
         var exception = Assert.Throws<InvalidOperationException>(() => collection.Dispose());
@@ -664,15 +653,13 @@ public sealed class DisposableCollectionTests : IDisposable
     [Fact]
     public void Dispose_CanBeUsedWithUsingStatement()
     {
-        var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
-        mockDisposable.Setup(x => x.Dispose());
+        var mockDisposable = CreateStrictMock<IDisposable>();
+        mockDisposable.Setup(x => x.Dispose()).Verifiable(Times.Once());
 
         using (var collection = new DisposableCollection())
         {
             collection.Add(mockDisposable.Object);
         }
-
-        mockDisposable.Verify(x => x.Dispose(), Times.Once);
     }
 
     #endregion
