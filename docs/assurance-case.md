@@ -26,10 +26,9 @@ What the library is expected to do:
 5. **R5.** A factory, constructor or extension rejects a `null` delegate, resource to wrap, collection or item with
    `ArgumentNullException`
    ([ADR-1008](decisions/1008-a-disposable-that-wraps-a-resource-rejects-a-null-resource.md));
-   only the aggregate and serial holders take `null`, meaning they hold nothing. `SharedReference.Create` and
-   `AsyncSharedReference.Create` check neither the value nor the release callback, so a `null` one fails only when the
-   last lease is released. A second assignment of a single-assignment holder throws `InvalidOperationException`, and so
-   does `Release()` on a guard already released.
+   only the aggregate and serial holders take `null`, meaning they hold nothing, and a shared reference given its own
+   release callback takes a `null` value and hands it to that callback. A second assignment of a single-assignment
+   holder throws `InvalidOperationException`, and so does `Release()` on a guard already released.
 6. **R6.** `DisposableContext` calls `OperationCompleted` for each `OperationStarted`, also when the context's `Post`
    throws, and rethrows.
 7. **R7.** The package consumers install is built from this repository's reviewed code, and they can check that.
@@ -73,8 +72,7 @@ privilege and open design."
 - **Fail-safe defaults:** a disposable runs its cleanup once unless a factory named for the other behavior, such as
   `CreateRepeatable`, creates it
   ([ADR-1007](decisions/1007-behavior-is-chosen-by-a-factory-name-not-a-flag-parameter.md)); a resource handed to a
-  disposed holder is disposed, not dropped (R3); a `null` resource to wrap is rejected, not ignored, outside the shared
-  references (R5).
+  disposed holder is disposed, not dropped (R3); a `null` resource to wrap is rejected, not ignored (R5).
 - **Complete mediation:** every member of a collection takes one lock and enumeration walks a snapshot; the holders
   swap their resource with atomic operations; every lease goes through its owner's atomic count, which refuses a new
   lease at zero (R1, R2).
@@ -99,7 +97,7 @@ privilege and open design."
 
 [//]: # "Maintainers: add the tests and the coverage the project keeps."
 
-- **Tests (R1–R6):** xUnit tests of every type, 676 in all, cover a second dispose (such as
+- **Tests (R1–R6):** xUnit tests of every type, 686 in all, cover a second dispose (such as
   `Dispose_Twice_DisposesOnce`), concurrent disposal and assignment from several threads (such as
   `Dispose_ConcurrentCalls_DisposesOnlyOnce` and `Dispose_ConcurrentWithAdd_DisposesEveryItemOnce`), `null` arguments,
   a resource handed to a disposed holder, and a context whose `Post` throws
