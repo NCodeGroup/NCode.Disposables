@@ -39,7 +39,8 @@ public class ShareAResourceSamples
     {
         // begin-snippet: SiteShareAResourceDoubleDispose
         List<string> log = [];
-        var first = SharedReference.Create(Disposable.Create(() => log.Add("closed")));
+        var connection = Disposable.Create(() => log.Add("closed"));
+        var first = SharedReference.Create(connection);
         var second = first.AddReference();
 
         first.Dispose();

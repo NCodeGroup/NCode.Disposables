@@ -58,7 +58,8 @@ public class HandOnOwnershipSamples
     public void SiteHandOnOwnershipReleaseTwiceSample_Runs()
     {
         // begin-snippet: SiteHandOnOwnershipReleaseTwice
-        using var guard = Disposable.Guard(Disposable.Create(() => { }));
+        var opened = Disposable.Create(() => { });
+        using var guard = Disposable.Guard(opened);
         var connection = guard.Release(); // the caller owns it now
 
         var rejected = false;
