@@ -87,10 +87,11 @@ public class AsyncDisposableSingleAssignmentTests
     {
         var holder = new AsyncDisposableSingleAssignment();
 
-        await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+        var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
             await holder.SetDisposableAsync(null!)
         );
 
+        Assert.Equal("disposable", exception.ParamName);
         Assert.False(holder.IsAssigned);
     }
 
@@ -131,7 +132,7 @@ public class AsyncDisposableSingleAssignmentTests
     #region DisposeAsync Tests
 
     [Fact]
-    public async Task DisposeAsync_DisposesAssignedValue()
+    public async Task DisposeAsync_WhenAssigned_DisposesValue()
     {
         var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
         mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);

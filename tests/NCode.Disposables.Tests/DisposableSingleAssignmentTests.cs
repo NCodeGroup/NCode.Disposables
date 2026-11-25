@@ -86,8 +86,9 @@ public class DisposableSingleAssignmentTests
     {
         var holder = new DisposableSingleAssignment();
 
-        Assert.Throws<ArgumentNullException>(() => holder.Disposable = null!);
+        var exception = Assert.Throws<ArgumentNullException>(() => holder.Disposable = null!);
 
+        Assert.Equal("value", exception.ParamName);
         Assert.False(holder.IsAssigned);
     }
 
@@ -127,7 +128,7 @@ public class DisposableSingleAssignmentTests
     #region Dispose Tests
 
     [Fact]
-    public void Dispose_DisposesAssignedValue()
+    public void Dispose_WhenAssigned_DisposesValue()
     {
         var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
         mockDisposable.Setup(x => x.Dispose());
