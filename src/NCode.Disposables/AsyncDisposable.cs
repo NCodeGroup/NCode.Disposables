@@ -39,7 +39,22 @@ public static class AsyncDisposable
     /// <returns>A new <see cref="AsyncDisposableAdapter"/> instance that wraps the specified disposable.</returns>
     public static AsyncDisposableAdapter Adapt(IDisposable disposable, bool idempotent)
     {
-        return new AsyncDisposableAdapter(disposable, idempotent);
+        return idempotent ? Adapt(disposable) : AdaptRepeatable(disposable);
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="AsyncDisposableAdapter"/> that wraps an existing <see cref="IDisposable"/> instance
+    /// and disposes it on every call to <see cref="IAsyncDisposable.DisposeAsync"/>.
+    /// </summary>
+    /// <param name="disposable">The underlying <see cref="IDisposable"/> instance to adapt.</param>
+    /// <returns>A new <see cref="AsyncDisposableAdapter"/> instance that disposes the specified disposable on every disposal.</returns>
+    /// <remarks>
+    /// The returned instance is not idempotent: each call to <see cref="IAsyncDisposable.DisposeAsync"/> disposes the underlying instance.
+    /// Use this with caution as it deviates from the standard dispose pattern.
+    /// </remarks>
+    public static AsyncDisposableAdapter AdaptRepeatable(IDisposable disposable)
+    {
+        return new AsyncDisposableAdapter(disposable) { IsRepeatable = true };
     }
 
     /// <summary>

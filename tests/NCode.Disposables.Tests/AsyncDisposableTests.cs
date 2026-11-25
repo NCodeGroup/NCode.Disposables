@@ -5,6 +5,44 @@ namespace NCode.Disposables.Tests;
 
 public class AsyncDisposableTests
 {
+    #region Adapt Tests
+
+    [Fact]
+    public async Task Adapt_WhenDisposedThreeTimes_DisposesOnce()
+    {
+        var count = 0;
+        var inner = Disposable.CreateRepeatable(() => count++);
+        var adapter = AsyncDisposable.Adapt(inner);
+
+        await adapter.DisposeAsync();
+        await adapter.DisposeAsync();
+        await adapter.DisposeAsync();
+
+        Assert.Equal(1, count);
+        Assert.True(adapter.IsDisposed);
+    }
+
+    #endregion
+
+    #region AdaptRepeatable Tests
+
+    [Fact]
+    public async Task AdaptRepeatable_WhenDisposedThreeTimes_DisposesEachTime()
+    {
+        var count = 0;
+        var inner = Disposable.CreateRepeatable(() => count++);
+        var adapter = AsyncDisposable.AdaptRepeatable(inner);
+
+        await adapter.DisposeAsync();
+        await adapter.DisposeAsync();
+        await adapter.DisposeAsync();
+
+        Assert.Equal(3, count);
+        Assert.True(adapter.IsDisposed);
+    }
+
+    #endregion
+
     #region Aggregate Tests
 
     [Fact]
