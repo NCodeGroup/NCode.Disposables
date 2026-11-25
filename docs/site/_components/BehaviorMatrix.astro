@@ -1,0 +1,112 @@
+---
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
+// The matrix on /reference/behavior/: every disposable against what it does and what it holds. It renders the
+// `outcomes` of disposables.json, in file order, the same data "Which disposable?" draws its cards from, so the two
+// cannot disagree. Each row is a card, one per outcome, its yes-or-no facts side by side where they fit, so no column
+// is hidden at any width. Usage:
+// <BehaviorMatrix />
+import { Status } from '@ncodegroup/docs/components';
+import disposables from '@site/components/data/disposables.json';
+import { inline, sitePath } from '@site/components/lib/text';
+
+const rows = disposables.outcomes.map((outcome) => {
+  const behavior = outcome.behavior as Record<string, boolean | string | null>;
+  const text = (key: string) => String(behavior[key] ?? '');
+  return {
+    id: outcome.id,
+    anchor: outcome.anchor,
+    name: outcome.name,
+    flags: [
+      { label: 'Safe to dispose twice', value: behavior.safeTwice as boolean | null },
+      { label: 'Reports IsDisposed', value: behavior.reportsStatus as boolean | null },
+      { label: 'Allocation-free', value: behavior.allocationFree as boolean | null },
+      { label: 'Sync and async forms', value: behavior.syncAndAsync as boolean | null },
+      { label: 'Disposes a late resource', value: behavior.lateResource as boolean | null },
+    ],
+    texts: [
+      { label: 'What it holds', value: text('holds') },
+      { label: 'What Dispose does', value: text('onDispose') },
+    ],
+  };
+});
+const headings = [
+  'Disposable',
+  'Safe to dispose twice',
+  'Reports `IsDisposed`',
+  'Allocation-free',
+  'Sync and async forms',
+  'Disposes a late resource',
+  'What it holds',
+  'What `Dispose` does',
+];
+---
+
+<div class="behavior-matrix not-content">
+  <table class="behavior-matrix__table" aria-label="Behavior of every disposable">
+    <thead>
+      <tr>
+        {headings.map((heading) => (
+          <th scope="col" set:html={inline(heading)} />
+        ))}
+      </tr>
+    </thead>
+    <tbody>
+      {rows.map((row) => (
+        <tr id={`behavior-${row.id}`} class="behavior-matrix__row">
+          <th scope="row" data-label="Disposable">
+            <a href={sitePath(`/start/which-disposable/#${row.anchor}`)} set:html={inline(row.name)} />
+          </th>
+          {row.flags.map((flag) => (
+            <td data-label={flag.label}>
+              {flag.value === true && <Status state="success">Yes</Status>}
+              {flag.value === false && <Status state="off">No</Status>}
+              {flag.value === null || flag.value === undefined ? <span class="behavior-matrix__na">Does not apply</span> : null}
+            </td>
+          ))}
+          {row.texts.map((cell) => (
+            <td class="behavior-matrix__text" data-label={cell.label} set:html={inline(cell.value)} />
+          ))}
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
+<style>
+  .behavior-matrix { margin-block: var(--nc-space-5); color: var(--nc-color-text); }
+  .behavior-matrix__table { display: block; width: 100%; font-size: var(--sl-text-sm); line-height: 1.45; }
+  .behavior-matrix__table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .behavior-matrix__table tbody { display: grid; gap: var(--nc-space-4); }
+  .behavior-matrix__row {
+    scroll-margin-top: calc(var(--sl-nav-height) + var(--nc-space-5));
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+    gap: var(--nc-space-3) var(--nc-space-5);
+    padding: var(--nc-space-4) var(--nc-space-5);
+    border: var(--nc-border-hair) solid var(--nc-color-border);
+    border-radius: var(--nc-radius-panel);
+    background: var(--nc-color-surface);
+  }
+  .behavior-matrix__row:target { border-color: var(--nc-color-primary-text); box-shadow: 0 0 0 1px var(--nc-color-primary-text); }
+  .behavior-matrix__row > :is(th, td) { display: block; padding: 0; border: 0; text-align: start; }
+  .behavior-matrix__row > :is(th, .behavior-matrix__text) { grid-column: 1 / -1; }
+  .behavior-matrix__row > th { font-size: var(--sl-text-base); font-weight: 600; }
+  .behavior-matrix__row > td::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: var(--nc-space-1);
+    font-size: 0.6875rem;
+    font-stretch: var(--nc-type-label-stretch);
+    font-weight: 600;
+    letter-spacing: var(--nc-type-label-tracking);
+    text-transform: uppercase;
+    color: var(--nc-color-text-muted);
+  }
+  .behavior-matrix__table a { color: var(--nc-color-text); text-decoration-color: var(--nc-color-border-strong); text-underline-offset: 0.2em; overflow-wrap: anywhere; }
+  .behavior-matrix__table a:hover { color: var(--nc-color-primary-text); }
+  .behavior-matrix__table a:focus-visible { outline: var(--nc-focus-width) solid var(--nc-color-focus); outline-offset: var(--nc-focus-gap); }
+  .behavior-matrix :global(code) { font-family: var(--nc-font-mono); font-stretch: var(--nc-type-code-stretch); font-size: 0.88em; overflow-wrap: break-word; }
+  .behavior-matrix__na { color: var(--nc-color-text-muted); }
+</style>
