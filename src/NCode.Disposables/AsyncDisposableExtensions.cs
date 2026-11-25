@@ -80,7 +80,7 @@ public static class AsyncDisposableExtensions
                     switch (item)
                     {
                         case IAsyncDisposable asyncDisposable:
-                            await asyncDisposable.DisposeAsync();
+                            await asyncDisposable.DisposeAsync().ConfigureAwait(false);
                             break;
 
                         case IDisposable disposable:

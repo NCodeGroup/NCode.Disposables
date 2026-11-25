@@ -43,7 +43,7 @@ public static class DisposableExtensions
         {
             if (disposable is IAsyncDisposable asyncDisposable)
             {
-                await asyncDisposable.DisposeAsync();
+                await asyncDisposable.DisposeAsync().ConfigureAwait(false);
             }
             else
             {
