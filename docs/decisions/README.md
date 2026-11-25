@@ -66,3 +66,4 @@ override in `AGENTS.md`.
 | [1001](1001-synchronous-disposal-disposes-an-item-that-implements-both-interfaces-through-idisposable.md) | Synchronous disposal disposes an item that implements both interfaces through IDisposable | Accepted |
 | [1002](1002-the-async-shared-reference-extension-is-asasyncsharedreference.md) | The async shared reference extension is AsAsyncSharedReference | Accepted |
 | [1003](1003-the-package-targets-the-oldest-supported-lts-release.md) | The package targets the oldest supported .NET LTS release | Accepted |
+| [1004](1004-a-resource-handed-to-a-disposed-holder-is-disposed.md) | A resource handed to a disposed holder is disposed | Accepted |
