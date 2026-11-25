@@ -13,21 +13,31 @@ import { inline, sitePath } from '@site/components/lib/text';
 
 const rows = disposables.outcomes.map((outcome) => {
   const behavior = outcome.behavior as Record<string, boolean | string | null>;
-  const text = (key: string) => String(behavior[key] ?? '');
+  // A key missing from disposables.json, or misspelled there, is a mistake in the data: it stops the build instead of
+  // rendering as 'Does not apply', which only an intended null shows.
+  const read = (key: string) => {
+    const value = behavior[key];
+    if (value === undefined) {
+      throw new Error(`[behavior matrix] outcome "${outcome.id}" has no behavior.${key} in docs/site/_components/data/disposables.json`);
+    }
+    return value;
+  };
+  const flag = (label: string, key: string) => ({ label, value: read(key) as boolean | null });
+  const text = (label: string, key: string) => ({ label, value: String(read(key)) });
   return {
     id: outcome.id,
     anchor: outcome.anchor,
     name: outcome.name,
     flags: [
-      { label: 'Safe to dispose twice', value: behavior.safeTwice as boolean | null },
-      { label: 'Reports IsDisposed', value: behavior.reportsStatus as boolean | null },
-      { label: 'Allocation-free', value: behavior.allocationFree as boolean | null },
-      { label: 'Sync and async forms', value: behavior.syncAndAsync as boolean | null },
-      { label: 'Disposes a late resource', value: behavior.lateResource as boolean | null },
+      flag('Safe to dispose twice', 'safeTwice'),
+      flag('Reports IsDisposed', 'reportsStatus'),
+      flag('Allocation-free', 'allocationFree'),
+      flag('Sync and async forms', 'syncAndAsync'),
+      flag('Disposes a late resource', 'lateResource'),
     ],
     texts: [
-      { label: 'What it holds', value: text('holds') },
-      { label: 'What Dispose does', value: text('onDispose') },
+      text('What it holds', 'holds'),
+      text('What Dispose does', 'onDispose'),
     ],
   };
 });
@@ -62,7 +72,7 @@ const headings = [
             <td data-label={flag.label}>
               {flag.value === true && <Status state="success">Yes</Status>}
               {flag.value === false && <Status state="off">No</Status>}
-              {flag.value === null || flag.value === undefined ? <span class="behavior-matrix__na">Does not apply</span> : null}
+              {flag.value === null && <span class="behavior-matrix__na">Does not apply</span>}
             </td>
           ))}
           {row.texts.map((cell) => (
