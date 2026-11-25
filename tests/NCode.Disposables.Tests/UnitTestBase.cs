@@ -5,15 +5,15 @@ namespace NCode.Disposables.Tests;
 
 public abstract class UnitTestBase : IDisposable
 {
-    private readonly MockRepository _mocks = new(MockBehavior.Strict);
+    private MockRepository Mocks { get; } = new(MockBehavior.Strict);
 
-    protected Mock<T> CreateStrictMock<T>(params object[] args)
-        where T : class => _mocks.Create<T>(args);
+    protected Mock<T> CreateStrictMock<T>(params IEnumerable<object> args)
+        where T : class => Mocks.Create<T>([.. args]);
 
-    protected Mock<T> CreateLooseMock<T>(params object[] args)
-        where T : class => _mocks.Create<T>(MockBehavior.Loose, args);
+    protected Mock<T> CreateLooseMock<T>(params IEnumerable<object> args)
+        where T : class => Mocks.Create<T>(MockBehavior.Loose, [.. args]);
 
-    protected Mock<T> CreatePartialMock<T>(params object[] args)
+    protected Mock<T> CreatePartialMock<T>(params IEnumerable<object> args)
         where T : class
     {
         var mock = CreateLooseMock<T>(args);
@@ -30,6 +30,6 @@ public abstract class UnitTestBase : IDisposable
     protected virtual void Dispose(bool disposing)
     {
         if (disposing)
-            _mocks.Verify();
+            Mocks.Verify();
     }
 }
