@@ -202,6 +202,65 @@ public static class Disposable
     /// <summary>
     /// Creates and returns a new instance of an <see cref="IDisposable"/>
     /// that will invoke the <see cref="IDisposable.Dispose"/> method of an underlying
+    /// resource synchronously from a <see cref="SynchronizationContext"/>.
+    /// </summary>
+    /// <param name="disposable">The underlying <see cref="IDisposable"/> instance to synchronize.</param>
+    /// <param name="context">The <see cref="SynchronizationContext"/> to invoke the operation.</param>
+    /// <returns>A new <see cref="DisposableContext"/> instance that wraps the specified disposable with context-aware disposal.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="disposable"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="context"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// This method is particularly useful for disposing resources that must be cleaned up on a specific thread,
+    /// such as UI components that require disposal on the UI thread.
+    /// </para>
+    /// <para>
+    /// The <see cref="SynchronizationContext.Send"/> method is used, which blocks until disposal is complete.
+    /// <see cref="PostingContext"/> returns immediately instead.
+    /// </para>
+    /// </remarks>
+    public static DisposableContext Context(IDisposable disposable, SynchronizationContext context)
+    {
+        ArgumentNullException.ThrowIfNull(disposable);
+        ArgumentNullException.ThrowIfNull(context);
+
+        return new DisposableContext(disposable, context);
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of an <see cref="IDisposable"/>
+    /// that will invoke the <see cref="IDisposable.Dispose"/> method of an underlying
+    /// resource asynchronously from a <see cref="SynchronizationContext"/>.
+    /// </summary>
+    /// <param name="disposable">The underlying <see cref="IDisposable"/> instance to synchronize.</param>
+    /// <param name="context">The <see cref="SynchronizationContext"/> to invoke the operation.</param>
+    /// <returns>A new <see cref="DisposableContext"/> instance that wraps the specified disposable with context-aware disposal.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="disposable"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="context"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// This method is particularly useful for disposing resources that must be cleaned up on a specific thread,
+    /// such as UI components that require disposal on the UI thread.
+    /// </para>
+    /// <para>
+    /// The <see cref="SynchronizationContext.Post"/> method is used, which returns immediately.
+    /// <c>Context</c> blocks until disposal is complete instead.
+    /// </para>
+    /// </remarks>
+    public static DisposableContext PostingContext(
+        IDisposable disposable,
+        SynchronizationContext context
+    )
+    {
+        ArgumentNullException.ThrowIfNull(disposable);
+        ArgumentNullException.ThrowIfNull(context);
+
+        return new DisposableContext(disposable, context) { IsPosting = true };
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of an <see cref="IDisposable"/>
+    /// that will invoke the <see cref="IDisposable.Dispose"/> method of an underlying
     /// resource using an asynchronous or synchronous operation from a <see cref="SynchronizationContext"/>.
     /// </summary>
     /// <param name="disposable">The underlying <see cref="IDisposable"/> instance to synchronize.</param>
@@ -221,6 +280,7 @@ public static class Disposable
     /// the <see cref="SynchronizationContext.Post"/> method is used, which returns immediately.
     /// </para>
     /// </remarks>
+    // Callers that pass only the disposable and the context bind to the overload without the flag, so this one keeps its default until it is deleted.
     public static DisposableContext Context(
         IDisposable disposable,
         SynchronizationContext context,
@@ -230,7 +290,7 @@ public static class Disposable
         ArgumentNullException.ThrowIfNull(disposable);
         ArgumentNullException.ThrowIfNull(context);
 
-        return new DisposableContext(disposable, context, async);
+        return async ? PostingContext(disposable, context) : Context(disposable, context);
     }
 
     /// <summary>

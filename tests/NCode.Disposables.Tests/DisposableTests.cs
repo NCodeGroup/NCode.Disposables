@@ -251,4 +251,87 @@ public class DisposableTests
     }
 
     #endregion
+
+    #region Context Tests
+
+    [Fact]
+    public void Context_WhenDisposed_SendsDisposal()
+    {
+        var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
+        context
+            .Setup(x => x.Send(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
+            .Callback((SendOrPostCallback c, object s) => c(s));
+
+        var item = new Mock<IDisposable>(MockBehavior.Strict);
+        item.Setup(x => x.Dispose());
+
+        var disposable = Disposable.Context(item.Object, context.Object);
+
+        disposable.Dispose();
+
+        context.Verify(x => x.Send(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()), Times.Once);
+        item.Verify(x => x.Dispose(), Times.Once);
+        Assert.True(disposable.IsDisposed);
+    }
+
+    #endregion
+
+    #region PostingContext Tests
+
+    [Fact]
+    public void PostingContext_WhenDisposed_PostsBetweenOperationStartedAndCompleted()
+    {
+        var callOrder = new List<string>();
+
+        var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
+        context.Setup(x => x.OperationStarted()).Callback(() => callOrder.Add("OperationStarted"));
+        context
+            .Setup(x => x.Post(It.IsAny<SendOrPostCallback>(), It.IsAny<object>()))
+            .Callback(
+                (SendOrPostCallback c, object s) =>
+                {
+                    callOrder.Add("Post");
+                    c(s);
+                }
+            );
+        context
+            .Setup(x => x.OperationCompleted())
+            .Callback(() => callOrder.Add("OperationCompleted"));
+
+        var item = new Mock<IDisposable>(MockBehavior.Strict);
+        item.Setup(x => x.Dispose()).Callback(() => callOrder.Add("Dispose"));
+
+        var disposable = Disposable.PostingContext(item.Object, context.Object);
+
+        disposable.Dispose();
+
+        Assert.Equal(["OperationStarted", "Post", "Dispose", "OperationCompleted"], callOrder);
+        Assert.True(disposable.IsDisposed);
+    }
+
+    [Fact]
+    public void PostingContext_NullDisposable_ThrowsArgumentNullException()
+    {
+        var context = new Mock<SynchronizationContext>(MockBehavior.Strict);
+
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            Disposable.PostingContext(null!, context.Object)
+        );
+
+        Assert.Equal("disposable", exception.ParamName);
+    }
+
+    [Fact]
+    public void PostingContext_NullContext_ThrowsArgumentNullException()
+    {
+        var item = new Mock<IDisposable>(MockBehavior.Strict);
+
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            Disposable.PostingContext(item.Object, null!)
+        );
+
+        Assert.Equal("context", exception.ParamName);
+    }
+
+    #endregion
 }
