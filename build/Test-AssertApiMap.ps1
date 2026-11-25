@@ -45,9 +45,9 @@ function Invoke-Case {
             [IO.File]::WriteAllText($map, "$json`n", $utf8)
         }
 
-        # The check sets no exit code when it passes, so start from a clean one.
-        $global:LASTEXITCODE = 0
-        $printed = @(& $script -Root $root)
+        # A child pwsh, as build/Test-AssertMarkdown.ps1 runs its check: the check's exit, a throw and its preferences
+        # stay out of this session, and its exit code is the process's.
+        $printed = @(pwsh -NoProfile -NonInteractive -File $script -Root $root 2>&1 | ForEach-Object { "$_" })
 
         $code = $LASTEXITCODE
         $expectedCode = if ($Problems) { 1 } else { 0 }
