@@ -10,25 +10,25 @@ namespace NCode.Disposables;
 public static class AsyncDisposable
 {
     /// <summary>
-    /// Gets a singleton instance of <see cref="IAsyncDisposable"/> that performs
+    /// Gets a singleton <see cref="AsyncDisposableEmpty"/> instance that performs
     /// no operation when <see cref="IAsyncDisposable.DisposeAsync"/> is called.
     /// </summary>
-    /// <value>A singleton <see cref="IAsyncDisposable"/> instance that does nothing on disposal.</value>
-    public static IAsyncDisposable Empty => AsyncDisposableEmpty.Singleton;
+    /// <value>A singleton <see cref="AsyncDisposableEmpty"/> instance that does nothing on disposal.</value>
+    public static AsyncDisposableEmpty Empty => AsyncDisposableEmpty.Singleton;
 
     /// <summary>
-    /// Creates a new <see cref="IAsyncDisposable"/> adapter that wraps an existing <see cref="IDisposable"/> instance,
+    /// Creates a new <see cref="AsyncDisposableAdapter"/> that wraps an existing <see cref="IDisposable"/> instance,
     /// enabling asynchronous disposal support. The adapter is idempotent by default.
     /// </summary>
     /// <param name="disposable">The underlying <see cref="IDisposable"/> instance to adapt.</param>
-    /// <returns>A new <see cref="IAsyncDisposable"/> instance that wraps the specified disposable.</returns>
-    public static IAsyncDisposable Adapt(IDisposable disposable)
+    /// <returns>A new <see cref="AsyncDisposableAdapter"/> instance that wraps the specified disposable.</returns>
+    public static AsyncDisposableAdapter Adapt(IDisposable disposable)
     {
         return new AsyncDisposableAdapter(disposable);
     }
 
     /// <summary>
-    /// Creates a new <see cref="IAsyncDisposable"/> adapter that wraps an existing <see cref="IDisposable"/> instance,
+    /// Creates a new <see cref="AsyncDisposableAdapter"/> that wraps an existing <see cref="IDisposable"/> instance,
     /// enabling asynchronous disposal support with configurable idempotency.
     /// </summary>
     /// <param name="disposable">The underlying <see cref="IDisposable"/> instance to adapt.</param>
@@ -36,22 +36,22 @@ public static class AsyncDisposable
     /// <see langword="true"/> to ensure multiple calls to <see cref="IAsyncDisposable.DisposeAsync"/>
     /// will only dispose the underlying instance once; <see langword="false"/> to allow multiple disposals.
     /// </param>
-    /// <returns>A new <see cref="IAsyncDisposable"/> instance that wraps the specified disposable.</returns>
-    public static IAsyncDisposable Adapt(IDisposable disposable, bool idempotent)
+    /// <returns>A new <see cref="AsyncDisposableAdapter"/> instance that wraps the specified disposable.</returns>
+    public static AsyncDisposableAdapter Adapt(IDisposable disposable, bool idempotent)
     {
         return new AsyncDisposableAdapter(disposable, idempotent);
     }
 
     /// <summary>
-    /// Creates a new <see cref="IAsyncDisposableAggregate"/> instance that wraps and manages
+    /// Creates a new <see cref="AsyncDisposableAggregate"/> instance that wraps and manages
     /// another <see cref="IAsyncDisposable"/> instance. The aggregate allows the underlying
     /// disposable to be replaced or cleared during its lifetime.
     /// </summary>
     /// <param name="disposable">
     /// The initial <see cref="IAsyncDisposable"/> instance to aggregate, or <see langword="null"/> to create an empty aggregate.
     /// </param>
-    /// <returns>A new <see cref="IAsyncDisposableAggregate"/> instance containing the specified disposable.</returns>
-    public static IAsyncDisposableAggregate Aggregate(IAsyncDisposable? disposable)
+    /// <returns>A new <see cref="AsyncDisposableAggregate"/> instance containing the specified disposable.</returns>
+    public static AsyncDisposableAggregate Aggregate(IAsyncDisposable? disposable)
     {
         return new AsyncDisposableAggregate(disposable);
     }
@@ -93,14 +93,14 @@ public static class AsyncDisposable
     }
 
     /// <summary>
-    /// Creates a new <see cref="IAsyncDisposableCollection"/> that manages multiple <see cref="IAsyncDisposable"/>
+    /// Creates a new <see cref="AsyncDisposableCollection"/> that manages multiple <see cref="IAsyncDisposable"/>
     /// instances. All contained items are disposed when the collection is disposed.
     /// Items are disposed in reverse order of their addition.
     /// </summary>
     /// <param name="collection">The <see cref="IAsyncDisposable"/> items to add to the collection.</param>
-    /// <returns>A new <see cref="IAsyncDisposableCollection"/> containing the specified items.</returns>
+    /// <returns>A new <see cref="AsyncDisposableCollection"/> containing the specified items.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
-    public static IAsyncDisposableCollection Collection(params IAsyncDisposable[] collection)
+    public static AsyncDisposableCollection Collection(params IAsyncDisposable[] collection)
     {
         ArgumentNullException.ThrowIfNull(collection);
 
@@ -108,7 +108,7 @@ public static class AsyncDisposable
     }
 
     /// <summary>
-    /// Creates a new <see cref="IAsyncDisposableCollection"/> that manages multiple <see cref="IAsyncDisposable"/>
+    /// Creates a new <see cref="AsyncDisposableCollection"/> that manages multiple <see cref="IAsyncDisposable"/>
     /// instances with configurable exception handling. All contained items are disposed when the collection is disposed.
     /// Items are disposed in reverse order of their addition.
     /// </summary>
@@ -117,9 +117,9 @@ public static class AsyncDisposable
     /// <see langword="false"/> to propagate exceptions.
     /// </param>
     /// <param name="collection">The <see cref="IAsyncDisposable"/> items to add to the collection.</param>
-    /// <returns>A new <see cref="IAsyncDisposableCollection"/> containing the specified items.</returns>
+    /// <returns>A new <see cref="AsyncDisposableCollection"/> containing the specified items.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
-    public static IAsyncDisposableCollection Collection(
+    public static AsyncDisposableCollection Collection(
         bool ignoreExceptions,
         params IAsyncDisposable[] collection
     )
@@ -130,7 +130,7 @@ public static class AsyncDisposable
     }
 
     /// <summary>
-    /// Creates a new <see cref="IAsyncDisposableCollection"/> that manages multiple <see cref="IAsyncDisposable"/>
+    /// Creates a new <see cref="AsyncDisposableCollection"/> that manages multiple <see cref="IAsyncDisposable"/>
     /// instances from an enumerable source. All contained items are disposed when the collection is disposed.
     /// Items are disposed in reverse order of their addition.
     /// </summary>
@@ -139,9 +139,12 @@ public static class AsyncDisposable
     /// <see langword="true"/> to suppress exceptions thrown by individual items during disposal and continue disposing remaining items;
     /// <see langword="false"/> (the default) to propagate exceptions.
     /// </param>
-    /// <returns>A new <see cref="IAsyncDisposableCollection"/> containing the specified items.</returns>
+    /// <returns>A new <see cref="AsyncDisposableCollection"/> containing the specified items.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
-    public static IAsyncDisposableCollection Collection(
+    // The parameter shape shipped in 6.x; 7.0 changes only the return type.
+#pragma warning disable RS0027 // optional parameter on an overload with fewer parameters than another
+    public static AsyncDisposableCollection Collection(
+#pragma warning restore RS0027
         IEnumerable<IAsyncDisposable> collection,
         bool ignoreExceptions = false
     )
@@ -152,13 +155,13 @@ public static class AsyncDisposable
     }
 
     /// <summary>
-    /// Creates a new <see cref="IAsyncDisposable"/> that invokes the specified asynchronous action
+    /// Creates a new <see cref="AsyncDisposableAction"/> that invokes the specified asynchronous action
     /// when <see cref="IAsyncDisposable.DisposeAsync"/> is called. The returned instance is idempotent by default.
     /// </summary>
     /// <param name="action">The asynchronous action to invoke on disposal.</param>
-    /// <returns>A new <see cref="IAsyncDisposable"/> instance that invokes the specified action on disposal.</returns>
+    /// <returns>A new <see cref="AsyncDisposableAction"/> instance that invokes the specified action on disposal.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
-    public static IAsyncDisposable Create(Func<ValueTask> action)
+    public static AsyncDisposableAction Create(Func<ValueTask> action)
     {
         ArgumentNullException.ThrowIfNull(action);
 
@@ -166,7 +169,7 @@ public static class AsyncDisposable
     }
 
     /// <summary>
-    /// Creates a new <see cref="IAsyncDisposable"/> that invokes the specified asynchronous action
+    /// Creates a new <see cref="AsyncDisposableAction"/> that invokes the specified asynchronous action
     /// when <see cref="IAsyncDisposable.DisposeAsync"/> is called, with configurable idempotency.
     /// </summary>
     /// <param name="action">The asynchronous action to invoke on disposal.</param>
@@ -174,9 +177,9 @@ public static class AsyncDisposable
     /// <see langword="true"/> to ensure multiple calls to <see cref="IAsyncDisposable.DisposeAsync"/>
     /// will only invoke the action once; <see langword="false"/> to allow multiple invocations.
     /// </param>
-    /// <returns>A new <see cref="IAsyncDisposable"/> instance that invokes the specified action on disposal.</returns>
+    /// <returns>A new <see cref="AsyncDisposableAction"/> instance that invokes the specified action on disposal.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
-    public static IAsyncDisposable Create(Func<ValueTask> action, bool idempotent)
+    public static AsyncDisposableAction Create(Func<ValueTask> action, bool idempotent)
     {
         ArgumentNullException.ThrowIfNull(action);
 
@@ -184,16 +187,16 @@ public static class AsyncDisposable
     }
 
     /// <summary>
-    /// Creates a new <see cref="IAsyncDisposable"/> that invokes the specified synchronous action
+    /// Creates a new <see cref="AsyncDisposableAction"/> that invokes the specified synchronous action
     /// when <see cref="IAsyncDisposable.DisposeAsync"/> is called. The returned instance is idempotent by default.
     /// </summary>
     /// <param name="action">The synchronous action to invoke on disposal.</param>
-    /// <returns>A new <see cref="IAsyncDisposable"/> instance that invokes the specified action on disposal.</returns>
+    /// <returns>A new <see cref="AsyncDisposableAction"/> instance that invokes the specified action on disposal.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// The synchronous action is wrapped to complete synchronously via <see cref="ValueTask.CompletedTask"/>.
     /// </remarks>
-    public static IAsyncDisposable Create(Action action)
+    public static AsyncDisposableAction Create(Action action)
     {
         ArgumentNullException.ThrowIfNull(action);
 
@@ -205,7 +208,7 @@ public static class AsyncDisposable
     }
 
     /// <summary>
-    /// Creates a new <see cref="IAsyncDisposable"/> that invokes the specified synchronous action
+    /// Creates a new <see cref="AsyncDisposableAction"/> that invokes the specified synchronous action
     /// when <see cref="IAsyncDisposable.DisposeAsync"/> is called, with configurable idempotency.
     /// </summary>
     /// <param name="action">The synchronous action to invoke on disposal.</param>
@@ -213,12 +216,12 @@ public static class AsyncDisposable
     /// <see langword="true"/> to ensure multiple calls to <see cref="IAsyncDisposable.DisposeAsync"/>
     /// will only invoke the action once; <see langword="false"/> to allow multiple invocations.
     /// </param>
-    /// <returns>A new <see cref="IAsyncDisposable"/> instance that invokes the specified action on disposal.</returns>
+    /// <returns>A new <see cref="AsyncDisposableAction"/> instance that invokes the specified action on disposal.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// The synchronous action is wrapped to complete synchronously via <see cref="ValueTask.CompletedTask"/>.
     /// </remarks>
-    public static IAsyncDisposable Create(Action action, bool idempotent)
+    public static AsyncDisposableAction Create(Action action, bool idempotent)
     {
         ArgumentNullException.ThrowIfNull(action);
 
