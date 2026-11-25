@@ -42,8 +42,11 @@ public sealed class AsyncDisposableAdapter : IAsyncDisposable, IDisposalStatus
     /// <see cref="IDisposable"/>, which is disposed only once.
     /// </summary>
     /// <param name="disposable">The underlying <see cref="IDisposable"/> instance to adapt.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="disposable"/> is <see langword="null"/>.</exception>
     public AsyncDisposableAdapter(IDisposable disposable)
     {
+        ArgumentNullException.ThrowIfNull(disposable);
+
         _disposable = disposable;
     }
 

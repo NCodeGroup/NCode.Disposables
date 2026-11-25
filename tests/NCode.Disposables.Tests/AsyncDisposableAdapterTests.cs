@@ -8,6 +8,16 @@ public class AsyncDisposableAdapterTests : UnitTestBase
     #region Constructor Tests
 
     [Fact]
+    public void Constructor_WithNullDisposable_ThrowsArgumentNullException()
+    {
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            new AsyncDisposableAdapter(null!)
+        );
+
+        Assert.Equal("disposable", exception.ParamName);
+    }
+
+    [Fact]
     public void Constructor_WithValidDisposable_CreatesInstance()
     {
         var mockDisposable = CreateStrictMock<IDisposable>();
