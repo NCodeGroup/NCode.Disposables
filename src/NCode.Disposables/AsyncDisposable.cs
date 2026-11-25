@@ -256,7 +256,69 @@ public static class AsyncDisposable
     {
         ArgumentNullException.ThrowIfNull(collection);
 
-        return Collection(collection.AsEnumerable(), ignoreExceptions);
+        return ignoreExceptions
+            ? CollectionIgnoringExceptions(collection.AsEnumerable())
+            : Collection(collection.AsEnumerable());
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="AsyncDisposableCollection"/> that manages multiple <see cref="IAsyncDisposable"/>
+    /// instances from an enumerable source. All contained items are disposed when the collection is disposed.
+    /// Items are disposed in reverse order of their addition.
+    /// </summary>
+    /// <param name="collection">The enumerable collection of <see cref="IAsyncDisposable"/> items to add.</param>
+    /// <returns>A new <see cref="AsyncDisposableCollection"/> containing the specified items.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// When the collection is disposed, every item is still disposed; then the one exception is
+    /// rethrown, or an <see cref="AggregateException"/> holding every exception is thrown when several items throw.
+    /// Use <c>CollectionIgnoringExceptions</c> to ignore the exceptions items throw.
+    /// </remarks>
+    public static AsyncDisposableCollection Collection(IEnumerable<IAsyncDisposable> collection)
+    {
+        ArgumentNullException.ThrowIfNull(collection);
+
+        return new AsyncDisposableCollection(collection);
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="AsyncDisposableCollection"/> that manages multiple <see cref="IAsyncDisposable"/>
+    /// instances and ignores the exceptions that items throw. All contained items are disposed when the collection
+    /// is disposed. Items are disposed in reverse order of their addition.
+    /// </summary>
+    /// <param name="collection">The <see cref="IAsyncDisposable"/> items to add to the collection.</param>
+    /// <returns>A new <see cref="AsyncDisposableCollection"/> containing the specified items.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// Disposal continues for all items even if some throw exceptions, and the exceptions are ignored.
+    /// </remarks>
+    public static AsyncDisposableCollection CollectionIgnoringExceptions(
+        params IAsyncDisposable[] collection
+    )
+    {
+        ArgumentNullException.ThrowIfNull(collection);
+
+        return CollectionIgnoringExceptions(collection.AsEnumerable());
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="AsyncDisposableCollection"/> that manages multiple <see cref="IAsyncDisposable"/>
+    /// instances from an enumerable source and ignores the exceptions that items throw. All contained items are
+    /// disposed when the collection is disposed. Items are disposed in reverse order of their addition.
+    /// </summary>
+    /// <param name="collection">The enumerable collection of <see cref="IAsyncDisposable"/> items to add.</param>
+    /// <returns>A new <see cref="AsyncDisposableCollection"/> containing the specified items.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// Disposal continues for all items even if some throw exceptions, and the exceptions are ignored.
+    /// </remarks>
+    public static AsyncDisposableCollection CollectionIgnoringExceptions(
+        IEnumerable<IAsyncDisposable> collection
+    )
+    {
+        ArgumentNullException.ThrowIfNull(collection);
+
+        return new AsyncDisposableCollection(collection) { IgnoresExceptions = true };
     }
 
     /// <summary>
@@ -281,7 +343,7 @@ public static class AsyncDisposable
     {
         ArgumentNullException.ThrowIfNull(collection);
 
-        return new AsyncDisposableCollection(collection, ignoreExceptions);
+        return ignoreExceptions ? CollectionIgnoringExceptions(collection) : Collection(collection);
     }
 
     /// <summary>

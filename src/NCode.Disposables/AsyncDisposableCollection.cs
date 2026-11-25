@@ -14,8 +14,8 @@ namespace NCode.Disposables;
 /// in reverse order of their addition (LIFO order). The disposal operation is idempotent.
 /// </para>
 /// <para>
-/// The collection can optionally be configured to ignore exceptions thrown during individual item disposal,
-/// allowing all items to be disposed even if some throw exceptions.
+/// <c>AsyncDisposable.CollectionIgnoringExceptions</c> creates a collection that ignores exceptions thrown during
+/// individual item disposal, allowing all items to be disposed even if some throw exceptions.
 /// </para>
 /// <para>
 /// Every member is thread-safe. Disposal runs at most once, even when several threads dispose the collection at once.
@@ -33,12 +33,37 @@ public sealed class AsyncDisposableCollection : IAsyncDisposableCollection, IDis
 {
     private int _disposed;
     private readonly List<IAsyncDisposable> _list;
-    private readonly bool _ignoreExceptions;
 
     /// <summary>
     /// Gets the lock that guards the item list and the disposed flag.
     /// </summary>
     private Lock Gate { get; } = new();
+
+    /// <summary>
+    /// Gets a value indicating whether <see cref="DisposeAsync"/> ignores the exceptions that individual items throw.
+    /// </summary>
+    internal bool IgnoresExceptions { get; init; }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AsyncDisposableCollection"/> class with an empty collection.
+    /// </summary>
+    public AsyncDisposableCollection()
+    {
+        _list = [];
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AsyncDisposableCollection"/> class with elements
+    /// copied from the specified collection.
+    /// </summary>
+    /// <param name="collection">The collection whose elements are copied to the new collection.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
+    public AsyncDisposableCollection(IEnumerable<IAsyncDisposable> collection)
+    {
+        ArgumentNullException.ThrowIfNull(collection);
+
+        _list = [.. collection];
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AsyncDisposableCollection"/> class with an empty collection.
@@ -47,10 +72,13 @@ public sealed class AsyncDisposableCollection : IAsyncDisposableCollection, IDis
     /// <see langword="true"/> to suppress exceptions thrown by individual items during disposal and continue
     /// disposing remaining items; <see langword="false"/> (the default) to propagate exceptions.
     /// </param>
+    // Callers that pass nothing bind to the constructor without the flag, so this one keeps its default until it is deleted.
+#pragma warning disable RS0027 // optional parameter on an overload with fewer parameters than another
     public AsyncDisposableCollection(bool ignoreExceptions = false)
+#pragma warning restore RS0027
+        : this()
     {
-        _list = [];
-        _ignoreExceptions = ignoreExceptions;
+        IgnoresExceptions = ignoreExceptions;
     }
 
     /// <summary>
@@ -67,9 +95,9 @@ public sealed class AsyncDisposableCollection : IAsyncDisposableCollection, IDis
         IEnumerable<IAsyncDisposable> collection,
         bool ignoreExceptions = false
     )
+        : this(collection)
     {
-        _list = [.. collection];
-        _ignoreExceptions = ignoreExceptions;
+        IgnoresExceptions = ignoreExceptions;
     }
 
     /// <inheritdoc />
@@ -79,8 +107,8 @@ public sealed class AsyncDisposableCollection : IAsyncDisposableCollection, IDis
     /// then clears the collection. This method is idempotent; subsequent calls have no effect.
     /// </para>
     /// <para>
-    /// If <c>ignoreExceptions</c> was set to <see langword="true"/> in the constructor, exceptions
-    /// thrown by individual items are suppressed, allowing all items to be disposed.
+    /// A collection that <c>AsyncDisposable.CollectionIgnoringExceptions</c> created suppresses exceptions
+    /// thrown by individual items, allowing all items to be disposed.
     /// </para>
     /// </remarks>
     public async ValueTask DisposeAsync()
@@ -98,7 +126,7 @@ public sealed class AsyncDisposableCollection : IAsyncDisposableCollection, IDis
             _list.Clear();
         }
 
-        if (_ignoreExceptions)
+        if (IgnoresExceptions)
         {
             await items.DisposeAllIgnoringExceptionsAsync().ConfigureAwait(false);
         }

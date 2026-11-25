@@ -254,4 +254,77 @@ public class AsyncDisposableTests
     }
 
     #endregion
+
+    #region Collection Tests
+
+    [Fact]
+    public async Task Collection_WithEnumerable_WhenItemThrows_DisposesEveryItemAndRethrows()
+    {
+        var log = new List<string>();
+        IEnumerable<IAsyncDisposable> items =
+        [
+            AsyncDisposable.Create(() => log.Add("first")),
+            AsyncDisposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
+            AsyncDisposable.Create(() => log.Add("third")),
+        ];
+        var collection = AsyncDisposable.Collection(items);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            collection.DisposeAsync().AsTask()
+        );
+
+        Assert.Equal(["third", "first"], log);
+    }
+
+    #endregion
+
+    #region CollectionIgnoringExceptions Tests
+
+    [Fact]
+    public async Task CollectionIgnoringExceptions_WhenItemThrows_DisposesEveryItemWithoutThrowing()
+    {
+        var log = new List<string>();
+        var collection = AsyncDisposable.CollectionIgnoringExceptions(
+            AsyncDisposable.Create(() => log.Add("first")),
+            AsyncDisposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
+            AsyncDisposable.Create(() => log.Add("third"))
+        );
+
+        await collection.DisposeAsync();
+
+        Assert.Equal(["third", "first"], log);
+    }
+
+    [Fact]
+    public async Task CollectionIgnoringExceptions_WithEnumerable_WhenItemThrows_DisposesEveryItemWithoutThrowing()
+    {
+        var log = new List<string>();
+        IEnumerable<IAsyncDisposable> items =
+        [
+            AsyncDisposable.Create(() => log.Add("first")),
+            AsyncDisposable.Create(() => throw new InvalidOperationException("Dispose failed.")),
+            AsyncDisposable.Create(() => log.Add("third")),
+        ];
+        var collection = AsyncDisposable.CollectionIgnoringExceptions(items);
+
+        await collection.DisposeAsync();
+
+        Assert.Equal(["third", "first"], log);
+    }
+
+    [Fact]
+    public void CollectionIgnoringExceptions_NullCollection_ThrowsArgumentNullException()
+    {
+        var arrayException = Assert.Throws<ArgumentNullException>(() =>
+            AsyncDisposable.CollectionIgnoringExceptions((IAsyncDisposable[])null!)
+        );
+        var enumerableException = Assert.Throws<ArgumentNullException>(() =>
+            AsyncDisposable.CollectionIgnoringExceptions((IEnumerable<IAsyncDisposable>)null!)
+        );
+
+        Assert.Equal("collection", arrayException.ParamName);
+        Assert.Equal("collection", enumerableException.ParamName);
+    }
+
+    #endregion
 }
