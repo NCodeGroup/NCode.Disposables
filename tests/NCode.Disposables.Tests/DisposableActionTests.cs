@@ -209,6 +209,50 @@ public class DisposableActionTests
 
     #endregion
 
+    #region IsDisposed Property Tests
+
+    [Fact]
+    public void IsDisposed_BeforeDispose_ReturnsFalse()
+    {
+        var disposable = new DisposableAction(() => { });
+
+        Assert.False(disposable.IsDisposed);
+    }
+
+    [Fact]
+    public void IsDisposed_AfterDispose_ReturnsTrue()
+    {
+        var disposable = new DisposableAction(() => { });
+
+        disposable.Dispose();
+
+        Assert.True(disposable.IsDisposed);
+    }
+
+    [Fact]
+    public void IsDisposed_NonIdempotentAfterDispose_ReturnsTrue()
+    {
+        var disposable = new DisposableAction(() => { }, idempotent: false);
+
+        disposable.Dispose();
+
+        Assert.True(disposable.IsDisposed);
+    }
+
+    [Fact]
+    public void IsDisposed_WhenActionThrows_ReturnsTrue()
+    {
+        var disposable = new DisposableAction(() =>
+            throw new InvalidOperationException("Test exception")
+        );
+
+        Assert.Throws<InvalidOperationException>(() => disposable.Dispose());
+
+        Assert.True(disposable.IsDisposed);
+    }
+
+    #endregion
+
     #region Interface Tests
 
     [Fact]

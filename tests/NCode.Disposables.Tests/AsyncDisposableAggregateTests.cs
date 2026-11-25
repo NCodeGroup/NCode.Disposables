@@ -84,7 +84,7 @@ public class AsyncDisposableAggregateTests
     }
 
     [Fact]
-    public async Task Disposable_GetAfterDispose_ThrowsObjectDisposedException()
+    public async Task Disposable_GetAfterDispose_ReturnsNull()
     {
         var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
         mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
@@ -92,7 +92,7 @@ public class AsyncDisposableAggregateTests
 
         await aggregate.DisposeAsync();
 
-        Assert.Throws<ObjectDisposedException>(() => aggregate.Disposable);
+        Assert.Null(aggregate.Disposable);
     }
 
     [Fact]
@@ -111,6 +111,73 @@ public class AsyncDisposableAggregateTests
 
     #endregion
 
+    #region SetDisposableAsync Tests
+
+    [Fact]
+    public async Task SetDisposableAsync_BeforeDispose_ReplacesWithoutDisposingPrevious()
+    {
+        var mockDisposable1 = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var mockDisposable2 = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var aggregate = new AsyncDisposableAggregate(mockDisposable1.Object);
+
+        await aggregate.SetDisposableAsync(mockDisposable2.Object);
+
+        Assert.Same(mockDisposable2.Object, aggregate.Disposable);
+        mockDisposable1.Verify(x => x.DisposeAsync(), Times.Never);
+    }
+
+    [Fact]
+    public async Task SetDisposableAsync_AfterDispose_DisposesValue()
+    {
+        var mockDisposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        mockDisposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var aggregate = new AsyncDisposableAggregate();
+        await aggregate.DisposeAsync();
+
+        await aggregate.SetDisposableAsync(mockDisposable.Object);
+
+        Assert.Null(aggregate.Disposable);
+        mockDisposable.Verify(x => x.DisposeAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task SetDisposableAsync_NullAfterDispose_DoesNothing()
+    {
+        var aggregate = new AsyncDisposableAggregate();
+        await aggregate.DisposeAsync();
+
+        var exception = await Record.ExceptionAsync(async () =>
+            await aggregate.SetDisposableAsync(null)
+        );
+
+        Assert.Null(exception);
+        Assert.True(aggregate.IsDisposed);
+    }
+
+    #endregion
+
+    #region IsDisposed Property Tests
+
+    [Fact]
+    public void IsDisposed_BeforeDispose_ReturnsFalse()
+    {
+        var aggregate = new AsyncDisposableAggregate();
+
+        Assert.False(aggregate.IsDisposed);
+    }
+
+    [Fact]
+    public async Task IsDisposed_AfterDispose_ReturnsTrue()
+    {
+        var aggregate = new AsyncDisposableAggregate();
+
+        await aggregate.DisposeAsync();
+
+        Assert.True(aggregate.IsDisposed);
+    }
+
+    #endregion
+
     #region DisposeAsync Tests
 
     [Fact]
@@ -120,7 +187,8 @@ public class AsyncDisposableAggregateTests
 
         await aggregate.DisposeAsync();
 
-        Assert.Throws<ObjectDisposedException>(() => aggregate.Disposable);
+        Assert.True(aggregate.IsDisposed);
+        Assert.Null(aggregate.Disposable);
     }
 
     [Fact]
@@ -188,7 +256,8 @@ public class AsyncDisposableAggregateTests
             await aggregate.DisposeAsync()
         );
 
-        Assert.Throws<ObjectDisposedException>(() => aggregate.Disposable);
+        Assert.True(aggregate.IsDisposed);
+        Assert.Null(aggregate.Disposable);
     }
 
     [Fact]
@@ -290,7 +359,8 @@ public class AsyncDisposableAggregateTests
 
             await Task.WhenAll(setTask, disposeTask);
 
-            Assert.Throws<ObjectDisposedException>(() => aggregate.Disposable);
+            Assert.True(aggregate.IsDisposed);
+            Assert.Null(aggregate.Disposable);
         }
     }
 
@@ -298,6 +368,7 @@ public class AsyncDisposableAggregateTests
 
     #region IAsyncDisposableAggregate Interface Tests
 
+#pragma warning disable NCDISP002 // implements the deprecated interface until it is deleted
     [Fact]
     public void ImplementsIAsyncDisposableAggregate()
     {
@@ -305,6 +376,7 @@ public class AsyncDisposableAggregateTests
 
         Assert.IsAssignableFrom<IAsyncDisposableAggregate>(aggregate);
     }
+#pragma warning restore NCDISP002
 
     [Fact]
     public void ImplementsIAsyncDisposable()

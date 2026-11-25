@@ -225,4 +225,52 @@ public class AsyncDisposableActionTests
     }
 
     #endregion
+
+    #region IsDisposed Property Tests
+
+    [Fact]
+    public void IsDisposed_BeforeDispose_ReturnsFalse()
+    {
+        var disposable = new AsyncDisposableAction(() => ValueTask.CompletedTask);
+
+        Assert.False(disposable.IsDisposed);
+    }
+
+    [Fact]
+    public async Task IsDisposed_AfterDispose_ReturnsTrue()
+    {
+        var disposable = new AsyncDisposableAction(() => ValueTask.CompletedTask);
+
+        await disposable.DisposeAsync();
+
+        Assert.True(disposable.IsDisposed);
+    }
+
+    [Fact]
+    public async Task IsDisposed_NonIdempotentAfterDispose_ReturnsTrue()
+    {
+        var disposable = new AsyncDisposableAction(
+            () => ValueTask.CompletedTask,
+            idempotent: false
+        );
+
+        await disposable.DisposeAsync();
+
+        Assert.True(disposable.IsDisposed);
+    }
+
+    [Fact]
+    public async Task IsDisposed_WhenActionThrows_ReturnsTrue()
+    {
+        var failure = new InvalidOperationException("Test exception");
+        var disposable = new AsyncDisposableAction(() => ValueTask.FromException(failure));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await disposable.DisposeAsync()
+        );
+
+        Assert.True(disposable.IsDisposed);
+    }
+
+    #endregion
 }

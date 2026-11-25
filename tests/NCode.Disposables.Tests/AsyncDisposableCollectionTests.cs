@@ -112,6 +112,111 @@ public class AsyncDisposableCollectionTests
         Assert.Equal(2, collection.Count);
     }
 
+    [Fact]
+    public async Task Add_AfterDispose_ThrowsObjectDisposedException()
+    {
+        var collection = new AsyncDisposableCollection();
+        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        await collection.DisposeAsync();
+
+        Assert.Throws<ObjectDisposedException>(() => collection.Add(disposable.Object));
+    }
+
+    [Fact]
+    public async Task Add_AfterDispose_DoesNotDisposeItem()
+    {
+        var collection = new AsyncDisposableCollection();
+        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        await collection.DisposeAsync();
+
+        Assert.Throws<ObjectDisposedException>(() => collection.Add(disposable.Object));
+
+        Assert.Empty(collection);
+    }
+
+    [Fact]
+    public async Task Add_ConcurrentCalls_AddsEveryItem()
+    {
+        var collection = new AsyncDisposableCollection();
+
+        const int concurrentCalls = 1000;
+        var tasks = new Task[concurrentCalls];
+
+        for (var i = 0; i < concurrentCalls; i++)
+        {
+            var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+            tasks[i] = Task.Run(() => collection.Add(disposable.Object));
+        }
+
+        await Task.WhenAll(tasks);
+
+        Assert.Equal(concurrentCalls, collection.Count);
+    }
+
+    #endregion
+
+    #region AddAsync Tests
+
+    [Fact]
+    public async Task AddAsync_BeforeDispose_AddsItem()
+    {
+        var collection = new AsyncDisposableCollection();
+        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+
+        await collection.AddAsync(disposable.Object);
+
+        Assert.Single(collection);
+        Assert.Contains(disposable.Object, collection);
+    }
+
+    [Fact]
+    public async Task AddAsync_AfterDispose_DisposesItem()
+    {
+        var collection = new AsyncDisposableCollection();
+        var disposable = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        disposable.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        await collection.DisposeAsync();
+
+        await collection.AddAsync(disposable.Object);
+
+        disposable.Verify(x => x.DisposeAsync(), Times.Once);
+        Assert.Empty(collection);
+    }
+
+    [Fact]
+    public async Task AddAsync_WhileDisposeAsyncRuns_DisposesItemAtOnce()
+    {
+        var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var mockFirst = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        mockFirst.Setup(x => x.DisposeAsync()).Returns(() => new ValueTask(gate.Task));
+        var mockLate = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        mockLate.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var collection = new AsyncDisposableCollection([mockFirst.Object]);
+
+        var disposeTask = collection.DisposeAsync().AsTask();
+        Assert.False(disposeTask.IsCompleted);
+
+        await collection.AddAsync(mockLate.Object);
+
+        mockLate.Verify(x => x.DisposeAsync(), Times.Once);
+        Assert.Empty(collection);
+
+        gate.SetResult();
+        await disposeTask;
+    }
+
+    [Fact]
+    public async Task AddAsync_Null_ThrowsArgumentNullException()
+    {
+        var collection = new AsyncDisposableCollection();
+
+        var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+            await collection.AddAsync(null!)
+        );
+
+        Assert.Equal("item", exception.ParamName);
+    }
+
     #endregion
 
     #region Remove Tests
@@ -387,6 +492,25 @@ public class AsyncDisposableCollectionTests
         Assert.Same(disposable.Object, items[0]);
     }
 
+    [Fact]
+    public void GetEnumerator_AddWhileEnumerating_DoesNotThrow()
+    {
+        var collection = new AsyncDisposableCollection();
+        var disposable1 = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        var disposable2 = new Mock<IAsyncDisposable>(MockBehavior.Strict);
+        collection.Add(disposable1.Object);
+
+        var count = 0;
+        foreach (var _ in collection)
+        {
+            collection.Add(disposable2.Object);
+            count++;
+        }
+
+        Assert.Equal(1, count);
+        Assert.Equal(2, collection.Count);
+    }
+
     #endregion
 
     #region DisposeAsync Tests
@@ -558,8 +682,31 @@ public class AsyncDisposableCollectionTests
 
     #endregion
 
+    #region IsDisposed Property Tests
+
+    [Fact]
+    public void IsDisposed_BeforeDispose_ReturnsFalse()
+    {
+        var collection = new AsyncDisposableCollection();
+
+        Assert.False(collection.IsDisposed);
+    }
+
+    [Fact]
+    public async Task IsDisposed_AfterDispose_ReturnsTrue()
+    {
+        var collection = new AsyncDisposableCollection();
+
+        await collection.DisposeAsync();
+
+        Assert.True(collection.IsDisposed);
+    }
+
+    #endregion
+
     #region Interface Tests
 
+#pragma warning disable NCDISP002 // implements the deprecated interface until it is deleted
     [Fact]
     public void ImplementsIAsyncDisposableCollection()
     {
@@ -567,6 +714,7 @@ public class AsyncDisposableCollectionTests
 
         Assert.IsAssignableFrom<IAsyncDisposableCollection>(collection);
     }
+#pragma warning restore NCDISP002
 
     [Fact]
     public void ImplementsIAsyncDisposable()

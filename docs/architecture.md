@@ -28,8 +28,15 @@ flowchart LR
         ACT["DisposableAction, AsyncDisposableAction"]
         AGG["DisposableAggregate, AsyncDisposableAggregate"]
         COL["DisposableCollection, AsyncDisposableCollection"]
+        SER["DisposableSerial, AsyncDisposableSerial"]
+        SGL["DisposableSingleAssignment, AsyncDisposableSingleAssignment"]
+        GRD["DisposableGuard, AsyncDisposableGuard"]
+        CAN["DisposableCancellation, AsyncDisposableCancellation"]
+        FLG[DisposableFlag]
         CTX[DisposableContext]
+        ACTX[AsyncDisposableContext]
         ADP[AsyncDisposableAdapter]
+        VAL["ValueDisposable, AsyncValueDisposable"]
     end
 
     subgraph shared["Shared references"]
@@ -40,22 +47,38 @@ flowchart LR
     subgraph ext["Extensions"]
         DE[DisposableExtensions]
         ADE[AsyncDisposableExtensions]
+        SSE[SemaphoreSlimExtensions]
+        RWE[ReaderWriterLockSlimExtensions]
     end
 
     APP --> D
     APP --> AD
     APP --> DE
     APP --> ADE
+    APP --> SSE
+    APP --> RWE
     D -->|creates| EMPTY
     D -->|creates| ACT
     D -->|creates| AGG
+    D -->|creates| SER
+    D -->|creates| SGL
+    D -->|creates| GRD
+    D -->|creates| CAN
+    D -->|creates| FLG
     D -->|creates| COL
     D -->|creates| CTX
+    D -->|creates| VAL
     D -->|Shared calls| SR
     AD -->|creates| EMPTY
     AD -->|creates| ACT
     AD -->|creates| AGG
+    AD -->|creates| SER
+    AD -->|creates| SGL
+    AD -->|creates| GRD
+    AD -->|creates| CAN
     AD -->|creates| COL
+    AD -->|creates| ACTX
+    AD -->|creates| VAL
     AD -->|Adapt creates| ADP
     AD -->|Shared calls| ASR
     SR -->|creates| OWN
@@ -66,28 +89,42 @@ flowchart LR
     COL -->|DisposeAllAsync| ADE
     DE -->|AsSharedReference calls| SR
     ADE -->|AsAsyncSharedReference calls| ASR
+    SSE -->|returns| VAL
+    RWE -->|returns| VAL
 ```
 
 | Component | Role |
 | --- | --- |
-| `Disposable` | Static factory: `Empty`, `Create` (an `Action` or a `Func<TResult>`, each also taking up to eight arguments, and `Create(Action, idempotent)`), `Aggregate`, `Collection`, `Context`, and `Shared`, which calls `SharedReference.Create`. |
-| `AsyncDisposable` | Static factory: `Empty`, `Create` (a `Func<ValueTask>` or an `Action`), `Adapt`, `Aggregate`, `Collection`, and `Shared`, which calls `AsyncSharedReference.Create`. |
+| `Disposable` | Static factory that returns the concrete types: `Empty`, `Create` (an `Action` or a `Func<TResult>`, each also taking up to eight arguments, and `Create(Action, idempotent)`), `CreateValue`, `Aggregate`, `Serial`, `SingleAssignment`, `Guard`, `Cancellation`, `Flag`, `Collection`, `Context` and `Shared`, which calls `SharedReference.Create`. |
+| `AsyncDisposable` | Static factory that returns the concrete types: `Empty`, `Create` (a `Func<ValueTask>`, which also takes up to eight arguments, or an `Action`, and `Create(Func<ValueTask>, idempotent)` and `Create(Action, idempotent)`), `CreateValue`, `Adapt`, `Aggregate`, `Serial`, `SingleAssignment`, `Guard`, `Cancellation`, `Collection`, `Context` and `Shared`, which calls `AsyncSharedReference.Create`. |
 | `DisposableEmpty`, `AsyncDisposableEmpty` | Do nothing; `Singleton` is the instance `Empty` returns. |
 | `DisposableAction`, `AsyncDisposableAction` | Run a delegate on the first dispose, taken with `Interlocked.Exchange` so it runs once across threads, or on every dispose with `idempotent: false`. |
-| `DisposableAggregate`, `AsyncDisposableAggregate` | Hold one replaceable resource in `Disposable`, swapped atomically; disposing the aggregate disposes the resource it holds, and later reads or writes throw `ObjectDisposedException`; interfaces `IDisposableAggregate`, `IAsyncDisposableAggregate`. |
-| `DisposableCollection`, `AsyncDisposableCollection` | An `ICollection<IDisposable>` and an `ICollection<IAsyncDisposable>` that dispose their items in reverse order on the first dispose, through `DisposeAll` and `DisposeAllAsync`; `Add`, `Remove`, `Clear` and enumeration hold no lock; interfaces `IDisposableCollection`, `IAsyncDisposableCollection`. |
+| `DisposableAggregate`, `AsyncDisposableAggregate` | Hold one replaceable resource in `Disposable`, swapped atomically; disposing the aggregate disposes the resource it holds, and after disposal `Disposable` reads `null` and a resource set on it is disposed ([ADR-1004](decisions/1004-a-resource-handed-to-a-disposed-holder-is-disposed.md)); `AsyncDisposableAggregate`'s setter throws `ObjectDisposedException` after disposal, and `SetDisposableAsync` disposes the resource; the interfaces `IDisposableAggregate` and `IAsyncDisposableAggregate` are obsolete (`NCDISP002`, [ADR-1005](decisions/1005-disposables-are-concrete-sealed-types-that-report-their-disposal-status.md)). |
+| `DisposableSerial`, `AsyncDisposableSerial` | Hold one resource and dispose the previous one when it is replaced. |
+| `DisposableSingleAssignment`, `AsyncDisposableSingleAssignment` | Take one resource, once. |
+| `DisposableGuard<T>`, `AsyncDisposableGuard<T>` | Dispose a resource unless `Release()` hands ownership on. |
+| `DisposableCancellation`, `AsyncDisposableCancellation` | Cancel a token on dispose. |
+| `DisposableFlag` | Only records that it was disposed. |
+| `DisposableCollection`, `AsyncDisposableCollection` | An `ICollection<IDisposable>` and an `ICollection<IAsyncDisposable>` that dispose their items in reverse order on the first dispose, through `DisposeAll` and `DisposeAllAsync`; every member takes one lock and enumeration walks a snapshot; `Add` after disposal disposes the item, and for the async collection `Add` throws and `AddAsync` disposes the item; the interfaces `IDisposableCollection` and `IAsyncDisposableCollection` are obsolete (`NCDISP002`, [ADR-1005](decisions/1005-disposables-are-concrete-sealed-types-that-report-their-disposal-status.md)). |
 | `DisposableContext` | Disposes a resource once on a `SynchronizationContext`, through `Send`, or through `Post` with `async: true`, between `OperationStarted` and `OperationCompleted`. |
+| `AsyncDisposableContext` | Posts the async disposal of a resource to a `SynchronizationContext`. |
 | `AsyncDisposableAdapter` | An `IAsyncDisposable` over an `IDisposable`, disposing it once, or on every call with `idempotent: false`. |
+| `ValueDisposable<TState>`, `AsyncValueDisposable<TState>` | Allocation-free structs that run a static delegate with their state on every dispose; non-idempotent ([ADR-1006](decisions/1006-value-disposables-and-lock-scopes-are-non-idempotent-structs.md)). |
+| `IDisposalStatus` | Exposes `IsDisposed`; the disposables are concrete sealed types that report it ([ADR-1005](decisions/1005-disposables-are-concrete-sealed-types-that-report-their-disposal-status.md)). |
 | `SharedReference`, `AsyncSharedReference` | Static `Create(value)` for an `IDisposable` or an `IAsyncDisposable`, and `Create(value, onRelease)` for any value; each creates an owner and returns its first lease. |
 | `SharedReferenceOwner<T>`, `AsyncSharedReferenceOwner<T>` | The reference count, changed with lock-free atomic operations; the release action runs once, on the thread that releases the last lease; interfaces `ISharedReferenceOwner<T>`, `IAsyncSharedReferenceOwner<T>`. |
 | `SharedReferenceLease<T>`, `AsyncSharedReferenceLease<T>` | `readonly struct` leases with `Value`, `IsActive`, `AddReference`, `TryAddReference`, and `Dispose` or `DisposeAsync`, which releases one reference. |
 | `DisposableExtensions` | `DisposeAsyncIfAvailable()`, `AsSharedReference()`, and `DisposeAll()`, which disposes each `IDisposable` in reverse order, also one that implements `IAsyncDisposable`, and throws `InvalidOperationException` for an item that implements only `IAsyncDisposable` ([ADR-1001](decisions/1001-synchronous-disposal-disposes-an-item-that-implements-both-interfaces-through-idisposable.md)). |
 | `AsyncDisposableExtensions` | `AsAsyncSharedReference()` and `DisposeAllAsync()`, which prefers `DisposeAsync` ([ADR-1002](decisions/1002-the-async-shared-reference-extension-is-asasyncsharedreference.md)). |
+| `SemaphoreSlimExtensions` | `Lock()` and `LockAsync()`, which return a `ValueDisposable` lock scope that releases the semaphore on dispose and throws `OperationCanceledException` when the wait is cancelled ([ADR-1006](decisions/1006-value-disposables-and-lock-scopes-are-non-idempotent-structs.md)). |
+| `ReaderWriterLockSlimExtensions` | `ReadLock()`, `UpgradeableReadLock()` and `WriteLock()`, which return a `ValueDisposable` lock scope that exits the lock on dispose ([ADR-1006](decisions/1006-value-disposables-and-lock-scopes-are-non-idempotent-structs.md)). |
 | `NCode.Disposables.Tests` | xUnit tests of every type, and in `ReadmeSamplesTests.cs` the README samples ([ADR-1000](decisions/1000-readme-samples-are-compiled-tests-that-markdownsnippets-copies-into-the-readmes.md)). |
 
-The package does no I/O, starts no threads, and keeps no static state beyond the `Singleton` instances of the empty
-disposables. It shows people no text: the exceptions it throws on purpose are `ArgumentNullException`,
-`ObjectDisposedException` and `InvalidOperationException`, for developers.
+The package does no I/O and starts no threads, and it keeps no mutable static state: its only static values are the
+`Singleton` instances of the empty disposables, the holders' private `Sentinel` markers and the lock scopes' cached
+release delegates, none of which changes once created. It shows people no text: the exceptions it throws on purpose are
+`ArgumentNullException`, `ObjectDisposedException` and `InvalidOperationException` and, from the lock scopes,
+`OperationCanceledException`, for developers.
 
 ## Design Rules
 
@@ -96,6 +133,12 @@ disposables. It shows people no text: the exceptions it throws on purpose are `A
   ([ADR-1001](decisions/1001-synchronous-disposal-disposes-an-item-that-implements-both-interfaces-through-idisposable.md)).
 - An extension name used for one disposal interface is never reused for the other
   ([ADR-1002](decisions/1002-the-async-shared-reference-extension-is-asasyncsharedreference.md)).
+- A resource handed to a disposed holder is disposed
+  ([ADR-1004](decisions/1004-a-resource-handed-to-a-disposed-holder-is-disposed.md)).
+- Disposables are concrete sealed types that report their disposal status
+  ([ADR-1005](decisions/1005-disposables-are-concrete-sealed-types-that-report-their-disposal-status.md)).
+- Value disposables and lock scopes are non-idempotent structs
+  ([ADR-1006](decisions/1006-value-disposables-and-lock-scopes-are-non-idempotent-structs.md)).
 - Warnings are errors ([ADR-0100](decisions/project-template/0100-warnings-are-errors-in-every-project.md)), and
   disallowed APIs are banned at build time
   ([ADR-0102](decisions/project-template/0102-disallowed-apis-are-banned-at-build-time.md)).

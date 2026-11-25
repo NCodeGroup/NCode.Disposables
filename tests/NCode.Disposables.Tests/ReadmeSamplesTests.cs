@@ -88,6 +88,24 @@ public class ReadmeSamplesTests
         Assert.Equal(5, stream.Length);
     }
 
+    [Fact]
+    public async Task AsyncActionWithStateSample_Runs()
+    {
+        // begin-snippet: AsyncActionWithState
+        var stream = new MemoryStream();
+        var writer = new StreamWriter(stream);
+
+        await using (AsyncDisposable.Create(static w => new ValueTask(w.FlushAsync()), writer))
+        {
+            await writer.WriteAsync("hello");
+        }
+
+        // stream.Length == 5
+        // end-snippet
+
+        Assert.Equal(5, stream.Length);
+    }
+
     #endregion
 
     #region Empty Tests
@@ -103,6 +121,27 @@ public class ReadmeSamplesTests
         // end-snippet
 
         Assert.Same(Disposable.Empty, subscription);
+    }
+
+    #endregion
+
+    #region Value Tests
+
+    [Fact]
+    public void ValueDisposableSample_Runs()
+    {
+        // begin-snippet: ValueDisposable
+        var stopwatch = Stopwatch.StartNew();
+
+        using (Disposable.CreateValue(static watch => watch.Stop(), stopwatch))
+        {
+            // timed work; the struct allocates nothing
+        }
+
+        // stopwatch.IsRunning == false
+        // end-snippet
+
+        Assert.False(stopwatch.IsRunning);
     }
 
     #endregion
@@ -131,6 +170,46 @@ public class ReadmeSamplesTests
 
     #endregion
 
+    #region Serial Tests
+
+    [Fact]
+    public void SerialDisposableSample_Runs()
+    {
+        // begin-snippet: SerialDisposable
+        var log = new List<string>();
+        using (var subscription = Disposable.Serial())
+        {
+            subscription.Disposable = Disposable.Create(() => log.Add("first closed"));
+            subscription.Disposable = Disposable.Create(() => log.Add("second closed")); // disposes the first
+        }
+
+        // log: "first closed", "second closed"
+        // end-snippet
+
+        Assert.Equal(["first closed", "second closed"], log);
+    }
+
+    #endregion
+
+    #region Single Assignment Tests
+
+    [Fact]
+    public void SingleAssignmentDisposableSample_Runs()
+    {
+        // begin-snippet: SingleAssignmentDisposable
+        var log = new List<string>();
+        var pending = Disposable.SingleAssignment();
+        pending.Dispose(); // disposed before the resource arrived
+        pending.Disposable = Disposable.Create(() => log.Add("late resource closed")); // disposed at once
+
+        // log: "late resource closed"
+        // end-snippet
+
+        Assert.Equal(["late resource closed"], log);
+    }
+
+    #endregion
+
     #region Collection Tests
 
     [Fact]
@@ -151,6 +230,42 @@ public class ReadmeSamplesTests
         // end-snippet
 
         Assert.Equal(["third", "first"], log);
+    }
+
+    [Fact]
+    public void CollectionLateAddSample_Runs()
+    {
+        // begin-snippet: CollectionLateAdd
+        var log = new List<string>();
+        var resources = Disposable.Collection();
+        resources.Dispose();
+        var lateItem = Disposable.Create(() => log.Add("late item closed"));
+
+        resources.Add(lateItem); // disposed at once, not kept
+
+        // log: "late item closed"; resources.Count == 0
+        // end-snippet
+
+        Assert.Equal(["late item closed"], log);
+        Assert.Empty(resources);
+    }
+
+    [Fact]
+    public async Task CollectionLateAddAsyncSample_Runs()
+    {
+        // begin-snippet: CollectionLateAddAsync
+        var log = new List<string>();
+        var resources = AsyncDisposable.Collection();
+        await resources.DisposeAsync();
+        var lateItem = AsyncDisposable.Create(() => log.Add("late item closed"));
+
+        await resources.AddAsync(lateItem); // disposed at once, not kept; Add would throw ObjectDisposedException
+
+        // log: "late item closed"; resources.Count == 0
+        // end-snippet
+
+        Assert.Equal(["late item closed"], log);
+        Assert.Empty(resources);
     }
 
     [Fact]
@@ -285,6 +400,80 @@ public class ReadmeSamplesTests
 
     #endregion
 
+    #region Guard Tests
+
+    [Fact]
+    public void GuardDisposableSample_Runs()
+    {
+        // begin-snippet: GuardDisposable
+        var log = new List<string>();
+
+        DisposableAction Connect(bool handshakeFails)
+        {
+            var connection = Disposable.Create(() => log.Add("connection closed"));
+            using var guard = Disposable.Guard(connection);
+
+            if (handshakeFails)
+                throw new InvalidOperationException("Handshake failed."); // the guard closes the connection
+
+            return guard.Release(); // the caller owns the connection now
+        }
+
+        using (Connect(handshakeFails: false)) { }
+
+        try
+        {
+            Connect(handshakeFails: true);
+        }
+        catch (InvalidOperationException)
+        {
+            log.Add("handshake failed");
+        }
+
+        // log: "connection closed", "connection closed", "handshake failed"
+        // end-snippet
+
+        Assert.Equal(["connection closed", "connection closed", "handshake failed"], log);
+    }
+
+    #endregion
+
+    #region Cancellation Tests
+
+    [Fact]
+    public void CancellationDisposableSample_Runs()
+    {
+        // begin-snippet: CancellationDisposable
+        using var cancellation = Disposable.Cancellation();
+        var work = Task.Delay(Timeout.Infinite, cancellation.Token);
+        cancellation.Dispose(); // cancels the token, then disposes the source it created
+        // work.IsCanceled == true
+        // end-snippet
+
+        Assert.True(work.IsCanceled);
+    }
+
+    #endregion
+
+    #region Status Tests
+
+    [Fact]
+    public void DisposalStatusSample_Runs()
+    {
+        // begin-snippet: DisposalStatus
+        var flag = Disposable.Flag();
+        var cleanup = Disposable.Create(() => { });
+        flag.Dispose();
+        IDisposalStatus status = cleanup; // every disposable that keeps state reports it
+        // flag.IsDisposed == true, status.IsDisposed == false
+        // end-snippet
+
+        Assert.True(flag.IsDisposed);
+        Assert.False(status.IsDisposed);
+    }
+
+    #endregion
+
     #region Context Tests
 
     [Fact]
@@ -303,6 +492,67 @@ public class ReadmeSamplesTests
 
         Assert.Equal(["control disposed"], log);
         Assert.Equal(1, uiContext.SendCount);
+    }
+
+    [Fact]
+    public async Task AsyncContextDisposableSample_Runs()
+    {
+        var uiContext = new RecordingSynchronizationContext();
+
+        // begin-snippet: AsyncContextDisposable
+        var log = new List<string>();
+        var viewModel = AsyncDisposable.Create(() => log.Add("view model disposed"));
+
+        // uiContext is the SynchronizationContext captured on the UI thread.
+        var disposable = AsyncDisposable.Context(viewModel, uiContext);
+        await disposable.DisposeAsync(); // Post: completes once the UI thread has disposed it
+        // end-snippet
+
+        Assert.Equal(["view model disposed"], log);
+        Assert.Equal(1, uiContext.PostCount);
+    }
+
+    #endregion
+
+    #region Lock Tests
+
+    [Fact]
+    public async Task SemaphoreLockSample_Runs()
+    {
+        // begin-snippet: SemaphoreLock
+        using var semaphore = new SemaphoreSlim(1, 1);
+        var countInScope = -1;
+        using (await semaphore.LockAsync())
+        {
+            countInScope = semaphore.CurrentCount; // 0 while the scope holds it
+        }
+        // semaphore.CurrentCount == 1
+        // end-snippet
+
+        Assert.Equal(0, countInScope);
+        Assert.Equal(1, semaphore.CurrentCount);
+    }
+
+    [Fact]
+    public void ReaderWriterLockSample_Runs()
+    {
+        // begin-snippet: ReaderWriterLock
+        using var cacheLock = new ReaderWriterLockSlim();
+        var readLockHeld = false;
+        using (cacheLock.ReadLock())
+        {
+            readLockHeld = cacheLock.IsReadLockHeld; // true while the scope holds it
+        }
+        using (cacheLock.WriteLock())
+        {
+            // update the cache
+        }
+        // cacheLock.IsWriteLockHeld == false
+        // end-snippet
+
+        Assert.True(readLockHeld);
+        Assert.False(cacheLock.IsReadLockHeld);
+        Assert.False(cacheLock.IsWriteLockHeld);
     }
 
     #endregion
@@ -393,6 +643,14 @@ public class ReadmeSamplesTests
         public override void Send(SendOrPostCallback d, object? state)
         {
             SendCount++;
+            d(state);
+        }
+
+        public int PostCount { get; private set; }
+
+        public override void Post(SendOrPostCallback d, object? state)
+        {
+            PostCount++;
             d(state);
         }
     }

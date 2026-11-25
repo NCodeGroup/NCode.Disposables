@@ -21,10 +21,15 @@ namespace NCode.Disposables;
 /// are handled safely using atomic operations.
 /// </para>
 /// </remarks>
-public sealed class DisposableAction : IDisposable
+public sealed class DisposableAction : IDisposable, IDisposalStatus
 {
     private Action? _action;
     private readonly bool _idempotent;
+
+    /// <summary>
+    /// Holds 1 after disposal has been requested and 0 before; <see cref="IsDisposed"/> reads it.
+    /// </summary>
+    private int _disposed;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DisposableAction"/> class with the specified
@@ -44,6 +49,11 @@ public sealed class DisposableAction : IDisposable
         _idempotent = idempotent;
     }
 
+    /// <summary>
+    /// Gets a value indicating whether <see cref="Dispose"/> has been called at least once.
+    /// </summary>
+    public bool IsDisposed => Volatile.Read(ref _disposed) != 0;
+
     /// <inheritdoc />
     /// <remarks>
     /// When idempotent mode is enabled (the default), the action is invoked only on the first call
@@ -52,6 +62,7 @@ public sealed class DisposableAction : IDisposable
     /// </remarks>
     public void Dispose()
     {
+        Volatile.Write(ref _disposed, 1);
         var action = _idempotent ? Interlocked.Exchange(ref _action, null) : _action;
         action?.Invoke();
     }

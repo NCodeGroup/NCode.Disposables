@@ -5,7 +5,7 @@
 <h1 align="center">NCode.Disposables</h1>
 
 <p align="center">
-  Building blocks for IDisposable and IAsyncDisposable in .NET: run an action on dispose, dispose many resources in reverse order, swap the resource an aggregate holds, share a resource through reference-counted leases, and dispose on a synchronization context.
+  Building blocks for IDisposable and IAsyncDisposable in .NET: run an action on dispose, dispose many resources in reverse order, hold a swappable, serial or single-assignment resource, guard a resource until ownership moves on, cancel on dispose, share a resource through reference-counted leases, scope a lock, and dispose on a synchronization context.
 </p>
 
 <p align="center">
@@ -17,7 +17,7 @@
   <a href="https://scorecard.dev/viewer/?uri=github.com/NCodeGroup/NCode.Disposables"><img alt="OpenSSF Scorecard" src="https://api.scorecard.dev/projects/github.com/NCodeGroup/NCode.Disposables/badge"></a>
 </p>
 
-Cleanup in .NET often needs more than one `using` statement: undoing a registration, disposing several resources in the right order, handing one expensive resource to several owners, or disposing a UI object on its own thread. NCode.Disposables gives each of these a small type behind the `Disposable` and `AsyncDisposable` factories, with an `IAsyncDisposable` counterpart for everything except disposal on a synchronization context.
+Cleanup in .NET often needs more than one `using` statement: undoing a registration, disposing several resources in the right order, handing one expensive resource to several owners, or disposing a UI object on its own thread. NCode.Disposables gives each of these a small type behind the `Disposable` and `AsyncDisposable` factories, each with an `IAsyncDisposable` counterpart except the flag and the lock scopes.
 
 This page is the full guide; nuget.org shows the shorter [package readme](src/NCode.Disposables/README.md).
 
@@ -100,6 +100,39 @@ await using (AsyncDisposable.Create(async () => await writer.FlushAsync()))
 ```
 <!-- endSnippet -->
 
+`AsyncDisposable.Create` also passes up to eight arguments to a `Func<…, ValueTask>`, so a static lambda needs no closure:
+
+<!-- snippet: AsyncActionWithState -->
+```cs
+var stream = new MemoryStream();
+var writer = new StreamWriter(stream);
+
+await using (AsyncDisposable.Create(static w => new ValueTask(w.FlushAsync()), writer))
+{
+    await writer.WriteAsync("hello");
+}
+
+// stream.Length == 5
+```
+<!-- endSnippet -->
+
+### Running an action without allocating
+
+`Disposable.CreateValue` and `AsyncDisposable.CreateValue` return a struct that runs a static delegate with a state value. It allocates nothing, but every dispose of every copy runs the action again, so dispose it once, through `using`:
+
+<!-- snippet: ValueDisposable -->
+```cs
+var stopwatch = Stopwatch.StartNew();
+
+using (Disposable.CreateValue(static watch => watch.Stop(), stopwatch))
+{
+    // timed work; the struct allocates nothing
+}
+
+// stopwatch.IsRunning == false
+```
+<!-- endSnippet -->
+
 ### The empty disposable
 
 `Disposable.Empty` and `AsyncDisposable.Empty` are singletons whose dispose does nothing, for a method that must return a disposable when there is nothing to clean up:
@@ -115,7 +148,7 @@ using var subscription = Subscribe(enabled: false); // Disposable.Empty: disposi
 
 ### Swapping the resource an aggregate holds
 
-`Disposable.Aggregate` holds one resource, or `null`, in its `Disposable` property, and disposes the resource it holds when it is disposed. Setting the property replaces the resource without disposing the old one. Once the aggregate is disposed, reading or setting the property throws `ObjectDisposedException`. `AsyncDisposable.Aggregate` does the same for an `IAsyncDisposable`:
+`Disposable.Aggregate` holds one resource, or `null`, in its `Disposable` property, and disposes the resource it holds when it is disposed. Setting the property replaces the resource without disposing the old one. Once the aggregate is disposed, the property reads `null` and setting it disposes the resource it is given; `AsyncDisposable.Aggregate`'s setter throws `ObjectDisposedException` then, and its `SetDisposableAsync` disposes the resource. `AsyncDisposable.Aggregate` does the same for an `IAsyncDisposable`:
 
 <!-- snippet: AggregateDisposable -->
 ```cs
@@ -133,9 +166,41 @@ using (var current = Disposable.Aggregate(primary))
 ```
 <!-- endSnippet -->
 
+### Replacing a resource and disposing the old one
+
+`Disposable.Serial` holds one resource and disposes it when another replaces it. Once the serial disposable is disposed, it disposes any resource it is given, and `Disposable` reads `null`. `AsyncDisposable.Serial` does the same through `SetDisposableAsync`:
+
+<!-- snippet: SerialDisposable -->
+```cs
+var log = new List<string>();
+using (var subscription = Disposable.Serial())
+{
+    subscription.Disposable = Disposable.Create(() => log.Add("first closed"));
+    subscription.Disposable = Disposable.Create(() => log.Add("second closed")); // disposes the first
+}
+
+// log: "first closed", "second closed"
+```
+<!-- endSnippet -->
+
+### Assigning a resource once
+
+`Disposable.SingleAssignment` takes one resource, once; a second assignment throws `InvalidOperationException`. A resource that arrives after it is disposed is disposed at once. `AsyncDisposable.SingleAssignment` takes it through `SetDisposableAsync`:
+
+<!-- snippet: SingleAssignmentDisposable -->
+```cs
+var log = new List<string>();
+var pending = Disposable.SingleAssignment();
+pending.Dispose(); // disposed before the resource arrived
+pending.Disposable = Disposable.Create(() => log.Add("late resource closed")); // disposed at once
+
+// log: "late resource closed"
+```
+<!-- endSnippet -->
+
 ### Disposing many resources together
 
-`Disposable.Collection` is an `ICollection<IDisposable>` that disposes its items in reverse order, the last one added first, on its first `Dispose`; later calls do nothing, and an item added after that is never disposed. `Remove` and `Clear` take items out without disposing them:
+`Disposable.Collection` is an `ICollection<IDisposable>` that disposes its items in reverse order, the last one added first, on its first `Dispose`; later calls do nothing, and an item added after that is disposed at once. `Remove` and `Clear` take items out without disposing them:
 
 <!-- snippet: CollectionDisposable -->
 ```cs
@@ -150,6 +215,36 @@ using (var resources = Disposable.Collection(first, second, third))
 }
 
 // log: "third", "first"
+```
+<!-- endSnippet -->
+
+`Disposable.Collection`'s `Add` disposes an item added after the collection is disposed, instead of keeping it:
+
+<!-- snippet: CollectionLateAdd -->
+```cs
+var log = new List<string>();
+var resources = Disposable.Collection();
+resources.Dispose();
+var lateItem = Disposable.Create(() => log.Add("late item closed"));
+
+resources.Add(lateItem); // disposed at once, not kept
+
+// log: "late item closed"; resources.Count == 0
+```
+<!-- endSnippet -->
+
+`AsyncDisposable.Collection`'s `Add` throws `ObjectDisposedException` after the collection is disposed, because it can't await the item's disposal; `AddAsync` disposes the item instead:
+
+<!-- snippet: CollectionLateAddAsync -->
+```cs
+var log = new List<string>();
+var resources = AsyncDisposable.Collection();
+await resources.DisposeAsync();
+var lateItem = AsyncDisposable.Create(() => log.Add("late item closed"));
+
+await resources.AddAsync(lateItem); // disposed at once, not kept; Add would throw ObjectDisposedException
+
+// log: "late item closed"; resources.Count == 0
 ```
 <!-- endSnippet -->
 
@@ -262,9 +357,70 @@ await using (var lease = stream.AsAsyncSharedReference())
 
 On a type that implements both `IDisposable` and `IAsyncDisposable`, such as a `MemoryStream`, `AsSharedReference()` returns a `SharedReferenceLease<T>`, which disposes the resource with `Dispose`, and `AsAsyncSharedReference()` returns an `AsyncSharedReferenceLease<T>`, which disposes it with `DisposeAsync`.
 
+### Handing on ownership with a guard
+
+`Disposable.Guard` disposes a resource when the scope ends, unless `Release()` hands it on first, so a factory can't leak what it built when a later step throws. `AsyncDisposable.Guard` does the same for an `IAsyncDisposable`:
+
+<!-- snippet: GuardDisposable -->
+```cs
+var log = new List<string>();
+
+DisposableAction Connect(bool handshakeFails)
+{
+    var connection = Disposable.Create(() => log.Add("connection closed"));
+    using var guard = Disposable.Guard(connection);
+
+    if (handshakeFails)
+        throw new InvalidOperationException("Handshake failed."); // the guard closes the connection
+
+    return guard.Release(); // the caller owns the connection now
+}
+
+using (Connect(handshakeFails: false)) { }
+
+try
+{
+    Connect(handshakeFails: true);
+}
+catch (InvalidOperationException)
+{
+    log.Add("handshake failed");
+}
+
+// log: "connection closed", "connection closed", "handshake failed"
+```
+<!-- endSnippet -->
+
+### Cancelling on dispose
+
+`Disposable.Cancellation()` cancels its token when disposed, then disposes the `CancellationTokenSource` it created; `Disposable.Cancellation(source)` only cancels a source you own. `AsyncDisposable.Cancellation` cancels with `CancelAsync`:
+
+<!-- snippet: CancellationDisposable -->
+```cs
+using var cancellation = Disposable.Cancellation();
+var work = Task.Delay(Timeout.Infinite, cancellation.Token);
+cancellation.Dispose(); // cancels the token, then disposes the source it created
+// work.IsCanceled == true
+```
+<!-- endSnippet -->
+
+### Checking whether a disposable is disposed
+
+Every disposable class that keeps disposal state implements `IDisposalStatus`, whose `IsDisposed` is `true` once disposal has started. The structs, which are the value disposables, the lock scopes and the shared-reference leases, keep no disposal state and don't implement it, and a shared-reference owner is a reference count, not a disposable. `Disposable.Flag()` only records its disposal:
+
+<!-- snippet: DisposalStatus -->
+```cs
+var flag = Disposable.Flag();
+var cleanup = Disposable.Create(() => { });
+flag.Dispose();
+IDisposalStatus status = cleanup; // every disposable that keeps state reports it
+// flag.IsDisposed == true, status.IsDisposed == false
+```
+<!-- endSnippet -->
+
 ### Disposing on a synchronization context
 
-`Disposable.Context` disposes a resource on a `SynchronizationContext`, such as a UI thread's. By default `Dispose` calls the context's `Send` and returns once the resource is disposed; with `async: true` it calls `Post` and returns at once, telling the context through `OperationStarted` and `OperationCompleted`. The resource is disposed once, however often `Dispose` is called:
+`Disposable.Context` and `AsyncDisposable.Context` dispose a resource on a `SynchronizationContext`, such as a UI thread's. By default `Dispose` calls the context's `Send` and returns once the resource is disposed; with `async: true` it calls `Post` and returns at once, telling the context through `OperationStarted` and `OperationCompleted`. The resource is disposed once, however often `Dispose` is called:
 
 <!-- snippet: ContextDisposable -->
 ```cs
@@ -274,6 +430,53 @@ var control = Disposable.Create(() => log.Add("control disposed"));
 // uiContext is the SynchronizationContext captured on the UI thread.
 var disposable = Disposable.Context(control, uiContext);
 disposable.Dispose(); // Send: returns once the UI thread has disposed the control
+```
+<!-- endSnippet -->
+
+`AsyncDisposable.Context` posts the disposal to the context and completes once it has run there:
+
+<!-- snippet: AsyncContextDisposable -->
+```cs
+var log = new List<string>();
+var viewModel = AsyncDisposable.Create(() => log.Add("view model disposed"));
+
+// uiContext is the SynchronizationContext captured on the UI thread.
+var disposable = AsyncDisposable.Context(viewModel, uiContext);
+await disposable.DisposeAsync(); // Post: completes once the UI thread has disposed it
+```
+<!-- endSnippet -->
+
+When the context's `Post` throws, `DisposeAsync` calls `OperationCompleted` and throws that exception. It doesn't dispose the resource on the calling thread, because a resource such as a UI control must be disposed on its context.
+
+### Scoping a lock
+
+`semaphore.Lock()` and `LockAsync()` wait for a `SemaphoreSlim` and return a scope that releases it; `ReadLock()`, `UpgradeableReadLock()` and `WriteLock()` do the same for a `ReaderWriterLockSlim`. A scope is a struct that allocates nothing: dispose it once, through `using`:
+
+<!-- snippet: SemaphoreLock -->
+```cs
+using var semaphore = new SemaphoreSlim(1, 1);
+var countInScope = -1;
+using (await semaphore.LockAsync())
+{
+    countInScope = semaphore.CurrentCount; // 0 while the scope holds it
+}
+// semaphore.CurrentCount == 1
+```
+<!-- endSnippet -->
+
+<!-- snippet: ReaderWriterLock -->
+```cs
+using var cacheLock = new ReaderWriterLockSlim();
+var readLockHeld = false;
+using (cacheLock.ReadLock())
+{
+    readLockHeld = cacheLock.IsReadLockHeld; // true while the scope holds it
+}
+using (cacheLock.WriteLock())
+{
+    // update the cache
+}
+// cacheLock.IsWriteLockHeld == false
 ```
 <!-- endSnippet -->
 
@@ -345,8 +548,8 @@ await items.DisposeAllAsync(); // DisposeAsync for the stream, then Dispose for 
 
 | Type | Members |
 | --- | --- |
-| `Disposable` | `Empty`, `Create`, `Aggregate`, `Collection`, `Context` and `Shared` |
-| `AsyncDisposable` | `Empty`, `Create`, `Adapt`, `Aggregate`, `Collection` and `Shared` |
+| `Disposable` | `Empty`, `Create`, `CreateValue`, `Aggregate`, `Serial`, `SingleAssignment`, `Guard`, `Cancellation`, `Flag`, `Collection`, `Context` and `Shared` |
+| `AsyncDisposable` | `Empty`, `Create`, `CreateValue`, `Adapt`, `Aggregate`, `Serial`, `SingleAssignment`, `Guard`, `Cancellation`, `Collection`, `Context` and `Shared` |
 | `SharedReference` | `Create(value)` for an `IDisposable`, and `Create(value, onRelease)` for any value |
 | `AsyncSharedReference` | `Create(value)` for an `IAsyncDisposable`, and `Create(value, onRelease)` for any value |
 
@@ -356,9 +559,17 @@ await items.DisposeAllAsync(); // DisposeAsync for the stream, then Dispose for 
 | --- | --- |
 | `DisposableEmpty`, `AsyncDisposableEmpty` | Do nothing; `Singleton` is the instance `Empty` returns |
 | `DisposableAction`, `AsyncDisposableAction` | Run a delegate on dispose, once unless `idempotent` is `false` |
-| `DisposableAggregate`, `AsyncDisposableAggregate` | Hold one replaceable resource; `IDisposableAggregate` and `IAsyncDisposableAggregate` |
-| `DisposableCollection`, `AsyncDisposableCollection` | Dispose their items in reverse order; `IDisposableCollection` and `IAsyncDisposableCollection` |
+| `DisposableAggregate`, `AsyncDisposableAggregate` | Hold one replaceable resource; the obsolete `IDisposableAggregate` and `IAsyncDisposableAggregate` |
+| `DisposableSerial`, `AsyncDisposableSerial` | Hold one resource and dispose the previous one when it is replaced |
+| `DisposableSingleAssignment`, `AsyncDisposableSingleAssignment` | Take one resource, once |
+| `DisposableGuard<T>`, `AsyncDisposableGuard<T>` | Dispose a resource unless `Release()` hands ownership on |
+| `DisposableCancellation`, `AsyncDisposableCancellation` | Cancel a token on dispose |
+| `DisposableFlag` | Only records that it was disposed |
+| `DisposableCollection`, `AsyncDisposableCollection` | Dispose their items in reverse order; the obsolete `IDisposableCollection` and `IAsyncDisposableCollection` |
 | `DisposableContext` | Disposes a resource on a `SynchronizationContext` |
+| `AsyncDisposableContext` | Posts the async disposal of a resource to a `SynchronizationContext` |
+| `ValueDisposable<TState>`, `AsyncValueDisposable<TState>` | An allocation-free struct that runs a static delegate with its state on every dispose |
+| `IDisposalStatus` | Exposes `IsDisposed` |
 | `AsyncDisposableAdapter` | An `IAsyncDisposable` over an `IDisposable` |
 | `SharedReferenceLease<T>`, `AsyncSharedReferenceLease<T>` | A lease on a shared resource: `Value`, `IsActive`, `AddReference` and `TryAddReference` |
 | `SharedReferenceOwner<T>`, `AsyncSharedReferenceOwner<T>` | The reference count behind the leases; `ISharedReferenceOwner<T>` and `IAsyncSharedReferenceOwner<T>` |
@@ -369,10 +580,12 @@ await items.DisposeAllAsync(); // DisposeAsync for the stream, then Dispose for 
 | --- | --- |
 | `DisposableExtensions` | `DisposeAsyncIfAvailable()`, `AsSharedReference()` and `DisposeAll()` |
 | `AsyncDisposableExtensions` | `AsAsyncSharedReference()` and `DisposeAllAsync()` |
+| `SemaphoreSlimExtensions` | `Lock()` and `LockAsync()` |
+| `ReaderWriterLockSlimExtensions` | `ReadLock()`, `UpgradeableReadLock()` and `WriteLock()` |
 
 ## Thread safety
 
-The actions, aggregates, collections, context disposables and adapters run their cleanup at most once, even when several threads dispose them at once, unless an action or adapter is created with `idempotent: false`. An aggregate's `Disposable` property is safe to read and set from several threads. A lease's `AddReference`, `TryAddReference` and `Dispose` are safe from any thread, and the release action runs once, on the thread that releases the last lease. A collection's `Add`, `Remove`, `Clear` and enumeration hold no lock: synchronize them, and don't change a collection while it is being disposed.
+Every class runs its cleanup at most once, even when several threads dispose it at once, unless an action or adapter is created with `idempotent: false`. The aggregate, serial and single-assignment holders swap their resource atomically, and a collection's members all take one lock, its enumeration walking a snapshot. A resource handed to a holder after it is disposed is disposed at once. A lease's `AddReference`, `TryAddReference` and `Dispose` are safe from any thread, and the release action runs once, on the thread that releases the last lease. The structs (`ValueDisposable<TState>`, `AsyncValueDisposable<TState>` and the lock scopes) run their action on every dispose: dispose them once.
 
 ## Project
 

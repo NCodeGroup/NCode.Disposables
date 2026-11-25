@@ -84,7 +84,7 @@ public class DisposableAggregateTests
     }
 
     [Fact]
-    public void Disposable_GetAfterDispose_ThrowsObjectDisposedException()
+    public void Disposable_GetAfterDispose_ReturnsNull()
     {
         var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
         mockDisposable.Setup(x => x.Dispose());
@@ -92,19 +92,43 @@ public class DisposableAggregateTests
 
         aggregate.Dispose();
 
-        Assert.Throws<ObjectDisposedException>(() => aggregate.Disposable);
+        Assert.Null(aggregate.Disposable);
     }
 
     [Fact]
-    public void Disposable_SetAfterDispose_ThrowsObjectDisposedException()
+    public void Disposable_SetAfterDispose_DisposesValue()
     {
         var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
         mockDisposable.Setup(x => x.Dispose());
-        var aggregate = new DisposableAggregate(mockDisposable.Object);
+        var aggregate = new DisposableAggregate();
+
+        aggregate.Dispose();
+        aggregate.Disposable = mockDisposable.Object;
+
+        mockDisposable.Verify(x => x.Dispose(), Times.Once);
+        Assert.Null(aggregate.Disposable);
+    }
+
+    #endregion
+
+    #region IsDisposed Property Tests
+
+    [Fact]
+    public void IsDisposed_BeforeDispose_ReturnsFalse()
+    {
+        var aggregate = new DisposableAggregate();
+
+        Assert.False(aggregate.IsDisposed);
+    }
+
+    [Fact]
+    public void IsDisposed_AfterDispose_ReturnsTrue()
+    {
+        var aggregate = new DisposableAggregate();
 
         aggregate.Dispose();
 
-        Assert.Throws<ObjectDisposedException>(() => aggregate.Disposable = new DisposableEmpty());
+        Assert.True(aggregate.IsDisposed);
     }
 
     #endregion
@@ -118,7 +142,8 @@ public class DisposableAggregateTests
 
         aggregate.Dispose();
 
-        Assert.Throws<ObjectDisposedException>(() => aggregate.Disposable);
+        Assert.True(aggregate.IsDisposed);
+        Assert.Null(aggregate.Disposable);
     }
 
     [Fact]
@@ -182,7 +207,8 @@ public class DisposableAggregateTests
 
         Assert.Throws<InvalidOperationException>(() => aggregate.Dispose());
 
-        Assert.Throws<ObjectDisposedException>(() => aggregate.Disposable);
+        Assert.True(aggregate.IsDisposed);
+        Assert.Null(aggregate.Disposable);
     }
 
     [Fact]
@@ -278,23 +304,15 @@ public class DisposableAggregateTests
             var mockDisposable = new Mock<IDisposable>(MockBehavior.Strict);
             mockDisposable.Setup(x => x.Dispose());
 
-            var setTask = Task.Run(() =>
-            {
-                try
-                {
-                    aggregate.Disposable = mockDisposable.Object;
-                }
-                catch (ObjectDisposedException)
-                {
-                    // Expected if dispose happens first
-                }
-            });
+            var setTask = Task.Run(() => aggregate.Disposable = mockDisposable.Object);
 
             var disposeTask = Task.Run(() => aggregate.Dispose());
 
             await Task.WhenAll(setTask, disposeTask);
 
-            Assert.Throws<ObjectDisposedException>(() => aggregate.Disposable);
+            Assert.True(aggregate.IsDisposed);
+            Assert.Null(aggregate.Disposable);
+            mockDisposable.Verify(x => x.Dispose(), Times.Once);
         }
     }
 
@@ -302,6 +320,7 @@ public class DisposableAggregateTests
 
     #region Interface Tests
 
+#pragma warning disable NCDISP002 // implements the deprecated interface until it is deleted
     [Fact]
     public void ImplementsIDisposableAggregate()
     {
@@ -309,6 +328,7 @@ public class DisposableAggregateTests
 
         Assert.IsAssignableFrom<IDisposableAggregate>(aggregate);
     }
+#pragma warning restore NCDISP002
 
     [Fact]
     public void ImplementsIDisposable()

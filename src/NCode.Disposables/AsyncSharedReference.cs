@@ -23,7 +23,7 @@ public static class AsyncSharedReference
     private static async ValueTask DisposeAsync<T>(T value)
         where T : IAsyncDisposable
     {
-        await value.DisposeAsync();
+        await value.DisposeAsync().ConfigureAwait(false);
     }
 
     /// <summary>

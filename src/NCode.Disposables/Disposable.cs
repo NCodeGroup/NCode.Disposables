@@ -30,19 +30,19 @@ public static class Disposable
     /// This property is useful as a default or placeholder value where an <see cref="IDisposable"/>
     /// is required but no actual cleanup is needed. The same singleton instance is always returned.
     /// </remarks>
-    public static IDisposable Empty => DisposableEmpty.Singleton;
+    public static DisposableEmpty Empty => DisposableEmpty.Singleton;
 
     /// <summary>
-    /// Creates and returns a new instance of <see cref="IDisposableAggregate"/>
+    /// Creates and returns a new instance of <see cref="DisposableAggregate"/>
     /// that contains (i.e. aggregates) a property to another <see cref="IDisposable"/>
     /// instance.
     /// </summary>
-    /// <param name="disposable">The underlying <see cref="IDisposable"/> instance that the <see cref="IDisposableAggregate"/> will contain (i.e. aggregate).</param>
-    /// <returns>A new <see cref="IDisposableAggregate"/> instance wrapping the specified disposable.</returns>
+    /// <param name="disposable">The underlying <see cref="IDisposable"/> instance that the <see cref="DisposableAggregate"/> will contain (i.e. aggregate).</param>
+    /// <returns>A new <see cref="DisposableAggregate"/> instance wrapping the specified disposable.</returns>
     /// <remarks>
     /// <para>
     /// The aggregate pattern allows the underlying disposable to be replaced at runtime through the
-    /// <see cref="IDisposableAggregate.Disposable"/> property. This is useful in scenarios where the
+    /// <see cref="DisposableAggregate.Disposable"/> property. This is useful in scenarios where the
     /// actual resource to be disposed is determined or changed after the aggregate is created.
     /// </para>
     /// <para>
@@ -50,9 +50,152 @@ public static class Disposable
     /// is currently held. If <paramref name="disposable"/> is <see langword="null"/>, no action is taken on disposal.
     /// </para>
     /// </remarks>
-    public static IDisposableAggregate Aggregate(IDisposable? disposable)
+    public static DisposableAggregate Aggregate(IDisposable? disposable)
     {
         return new DisposableAggregate(disposable);
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="DisposableAggregate"/>
+    /// that does not yet contain an <see cref="IDisposable"/> instance.
+    /// </summary>
+    /// <returns>A new, empty <see cref="DisposableAggregate"/> instance.</returns>
+    /// <remarks>
+    /// The underlying disposable can be assigned later through the
+    /// <see cref="DisposableAggregate.Disposable"/> property. If no disposable is assigned,
+    /// no action is taken on disposal.
+    /// </remarks>
+    public static DisposableAggregate Aggregate()
+    {
+        return new DisposableAggregate();
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="DisposableSerial"/>
+    /// that does not yet contain an <see cref="IDisposable"/> instance.
+    /// </summary>
+    /// <returns>A new, empty <see cref="DisposableSerial"/> instance.</returns>
+    /// <remarks>
+    /// Each time a new <see cref="IDisposable"/> is assigned through the
+    /// <see cref="DisposableSerial.Disposable"/> property, the previously held instance is disposed.
+    /// </remarks>
+    public static DisposableSerial Serial()
+    {
+        return new DisposableSerial();
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="DisposableSerial"/>
+    /// that initially contains the specified <see cref="IDisposable"/> instance.
+    /// </summary>
+    /// <param name="disposable">The initial <see cref="IDisposable"/> instance that the <see cref="DisposableSerial"/> will contain.</param>
+    /// <returns>A new <see cref="DisposableSerial"/> instance holding the specified disposable.</returns>
+    /// <remarks>
+    /// Each time a new <see cref="IDisposable"/> is assigned through the
+    /// <see cref="DisposableSerial.Disposable"/> property, the previously held instance is disposed.
+    /// If <paramref name="disposable"/> is <see langword="null"/>, nothing is held initially.
+    /// </remarks>
+    public static DisposableSerial Serial(IDisposable? disposable)
+    {
+        return new DisposableSerial(disposable);
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="DisposableSingleAssignment"/>
+    /// that does not yet contain an <see cref="IDisposable"/> instance.
+    /// </summary>
+    /// <returns>A new, unassigned <see cref="DisposableSingleAssignment"/> instance.</returns>
+    /// <remarks>
+    /// The underlying disposable can be assigned once through the
+    /// <see cref="DisposableSingleAssignment.Disposable"/> property.
+    /// </remarks>
+    public static DisposableSingleAssignment SingleAssignment()
+    {
+        return new DisposableSingleAssignment();
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="DisposableGuard{T}"/>
+    /// that guards the specified <see cref="IDisposable"/> value.
+    /// </summary>
+    /// <typeparam name="T">The type of the guarded disposable value.</typeparam>
+    /// <param name="value">The <see cref="IDisposable"/> instance that the <see cref="DisposableGuard{T}"/> will guard.</param>
+    /// <returns>A new <see cref="DisposableGuard{T}"/> instance guarding the specified value.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// The guarded value is disposed when the guard is disposed, unless ownership of the value
+    /// has been released from the guard.
+    /// </remarks>
+    public static DisposableGuard<T> Guard<T>(T value)
+        where T : IDisposable
+    {
+        ArgumentNullException.ThrowIfNull(value);
+
+        return new DisposableGuard<T>(value);
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="DisposableCancellation"/>
+    /// with a new <see cref="CancellationTokenSource"/>.
+    /// </summary>
+    /// <returns>A new <see cref="DisposableCancellation"/> instance.</returns>
+    /// <remarks>
+    /// When the returned instance is disposed, its <see cref="CancellationTokenSource"/> is cancelled and then disposed.
+    /// </remarks>
+    public static DisposableCancellation Cancellation()
+    {
+        return new DisposableCancellation();
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="DisposableCancellation"/>
+    /// that cancels the specified <see cref="CancellationTokenSource"/>.
+    /// </summary>
+    /// <param name="source">The <see cref="CancellationTokenSource"/> to cancel when the returned instance is disposed.</param>
+    /// <returns>A new <see cref="DisposableCancellation"/> instance using the specified source.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// The returned instance cancels <paramref name="source"/> without disposing it.
+    /// The caller remains responsible for disposing <paramref name="source"/>.
+    /// </remarks>
+    public static DisposableCancellation Cancellation(CancellationTokenSource source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        return new DisposableCancellation(source);
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="DisposableFlag"/>
+    /// that has not been disposed.
+    /// </summary>
+    /// <returns>A new <see cref="DisposableFlag"/> instance.</returns>
+    /// <remarks>
+    /// The <see cref="DisposableFlag.IsDisposed"/> property reports whether the flag has been disposed.
+    /// </remarks>
+    public static DisposableFlag Flag()
+    {
+        return new DisposableFlag();
+    }
+
+    /// <summary>
+    /// Creates and returns a new instance of <see cref="ValueDisposable{TState}"/>
+    /// that invokes an action with a state value when it is disposed.
+    /// </summary>
+    /// <typeparam name="TState">The type of the state value that is passed to the action.</typeparam>
+    /// <param name="action">The action to invoke when the returned value is disposed.</param>
+    /// <param name="state">The state value that is passed to <paramref name="action"/>.</param>
+    /// <returns>A new <see cref="ValueDisposable{TState}"/> value.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// The returned value does not allocate and is not idempotent; every call to
+    /// <see cref="IDisposable.Dispose"/> invokes <paramref name="action"/>.
+    /// </remarks>
+    public static ValueDisposable<TState> CreateValue<TState>(Action<TState> action, TState state)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        return new ValueDisposable<TState>(action, state);
     }
 
     /// <summary>
@@ -77,7 +220,7 @@ public static class Disposable
     /// the <see cref="SynchronizationContext.Post"/> method is used, which returns immediately.
     /// </para>
     /// </remarks>
-    public static IDisposable Context(
+    public static DisposableContext Context(
         IDisposable disposable,
         SynchronizationContext context,
         bool async = false
@@ -148,14 +291,14 @@ public static class Disposable
     }
 
     /// <summary>
-    /// Creates and returns a new instance of <see cref="IDisposableCollection"/>
+    /// Creates and returns a new instance of <see cref="DisposableCollection"/>
     /// which contains other <see cref="IDisposable"/> items that will be
     /// disposed when the collection itself is disposed. The collection is
     /// initialized from a variable argument array of <see cref="IDisposable"/>
     /// items.
     /// </summary>
-    /// <param name="collection">The collection whose elements are copied to the new <see cref="IDisposableCollection"/>.</param>
-    /// <returns>A new <see cref="IDisposableCollection"/> containing the specified disposables.</returns>
+    /// <param name="collection">The collection whose elements are copied to the new <see cref="DisposableCollection"/>.</param>
+    /// <returns>A new <see cref="DisposableCollection"/> containing the specified disposables.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
@@ -167,7 +310,7 @@ public static class Disposable
     /// Additional items can be added to the collection after creation.
     /// </para>
     /// </remarks>
-    public static IDisposableCollection Collection(params IDisposable[] collection)
+    public static DisposableCollection Collection(params IDisposable[] collection)
     {
         ArgumentNullException.ThrowIfNull(collection);
 
@@ -175,13 +318,13 @@ public static class Disposable
     }
 
     /// <summary>
-    /// Creates and returns a new instance of <see cref="IDisposableCollection"/>
+    /// Creates and returns a new instance of <see cref="DisposableCollection"/>
     /// which contains other <see cref="IDisposable"/> items that will be
     /// disposed when the collection itself is disposed, with an option to ignore exceptions.
     /// </summary>
     /// <param name="ignoreExceptions"><see langword="true"/> to ignore any exceptions thrown while disposing individual items; otherwise, <see langword="false"/> to allow exceptions to propagate.</param>
-    /// <param name="collection">The collection whose elements are copied to the new <see cref="IDisposableCollection"/>.</param>
-    /// <returns>A new <see cref="IDisposableCollection"/> containing the specified disposables.</returns>
+    /// <param name="collection">The collection whose elements are copied to the new <see cref="DisposableCollection"/>.</param>
+    /// <returns>A new <see cref="DisposableCollection"/> containing the specified disposables.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
@@ -193,7 +336,7 @@ public static class Disposable
     /// rethrown, or an <see cref="AggregateException"/> holding every exception is thrown when several items throw.
     /// </para>
     /// </remarks>
-    public static IDisposableCollection Collection(
+    public static DisposableCollection Collection(
         bool ignoreExceptions,
         params IDisposable[] collection
     )
@@ -204,14 +347,14 @@ public static class Disposable
     }
 
     /// <summary>
-    /// Creates and returns a new instance of <see cref="IDisposableCollection"/>
+    /// Creates and returns a new instance of <see cref="DisposableCollection"/>
     /// which contains other <see cref="IDisposable"/> items that will be
     /// disposed when the collection itself is disposed. The collection is
     /// initialized from an enumeration of <see cref="IDisposable"/> items.
     /// </summary>
-    /// <param name="collection">The collection whose elements are copied to the new <see cref="IDisposableCollection"/>.</param>
+    /// <param name="collection">The collection whose elements are copied to the new <see cref="DisposableCollection"/>.</param>
     /// <param name="ignoreExceptions"><see langword="true"/> to ignore any exceptions thrown while disposing individual items; otherwise, <see langword="false"/> to allow exceptions to propagate.</param>
-    /// <returns>A new <see cref="IDisposableCollection"/> containing copies of the elements from the specified collection.</returns>
+    /// <returns>A new <see cref="DisposableCollection"/> containing copies of the elements from the specified collection.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
@@ -224,7 +367,10 @@ public static class Disposable
     /// rethrown, or an <see cref="AggregateException"/> holding every exception is thrown when several items throw.
     /// </para>
     /// </remarks>
-    public static IDisposableCollection Collection(
+    // Callers that pass only the collection bind to this overload, so it keeps its optional parameter.
+#pragma warning disable RS0027 // optional parameter on an overload with fewer parameters than another
+    public static DisposableCollection Collection(
+#pragma warning restore RS0027
         IEnumerable<IDisposable> collection,
         bool ignoreExceptions = false
     )
@@ -246,7 +392,7 @@ public static class Disposable
     /// The returned instance is idempotent by default, meaning multiple calls to <see cref="IDisposable.Dispose"/>
     /// will only invoke the action once.
     /// </remarks>
-    public static IDisposable Create(Action action)
+    public static DisposableAction Create(Action action)
     {
         ArgumentNullException.ThrowIfNull(action);
 
@@ -267,7 +413,7 @@ public static class Disposable
     /// When <paramref name="idempotent"/> is <see langword="false"/>, each call to <see cref="IDisposable.Dispose"/>
     /// will invoke the action. Use this with caution as it deviates from the standard dispose pattern.
     /// </remarks>
-    public static IDisposable Create(Action action, bool idempotent)
+    public static DisposableAction Create(Action action, bool idempotent)
     {
         ArgumentNullException.ThrowIfNull(action);
 
@@ -287,7 +433,7 @@ public static class Disposable
     /// This overload is useful when you have an existing method that returns a value but you only care
     /// about its side effects during disposal. The returned instance is idempotent by default.
     /// </remarks>
-    public static IDisposable Create<TResult>(Func<TResult> action)
+    public static DisposableAction Create<TResult>(Func<TResult> action)
     {
         ArgumentNullException.ThrowIfNull(action);
 
@@ -308,7 +454,7 @@ public static class Disposable
     /// The argument is captured at creation time, allowing type-safe disposal patterns.
     /// The returned instance is idempotent by default.
     /// </remarks>
-    public static IDisposable Create<T>(Action<T> action, T arg)
+    public static DisposableAction Create<T>(Action<T> action, T arg)
     {
         ArgumentNullException.ThrowIfNull(action);
 
@@ -330,7 +476,7 @@ public static class Disposable
     /// This overload is useful when you have an existing method that returns a value but you only care
     /// about its side effects during disposal. The returned instance is idempotent by default.
     /// </remarks>
-    public static IDisposable Create<T, TResult>(Func<T, TResult> action, T arg)
+    public static DisposableAction Create<T, TResult>(Func<T, TResult> action, T arg)
     {
         ArgumentNullException.ThrowIfNull(action);
 
@@ -353,7 +499,7 @@ public static class Disposable
     /// The arguments are captured at creation time, allowing type-safe disposal patterns.
     /// The returned instance is idempotent by default.
     /// </remarks>
-    public static IDisposable Create<T1, T2>(Action<T1, T2> action, T1 arg1, T2 arg2)
+    public static DisposableAction Create<T1, T2>(Action<T1, T2> action, T1 arg1, T2 arg2)
     {
         ArgumentNullException.ThrowIfNull(action);
 
@@ -377,7 +523,7 @@ public static class Disposable
     /// This overload is useful when you have an existing method that returns a value but you only care
     /// about its side effects during disposal. The returned instance is idempotent by default.
     /// </remarks>
-    public static IDisposable Create<T1, T2, TResult>(
+    public static DisposableAction Create<T1, T2, TResult>(
         Func<T1, T2, TResult> action,
         T1 arg1,
         T2 arg2
@@ -406,7 +552,7 @@ public static class Disposable
     /// The arguments are captured at creation time, allowing type-safe disposal patterns.
     /// The returned instance is idempotent by default.
     /// </remarks>
-    public static IDisposable Create<T1, T2, T3>(
+    public static DisposableAction Create<T1, T2, T3>(
         Action<T1, T2, T3> action,
         T1 arg1,
         T2 arg2,
@@ -437,7 +583,7 @@ public static class Disposable
     /// This overload is useful when you have an existing method that returns a value but you only care
     /// about its side effects during disposal. The returned instance is idempotent by default.
     /// </remarks>
-    public static IDisposable Create<T1, T2, T3, TResult>(
+    public static DisposableAction Create<T1, T2, T3, TResult>(
         Func<T1, T2, T3, TResult> action,
         T1 arg1,
         T2 arg2,
@@ -469,7 +615,7 @@ public static class Disposable
     /// The arguments are captured at creation time, allowing type-safe disposal patterns.
     /// The returned instance is idempotent by default.
     /// </remarks>
-    public static IDisposable Create<T1, T2, T3, T4>(
+    public static DisposableAction Create<T1, T2, T3, T4>(
         Action<T1, T2, T3, T4> action,
         T1 arg1,
         T2 arg2,
@@ -503,7 +649,7 @@ public static class Disposable
     /// This overload is useful when you have an existing method that returns a value but you only care
     /// about its side effects during disposal. The returned instance is idempotent by default.
     /// </remarks>
-    public static IDisposable Create<T1, T2, T3, T4, TResult>(
+    public static DisposableAction Create<T1, T2, T3, T4, TResult>(
         Func<T1, T2, T3, T4, TResult> action,
         T1 arg1,
         T2 arg2,
@@ -538,7 +684,7 @@ public static class Disposable
     /// The arguments are captured at creation time, allowing type-safe disposal patterns.
     /// The returned instance is idempotent by default.
     /// </remarks>
-    public static IDisposable Create<T1, T2, T3, T4, T5>(
+    public static DisposableAction Create<T1, T2, T3, T4, T5>(
         Action<T1, T2, T3, T4, T5> action,
         T1 arg1,
         T2 arg2,
@@ -575,7 +721,7 @@ public static class Disposable
     /// This overload is useful when you have an existing method that returns a value but you only care
     /// about its side effects during disposal. The returned instance is idempotent by default.
     /// </remarks>
-    public static IDisposable Create<T1, T2, T3, T4, T5, TResult>(
+    public static DisposableAction Create<T1, T2, T3, T4, T5, TResult>(
         Func<T1, T2, T3, T4, T5, TResult> action,
         T1 arg1,
         T2 arg2,
@@ -613,7 +759,7 @@ public static class Disposable
     /// The arguments are captured at creation time, allowing type-safe disposal patterns.
     /// The returned instance is idempotent by default.
     /// </remarks>
-    public static IDisposable Create<T1, T2, T3, T4, T5, T6>(
+    public static DisposableAction Create<T1, T2, T3, T4, T5, T6>(
         Action<T1, T2, T3, T4, T5, T6> action,
         T1 arg1,
         T2 arg2,
@@ -653,7 +799,7 @@ public static class Disposable
     /// This overload is useful when you have an existing method that returns a value but you only care
     /// about its side effects during disposal. The returned instance is idempotent by default.
     /// </remarks>
-    public static IDisposable Create<T1, T2, T3, T4, T5, T6, TResult>(
+    public static DisposableAction Create<T1, T2, T3, T4, T5, T6, TResult>(
         Func<T1, T2, T3, T4, T5, T6, TResult> action,
         T1 arg1,
         T2 arg2,
@@ -694,7 +840,7 @@ public static class Disposable
     /// The arguments are captured at creation time, allowing type-safe disposal patterns.
     /// The returned instance is idempotent by default.
     /// </remarks>
-    public static IDisposable Create<T1, T2, T3, T4, T5, T6, T7>(
+    public static DisposableAction Create<T1, T2, T3, T4, T5, T6, T7>(
         Action<T1, T2, T3, T4, T5, T6, T7> action,
         T1 arg1,
         T2 arg2,
@@ -737,7 +883,7 @@ public static class Disposable
     /// This overload is useful when you have an existing method that returns a value but you only care
     /// about its side effects during disposal. The returned instance is idempotent by default.
     /// </remarks>
-    public static IDisposable Create<T1, T2, T3, T4, T5, T6, T7, TResult>(
+    public static DisposableAction Create<T1, T2, T3, T4, T5, T6, T7, TResult>(
         Func<T1, T2, T3, T4, T5, T6, T7, TResult> action,
         T1 arg1,
         T2 arg2,
@@ -781,7 +927,7 @@ public static class Disposable
     /// The arguments are captured at creation time, allowing type-safe disposal patterns.
     /// The returned instance is idempotent by default.
     /// </remarks>
-    public static IDisposable Create<T1, T2, T3, T4, T5, T6, T7, T8>(
+    public static DisposableAction Create<T1, T2, T3, T4, T5, T6, T7, T8>(
         Action<T1, T2, T3, T4, T5, T6, T7, T8> action,
         T1 arg1,
         T2 arg2,
@@ -827,7 +973,7 @@ public static class Disposable
     /// This overload is useful when you have an existing method that returns a value but you only care
     /// about its side effects during disposal. The returned instance is idempotent by default.
     /// </remarks>
-    public static IDisposable Create<T1, T2, T3, T4, T5, T6, T7, T8, TResult>(
+    public static DisposableAction Create<T1, T2, T3, T4, T5, T6, T7, T8, TResult>(
         Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> action,
         T1 arg1,
         T2 arg2,
