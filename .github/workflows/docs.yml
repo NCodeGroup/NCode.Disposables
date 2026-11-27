@@ -32,7 +32,7 @@ jobs:
       id-token: write # proves to GitHub Pages where the deployment comes from
     # Taken the day it is released, not after project-template ADR-0009's cooldown, while the toolchain is built out
     # (ADR-1011).
-    uses: NCodeGroup/docs/.github/workflows/site.yml@f796a21fc43a1001743446df21a6ed2d6f555c3c # v0.18.0
+    uses: NCodeGroup/docs/.github/workflows/site.yml@024e475a84e99b3027670c51a00ab5eeb5266b6d # v0.18.1
     with:
       content-path: docs/site
       deploy: ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
