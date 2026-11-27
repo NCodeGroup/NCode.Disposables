@@ -206,7 +206,9 @@ public class AsyncDisposablePropertyTests
         {
             null => [],
             AggregateException aggregate =>
-                aggregate.InnerExceptions.Select(exception => exception.Message).ToList(),
+            [
+                .. aggregate.InnerExceptions.Select(exception => exception.Message),
+            ],
             _ => [thrown.Message],
         };
 }
