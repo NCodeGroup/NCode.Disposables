@@ -1,0 +1,59 @@
+name: CodeQL
+
+# CodeQL's advanced setup: it analyzes every pull request, one from a fork included, which CodeQL's default setup skips,
+# so OpenSSF Scorecard's SAST check finds CodeQL's results on every commit the default branch takes (ADR-1014). It
+# analyzes actions, csharp and javascript-typescript with the security-extended query suite, and a language the
+# repository adds that CodeQL analyzes goes into the matrix below in the same change. GitHub refuses this workflow's
+# results while default setup is on, so the repository's code scanning settings keep default setup off.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
+  # The ruleset's code-scanning rule asks for CodeQL's results in a merge queue too.
+  merge_group:
+    types: [checks_requested]
+  schedule:
+    - cron: '41 4 * * 3'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# The same groups as ci.yml: a newer push to a pull request cancels the run it supersedes, and a run for a
+# default-branch commit or a merge queue entry is never cancelled.
+concurrency:
+  group: codeql-${{ github.ref }}-${{ (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.event_name == 'merge_group') && github.sha || 'latest' }}
+  cancel-in-progress: ${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) && github.event_name != 'merge_group' }}
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      # CodeQL reads the run's workflow to describe the analysis it uploads.
+      actions: read
+      # Uploads the results to code scanning. A pull request from a fork gets a read-only token, and code scanning
+      # still takes its results, for the pull request alone.
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [actions, csharp, javascript-typescript]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # build-mode none builds nothing, and restores the C# projects' packages with the SDK global.json selects.
+      - if: matrix.language == 'csharp'
+        uses: ./.github/actions/install-dotnet
+      - uses: github/codeql-action/init@915412ff23e8b7659517e607487dbeae018f2934 # v4.39.5
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+          queries: security-extended
+      - uses: github/codeql-action/analyze@915412ff23e8b7659517e607487dbeae018f2934 # v4.39.5
+        with:
+          category: /language:${{ matrix.language }}
