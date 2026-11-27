@@ -119,8 +119,11 @@ privilege and open design."
   banned-API list in `build/BannedSymbols.txt`
   ([ADR-0102](decisions/project-template/0102-disallowed-apis-are-banned-at-build-time.md)), and runs the tests; CI runs
   `./build/gate.ps1` on every pull request.
-- **Static analysis:** with CodeQL's default setup configured and analyzing at least one language, the repository
-  ruleset blocks a pull request that adds a CodeQL alert at warning level or above, or a security alert of any severity
+- **Static analysis:** `.github/workflows/codeql.yml` runs CodeQL's `security-extended` queries over the C#, the
+  workflows and the site's TypeScript on every pull request, a fork's included, every push to `main` and every week
+  ([ADR-1014](decisions/1014-codeql-runs-through-a-workflow-of-the-repositorys-own-so-it-analyzes-pull-requests-from-forks.md)),
+  and the repository ruleset blocks a pull request that adds a CodeQL alert at warning level or above, or a security
+  alert of any severity
   ([ADR-0005](decisions/project-template/0005-the-default-branch-accepts-changes-only-through-pull-requests.md),
   [ADR-0030](decisions/project-template/0030-the-code-scanning-rule-is-added-only-where-codeql-analyzes-a-language.md)).
 - **Review:** every change reaches the default branch through a pull request with passing CI and every conversation

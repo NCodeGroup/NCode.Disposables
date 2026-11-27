@@ -76,3 +76,4 @@ override in `AGENTS.md`.
 | [1011](1011-ncodegroup-docs-releases-are-taken-without-a-cooldown-during-the-build-out.md) | NCodeGroup/docs releases are taken without a cooldown during the build-out | Accepted |
 | [1012](1012-the-documentation-site-is-published-to-github-pages-from-the-default-branch.md) | The documentation site is published to GitHub Pages from the default branch | Accepted |
 | [1013](1013-the-documentation-site-is-served-at-disposables-ncode-io.md) | The documentation site is served at disposables.ncode.io | Accepted |
+| [1014](1014-codeql-runs-through-a-workflow-of-the-repositorys-own-so-it-analyzes-pull-requests-from-forks.md) | CodeQL runs through a workflow of the repository's own, so it analyzes pull requests from forks | Accepted |
