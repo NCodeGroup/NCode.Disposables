@@ -2,8 +2,9 @@ name: CodeQL
 
 # CodeQL's advanced setup: it analyzes every pull request, one from a fork included, which CodeQL's default setup skips,
 # so OpenSSF Scorecard's SAST check finds CodeQL's results on every commit the default branch takes (ADR-1014). It
-# analyzes the languages and runs the query suite the repository's default setup analyzed and ran. GitHub refuses this
-# workflow's results while default setup is on, so the repository's code scanning settings keep default setup off.
+# analyzes actions, csharp and javascript-typescript with the security-extended query suite, and a language the
+# repository adds that CodeQL analyzes goes into the matrix below in the same change. GitHub refuses this workflow's
+# results while default setup is on, so the repository's code scanning settings keep default setup off.
 on:
   push:
     branches: [main]
