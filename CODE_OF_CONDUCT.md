@@ -48,7 +48,9 @@ offline event.
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leaders
 responsible for enforcement, the maintainers [GOVERNANCE.md](GOVERNANCE.md) lists, privately: on the repository's **Security** tab, choose **Report a vulnerability** and start the title with
-"Conduct:". The report reaches the maintainers only. All complaints will be reviewed and investigated promptly and fairly.
+"Conduct:". The report reaches the maintainers only. A report about behavior elsewhere in the organization that owns
+this repository goes the same way to that organization's `.github` repository, whose Code of Conduct covers the
+organization's repositories that have none of their own. All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the reporter of any incident.
 
