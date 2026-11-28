@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Marcin Polewski
+# SPDX-License-Identifier: MIT
+
 <#
 .SYNOPSIS
     Fail on a source file that doesn't start with the copyright line and the SPDX license line.
@@ -10,11 +13,11 @@
     comment line within its first 10 lines. The comment follows the file's extension: "#" for scripts, "//" for the C
     family and JavaScript, "/* ... */" on each line for .css, .scss and .less, and "//" inside the frontmatter for
     .astro, whose lines must sit between its leading "---" lines so nothing reaches the built page. Files of other
-    kinds, and names ending in .min.js, aren't checked. Nor does it check the five build scripts the template owns
-    (build/dod.ps1, Update-PublicApi.ps1, Get-TestRuntimes.ps1, Install-Dotnet.ps1 and Update-Baseline.ps1), which
-    updates replace. A hand-written declaration file (.d.ts) is checked like any
-    TypeScript file; a generated one, like other build output, sits in a git-ignored folder, which git ls-files
-    leaves out.
+    kinds, and names ending in .min.js, aren't checked. Nor does it check the six build scripts the template owns
+    (build/dod.ps1, Update-PublicApi.ps1, Get-TestRuntimes.ps1, Install-Dotnet.ps1, Test-DotnetSupport.ps1 and
+    Update-Baseline.ps1), which updates replace and which carry the template's own copyright and license lines (the
+    template's ADR-0038). A hand-written declaration file (.d.ts) is checked like any TypeScript file; a generated
+    one, like other build output, sits in a git-ignored folder, which git ls-files leaves out.
     Prints each miss and exits 1 when there is one, else 0. With -Fix, it adds the missing lines instead, after any #!
     line or an .astro file's opening "---" line, giving an .astro file without frontmatter a "---" block that holds
     them, keeping the file's line endings and byte order mark, and exits 0. Without an author_name answer there is no
@@ -61,8 +64,9 @@ $spdxLine = if ($license) { "SPDX-License-Identifier: $license" }
 $hashMarker = '.ps1', '.psm1', '.py', '.sh', '.bash', '.rb', '.tf'
 $slashMarker = '.js', '.mjs', '.cjs', '.jsx', '.ts', '.mts', '.cts', '.tsx', '.go', '.rs', '.java', '.kt', '.kts', '.swift', '.c', '.h', '.cc', '.cpp', '.hpp', '.cs', '.scala', '.dart', '.groovy', '.astro'
 $blockMarker = '.css', '.scss', '.less'
-# Scripts the template owns and updates replace, so a header added to one would be discarded.
-$templateOwned = 'build/dod.ps1', 'build/Update-PublicApi.ps1', 'build/Get-TestRuntimes.ps1', 'build/Install-Dotnet.ps1', 'build/Update-Baseline.ps1'
+# Scripts the template owns and updates replace: they carry the template's copyright and license lines, not the
+# project's (the template's ADR-0038).
+$templateOwned = 'build/dod.ps1', 'build/Update-PublicApi.ps1', 'build/Get-TestRuntimes.ps1', 'build/Install-Dotnet.ps1', 'build/Test-DotnetSupport.ps1', 'build/Update-Baseline.ps1'
 
 $listed = git -C $Root ls-files -z
 if ($LASTEXITCODE) { throw "git ls-files exited with code $LASTEXITCODE." }

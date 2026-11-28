@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Marcin Polewski
+# SPDX-License-Identifier: MIT
+
 <#
 .SYNOPSIS
     Records each packable project's public API in its PublicAPI.Shipped.txt and PublicAPI.Unshipped.txt.

@@ -33,6 +33,14 @@
     <PackageReference Include="Nullable.Extended.Analyzer" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
   </ItemGroup>
 
+  <!-- .NET code targets only LTS releases (ADR-0155): a target framework on an odd-numbered major, a Standard Term Support release, fails the build. Only the majors of the yearly even/odd cadence are checked; build/Test-DotnetSupport.ps1 reports earlier ones, which are past their end of support. It reads only the target framework, so it needs no network and no clock. A project that can't migrate yet sets ProjectTemplateLtsCheck to false in Directory.Build.props until it has. -->
+  <Target Name="ProjectTemplateLtsTargetFramework" BeforeTargets="BeforeBuild" Condition="'$(ProjectTemplateLtsCheck)' != 'false' and '$(TargetFramework)' != '' and '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' == '.NETCoreApp'">
+    <PropertyGroup>
+      <_ProjectTemplateFrameworkMajor>$([System.Version]::Parse($([MSBuild]::GetTargetFrameworkVersion($(TargetFramework)))).Major)</_ProjectTemplateFrameworkMajor>
+    </PropertyGroup>
+    <Error Condition="$(_ProjectTemplateFrameworkMajor) &gt;= 5 and $([MSBuild]::Modulo($(_ProjectTemplateFrameworkMajor), 2)) == 1" Code="PT0155" Text="$(TargetFramework) is a Standard Term Support release: target an LTS release, an even-numbered major, or set ProjectTemplateLtsCheck to false in Directory.Build.props until the project migrates (docs/decisions/project-template/0155-dotnet-code-targets-only-lts-releases-and-prose-names-no-dotnet-version.md)." />
+  </Target>
+
   <!-- NuGet packages: license expression, README and icon in each package, Source Link (built into the .NET SDK) with untracked sources, symbol packages and XML documentation. A project's own README.md is its package's readme; without one, the repository's is. Package validation compares each pack with its other target frameworks and with PackageValidationBaselineVersion, which the project sets. -->
   <PropertyGroup>
     <EnablePackageValidation>true</EnablePackageValidation>

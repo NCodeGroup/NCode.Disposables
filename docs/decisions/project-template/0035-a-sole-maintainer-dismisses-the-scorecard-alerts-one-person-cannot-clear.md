@@ -28,9 +28,13 @@ comment, each under GitHub's 280-character limit:
 
 | Check | Score one writer reaches | Dismissal comment |
 | --- | --- | --- |
-| Branch-Protection | 4 | `One person has write access. GitHub counts no approval from the author or from NCode Review, so a required approval or last-push approval would block every merge, and the ruleset requires neither (project-template ADR-0034).` |
+| Branch-Protection | 8 where NCode Review's approver is set up ([ADR-0036](0036-a-required-approval-is-met-by-ncode-reviews-approver-app.md)), 4 elsewhere | `One person has write access. GitHub counts no approval from the author or from NCode Review, so a required approval or last-push approval would block every merge, and the ruleset requires neither (project-template ADR-0034).` |
 | CII-Best-Practices | 5 (passing) | `One person maintains the project. Silver needs a second owner, and gold needs two-person review and a bus factor of 2, so one person reaches passing at most and the check stays below 10 (project-template ADR-0035).` |
 | Contributors | 0 | `One person maintains the project. The check scores 10 only with recent contributors from at least 3 companies, each with 5 of the last 30 commits, which one person can't meet (project-template ADR-0035).` |
+
+The Branch-Protection comment above describes a ruleset without NCode Review's approver. Where the approver is set
+up, the ruleset requires one approval, of the last push, so `tools/Dismiss-ScorecardAlerts.ps1` writes a comment that
+cites ADR-0034 and ADR-0036 instead, which holds for both rulesets.
 
 1. `tools/Dismiss-ScorecardAlerts.ps1 -Repo <owner>/<name>` in the project template does it, run from its clone with
    `-WhatIf` first. It reads who can write and dismisses nothing with two writers or more. It lists every open Scorecard
@@ -55,8 +59,10 @@ comment, each under GitHub's 280-character limit:
 - The score doesn't change, only the alerts.
 - GitHub keeps a dismissed alert dismissed when Scorecard finds it again. A new alert for one of the checks needs the
   helper again.
-- Once a second person has write access, the Branch-Protection alert is reopened, since the baseline then requires the
-  approval again.
+- Once a second person has write access, the Branch-Protection alert is reopened, since two people can meet tier 4's
+  two approvals and code owners' review, which [ADR-0020](0020-github-projects-are-scored-by-openssf-scorecard.md)
+  leaves to a person. With one writer, the approver's one approval
+  ([ADR-0036](0036-a-required-approval-is-met-by-ncode-reviews-approver-app.md)) reaches 8 at most.
 
 ## References
 
@@ -64,6 +70,7 @@ comment, each under GitHub's 280-character limit:
 - [Scorecard checks](https://github.com/ossf/scorecard/blob/main/docs/checks.md), read 2026-11-20
 - [ADR-0020](0020-github-projects-are-scored-by-openssf-scorecard.md),
   [ADR-0021](0021-tooling-is-written-in-nodejs-then-go-then-powershell.md),
-  [ADR-0034](0034-with-one-writer-the-baseline-requires-no-approval.md) and
+  [ADR-0034](0034-with-one-writer-the-baseline-requires-no-approval.md),
+  [ADR-0036](0036-a-required-approval-is-met-by-ncode-reviews-approver-app.md) and
   [ADR-0037](0037-best-practices-reports-scorecard-and-answers-for-the-default-branch.md)
 - NCodeGroup/project-template#456 and #386

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Marcin Polewski
+# SPDX-License-Identifier: MIT
+
 <#
 .SYNOPSIS
     Packs the project twice from clean build folders and compares the packages entry by entry, the template's ADR-0154.

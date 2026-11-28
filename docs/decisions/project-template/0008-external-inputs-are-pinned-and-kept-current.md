@@ -1,6 +1,6 @@
 # 0008. External inputs are pinned exactly and kept current
 
-- **Status:** Accepted
+- **Status:** Accepted (amended by 0040)
 - **Date:** 2026-10-31
 
 ## Context
@@ -64,9 +64,9 @@ Every external input is pinned exactly, and on GitHub Dependabot moves the pins 
   the pinned major and minor version once Microsoft releases it, and Dependabot moves the pinned version on GitHub. A
   project that needs one exact SDK in CI removes `rollForward` or sets it to `disable`.
 - The runtime of each older .NET a test project targets follows its channel's newest patch, as
-  `build/Get-TestRuntimes.ps1` names it (`8.0.x`): the `.github/actions/install-dotnet` action installs it on GitHub
+  `build/Get-TestRuntimes.ps1` names it (`N.0.x`): the `.github/actions/install-dotnet` action installs it on GitHub
   with `actions/setup-dotnet`, and `build/Install-Dotnet.ps1` on GitLab.
-- On GitLab the .NET job runs in `mcr.microsoft.com/dotnet/sdk:10.0` for its git and PowerShell, and its tag floats
+- On GitLab the .NET job runs in `mcr.microsoft.com/dotnet/sdk:N.0` for its git and PowerShell, and its tag floats
   with the other GitLab images. `build/Install-Dotnet.ps1` adds the SDK `global.json` selects and the test runtimes
   beside the image's own SDK, taking each from Microsoft's release metadata and only once its download matches the
   SHA-512 that metadata gives, so no installer script or image digest is pinned there for a person to move by hand.

@@ -24,7 +24,7 @@ fails the build.
   no such answer and `-Data` doesn't set it, and the template's `Adopt-Project.ps1` answers `false`. A project turns the formatter on
   with `.\.template\Update-Project.ps1 -Data @{ csharp_format = $true }` and runs `dotnet csharpier format .` once.
 - The template writes the tool manifest itself, with CSharpier pinned and `"rollForward": false`, because
-  `dotnet new tool-manifest` writes it at the root on .NET 10, where `dod.ps1`, the CI cache key and
+  `dotnet new tool-manifest` writes it at the root, where `dod.ps1`, the CI cache key and
   `copilot-setup-steps.yml` don't look. The manifest and `.csharpierignore` are project-owned, so Dependabot bumps and the
   project's own ignores persist. `.csharpierignore` lists `build/ProjectTemplate.props` and `nuget.config`, which updates
   overwrite, so the formatter never rewrites template-owned XML.

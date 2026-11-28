@@ -18,7 +18,7 @@ The Request Delegate Generator (RDG) is the ASP.NET Core source generator that e
 compile time. It intercepts each `Map*` call with a C# interceptor, which works only in the project that makes the
 call, so it is enabled per project. It reports a warning for a handler shape it cannot generate.
 
-RDG has a known behavioral gap in ASP.NET Core 10.0: its generated form binding reads the form without checking
+RDG has a known behavioral gap: its generated form binding reads the form without checking
 `IAntiforgeryValidationFeature`. For a request whose antiforgery validation failed, reading the form then throws, and
 the endpoint answers 500 instead of the runtime factory's 400.
 

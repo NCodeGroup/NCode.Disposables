@@ -1,6 +1,6 @@
 # 0150. A workflow raises the package validation baseline after each release
 
-- **Status:** Accepted (amended by 0022, 0034, 0036 and 0151)
+- **Status:** Accepted (amended by 0022, 0034, 0036, 0040 and 0151)
 - **Date:** 2026-11-15
 - **Amends:** 0147
 

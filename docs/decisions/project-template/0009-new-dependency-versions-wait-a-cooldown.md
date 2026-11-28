@@ -1,6 +1,6 @@
 # 0009. A new dependency version waits three days before it is adopted
 
-- **Status:** Accepted
+- **Status:** Accepted (amended by 0040)
 - **Date:** 2026-10-31
 
 ## Context

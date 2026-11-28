@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Marcin Polewski
+# SPDX-License-Identifier: MIT
+
 <#
 .SYNOPSIS
     Installs the .NET SDK global.json selects and the runtimes build/Get-TestRuntimes.ps1 names.
@@ -23,7 +26,7 @@
     and runtimes with actions/setup-dotnet. Run it as an administrator or with sudo when .NET is installed system-wide.
 
 .PARAMETER Channel
-    The runtime channels to install, such as 8.0.x. Defaults to what build/Get-TestRuntimes.ps1 prints once the SDK is
+    The runtime channels to install, such as N.0.x. Defaults to what build/Get-TestRuntimes.ps1 prints once the SDK is
     installed.
 
 .PARAMETER GlobalJson
@@ -43,7 +46,7 @@
     ./build/Install-Dotnet.ps1 -InstallDir ~/.dotnet
 
 .EXAMPLE
-    ./build/Install-Dotnet.ps1 -SkipSdk -Channel 8.0.x
+    ./build/Install-Dotnet.ps1 -SkipSdk
 #>
 #Requires -Version 7.4
 [CmdletBinding()]
@@ -151,7 +154,7 @@ try {
     if (-not $SkipSdk) {
         $sdk = (Get-Content -Raw -LiteralPath $GlobalJson | ConvertFrom-Json).sdk
         if ("$($sdk.version)" -notmatch '^(\d+)\.(\d+)\.([1-9])\d{2,}(-.+)?$') {
-            throw "$GlobalJson names no full SDK version, such as 10.0.100, in sdk.version."
+            throw "$GlobalJson names no full SDK version, such as the one dotnet --version prints, in sdk.version."
         }
         $pinned = $sdk.version
         $major = [int]$Matches[1]

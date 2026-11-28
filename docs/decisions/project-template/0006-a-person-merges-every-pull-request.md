@@ -1,6 +1,6 @@
 # 0006. A person merges every pull request; an agent never does
 
-- **Status:** Accepted (amended by 0022 and 0034)
+- **Status:** Accepted (amended by 0022, 0034 and 0041)
 - **Date:** 2026-10-31
 
 ## Context

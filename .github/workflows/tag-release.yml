@@ -9,8 +9,9 @@ name: Tag and publish release
 # only contents: read and a checkout that keeps no token, reads release: from AGENTS.md's Landing section; the release
 # job, the only one that can write, runs only for release: tag or tag+release. Before it, the test job runs ci.yml on the
 # same commit, and the release job waits for it to pass. It runs on every push to main because the
-# script does nothing when the tag and the release exist. For a .NET library, the script starts publish.yml through
-# workflow_dispatch after it publishes the release, because the workflow's token starts no other workflow.
+# script does nothing when the tag and the release exist. For a .NET library, the script starts publish.yml, or the
+# workflows the nuget_publisher answer names, through workflow_dispatch after it publishes the release, because the
+# workflow's token starts no other workflow.
 #
 # The template owns this file, so a template update replaces it. To retry a run that failed, choose Re-run failed jobs
 # on that run in the Actions tab: it tags the same commit. Run workflow tags the commit main points to at that time, which

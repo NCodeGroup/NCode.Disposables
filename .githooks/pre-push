@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
+# Copyright (c) 2026 Marcin Polewski
+# SPDX-License-Identifier: MIT
 #
 # pre-push - keep pushes off the default branch when the Landing policy says so.
 #

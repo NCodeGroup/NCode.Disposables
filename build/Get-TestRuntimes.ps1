@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Marcin Polewski
+# SPDX-License-Identifier: MIT
+
 <#
 .SYNOPSIS
     Names the .NET runtimes the test projects target besides the SDK's own.
@@ -8,7 +11,7 @@
     TargetFramework and TargetFrameworks of each, so a value that Directory.Build.props or build/ProjectTemplate.props
     sets counts, and keeps the net and netcoreapp frameworks.
 
-    Prints one channel per line, such as 8.0.x, lowest first, for every such framework other than the SDK's own version;
+    Prints one channel per line, such as N.0.x, lowest first, for every such framework other than the SDK's own version;
     actions/setup-dotnet's dotnet-version and build/Install-Dotnet.ps1 take them. Prints nothing when every test
     project targets the SDK's own version. On GitHub, the .github/actions/install-dotnet action, which ci.yml,
     copilot-setup-steps.yml and publish.yml call, installs what it prints with actions/setup-dotnet; on GitLab,
@@ -43,8 +46,12 @@ try {
     foreach ($project in @($projects | Select-Object -Unique)) {
         $properties = @(dotnet msbuild $project -getProperty:TargetFramework -getProperty:TargetFrameworks 2>&1)
         if ($LASTEXITCODE) { throw "dotnet msbuild $project failed: $($properties -join "`n")" }
-        $text = $properties -join "`n"
-        $json = ConvertFrom-Json $text.Substring($text.IndexOf('{'), $text.LastIndexOf('}') - $text.IndexOf('{') + 1)
+        # MSBuild writes its warnings to stderr and the JSON to stdout: parse only stdout.
+        $text = @($properties | Where-Object { $_ -isnot [System.Management.Automation.ErrorRecord] }) -join "`n"
+        $start = $text.IndexOf('{')
+        $end = $text.LastIndexOf('}')
+        if ($start -lt 0 -or $end -lt $start) { throw "dotnet msbuild $project printed no JSON properties: $($properties -join "`n")" }
+        $json = ConvertFrom-Json $text.Substring($start, $end - $start + 1)
         foreach ($framework in "$($json.Properties.TargetFrameworks);$($json.Properties.TargetFramework)" -split ';') {
             if ($framework -match '^net(?:coreapp)?(\d+)\.(\d+)') { $channels += "$($Matches[1]).$($Matches[2])" }
         }

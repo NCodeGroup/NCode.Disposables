@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 Marcin Polewski
+# SPDX-License-Identifier: MIT
 #
 # session-start.sh - bootstrap the tools a Claude Code cloud session needs.
 #

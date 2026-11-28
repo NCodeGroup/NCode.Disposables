@@ -1,6 +1,6 @@
 # 0016. Releases are tagged and published when their pull request merges
 
-- **Status:** Accepted
+- **Status:** Accepted (amended by 0026, 0028, 0032 and 0040)
 - **Date:** 2026-11-08
 
 ## Context
