@@ -32,9 +32,9 @@ records. `.github/workflows/publish.yml` publishes the packages to nuget.org thr
 ## Continuity
 
 The repository, its issues, decision records, build, release automation and documentation are all in the
-GitHub organization that owns it, so anyone given access can carry
-on with no knowledge held elsewhere. The organization's owners can administer every repository it holds, so they can step in
-when the repository's maintainers can't. nuget.org publishing uses trusted publishing, with no stored API key to hand over.
+GitHub organization that owns it, so anyone given access can carry on with no knowledge held elsewhere.
+The organization's owners can administer every repository it holds, so they can step in when the repository's
+maintainers can't. nuget.org publishing uses trusted publishing, with no stored API key to hand over.
 
 Owners today: [@polewskm](https://github.com/polewskm) is the one owner of the NCodeGroup GitHub organization, and
 the nuget.org account [NCode](https://www.nuget.org/profiles/NCode) owns the package. Continuity needs at least two
