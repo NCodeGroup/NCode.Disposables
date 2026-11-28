@@ -1,6 +1,6 @@
 # 0030. The code-scanning rule is added only where CodeQL analyzes a language
 
-- **Status:** Accepted
+- **Status:** Accepted (amended by 0044)
 - **Date:** 2026-11-16
 - **Amends:** 0005
 

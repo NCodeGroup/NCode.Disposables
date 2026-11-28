@@ -29,7 +29,7 @@ says for `PackageValidationBaselineVersion`.
   as a block of their own; neither edits a project file.
 - It runs only when `nuget_package` is `true`.
 - It does not detect a transitive dependency that an older target framework doesn't support (issue #360's
-  `System.IO.Hashing` 11 on net8.0 through Nerdbank.Streams): that needs a restore, which an offline scan can't do.
+  `System.IO.Hashing` 11 through Nerdbank.Streams): that needs a restore, which an offline scan can't do.
   `build/ProjectTemplate.props` sets `TreatWarningsAsErrors`, so a project that follows the template already fails its
   build on a package's unsupported-framework warning. A project that keeps its own settings is caught by the
   `RepeatedSettings` finding only for the settings it lists, so its guidance names `TreatWarningsAsErrors` set to

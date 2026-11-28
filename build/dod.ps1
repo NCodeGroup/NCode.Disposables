@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Marcin Polewski
+# SPDX-License-Identifier: MIT
+
 <#
 .SYNOPSIS
     The Definition of Done: the one gate a change passes before it counts as done, run the same way by people, agents

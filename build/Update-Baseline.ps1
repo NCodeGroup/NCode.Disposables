@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Marcin Polewski
+# SPDX-License-Identifier: MIT
+
 <#
 .SYNOPSIS
     Raises PackageValidationBaselineVersion to a released version once nuget.org lists it, the template's ADR-0150.

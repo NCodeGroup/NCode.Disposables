@@ -121,8 +121,8 @@ The [passing criteria](https://www.bestpractices.dev/en/criteria/0), 67 in all.
 
 | Criterion | Req | N/A | URL | Answer and evidence |
 | --- | --- | --- | --- | --- |
-| `static_analysis` | MUST | yes | no | **Check**: Met while CodeQL's default setup runs; the ruleset the template's `tools/Set-RepositoryBaseline.ps1` writes then blocks a pull request that adds an alert ([assurance-case.md](assurance-case.md), Evidence). |
-| `static_analysis_common_vulnerabilities` | SUGGESTED | yes | no | **Check**: CodeQL's security queries, while its default setup runs. |
+| `static_analysis` | MUST | yes | no | **Check**: Met while `.github/workflows/codeql.yml` runs CodeQL; the ruleset the template's `tools/Set-RepositoryBaseline.ps1` writes then blocks a pull request that adds an alert ([assurance-case.md](assurance-case.md), Evidence). |
+| `static_analysis_common_vulnerabilities` | SUGGESTED | yes | no | **Check**: CodeQL's `security-extended` queries, while `.github/workflows/codeql.yml` runs them. |
 | `static_analysis_fixed` | MUST | yes | no | **Check**: Met when no confirmed finding of medium or higher severity is open: Security > Code scanning with `tool:CodeQL` shows none, and Scorecard's alerts there are posture checks, not code findings. Name any finding dismissed as won't fix. List the closed alerts by reason (Security > Code scanning with `tool:CodeQL is:closed`) and name each one closed as won't fix with its rationale; write 'none dismissed' only when there is none. |
 | `static_analysis_often` | SUGGESTED | yes | no | **Check**: Met while CodeQL runs on every pull request; Scorecard also runs on every push to the default branch and weekly. |
 | `dynamic_analysis` | SUGGESTED | no | no | **Check**: Met when a fuzzer, property tests or a test suite with 80% branch coverage runs before each release: read the branch rate with the Coverage check; `.\.template\Update-Project.ps1 -Data @{ coverage_gate = $true }` makes CI enforce it and makes the tests `tag-release.yml` runs before each release one. |
@@ -182,7 +182,7 @@ The [silver criteria](https://www.bestpractices.dev/en/criteria/1), 55 in all.
 | `build_repeatable` | MUST | yes | no | **Check**: Met while `reproducible-build` in `.github/workflows/ci.yml` passes (`./.template/Test-ReproducibleBuild.ps1`, which packs twice and compares entry by entry); a rebuild of a release's tag also matches in a later year because `Copyright` names no year ([ADR-0154](decisions/project-template/0154-a-library-build-takes-nothing-from-the-clock-and-ci-builds-it-twice.md)). |
 | `installation_common` | MUST | yes | no | **Met**: a NuGet package reference. |
 | `installation_standard_variables` | MUST | yes | no | **N/A**: it applies only to an installer that writes files where users choose. |
-| `installation_development_quick` | MUST | yes | no | **Met**: [CONTRIBUTING.md](../CONTRIBUTING.md) names the prerequisites, the one command that sets up a clone, and the build and test commands. |
+| `installation_development_quick` | MUST | yes | no | **Met**: [CONTRIBUTING.md](../CONTRIBUTING.md) names the prerequisites, the commands that set up a clone, and the build and test commands. |
 | `external_dependencies` | MUST | yes | yes | **Met**: `Directory.Packages.props` and the project files. |
 | `dependency_monitoring` | MUST | yes | no | **Check**: Dependabot (`.github/dependabot.yml`) and its alerts, which the template's `tools/Set-RepositoryBaseline.ps1` turns on; Security > Dependabot shows the open ones. |
 | `updateable_reused_components` | MUST | yes | no | **Met**: dependencies are pinned and moved by reviewed updates that Dependabot proposes, with actions pinned to a full commit SHA. |
@@ -216,7 +216,7 @@ The [silver criteria](https://www.bestpractices.dev/en/criteria/1), 55 in all.
 
 | Criterion | Req | N/A | URL | Answer and evidence |
 | --- | --- | --- | --- | --- |
-| `static_analysis_common_vulnerabilities` | MUST | yes | no | **Check**: CodeQL's security queries, while its default setup runs. |
+| `static_analysis_common_vulnerabilities` | MUST | yes | no | **Check**: CodeQL's `security-extended` queries, while `.github/workflows/codeql.yml` runs them. |
 | `dynamic_analysis_unsafe` | MUST | yes | no | **N/A**: C# is memory-safe; it applies only to `unsafe` code. |
 
 ## Gold
@@ -230,8 +230,8 @@ The [gold criteria](https://www.bestpractices.dev/en/criteria/2), 23 in all.
 | `achieve_silver` | MUST | no | no | **Check**: the site sets it once the silver level is earned. |
 | `bus_factor` | MUST | no | yes | **Person**: two or more people who could carry the project on; Unmet with one maintainer, which keeps gold from being earned. |
 | `contributors_unassociated` | MUST | no | yes | **Person**: at least two significant contributors from different organizations. |
-| `copyright_per_file` | MUST | no | no | **Check**: the C# file header `.editorconfig` sets starts with the copyright line, and the build fails a C# file without it; check every other source file, such as scripts. |
-| `license_per_file` | MUST | no | no | **Check**: the C# file header holds `SPDX-License-Identifier: Apache-2.0`, and the build fails a C# file without it; check every other source file. |
+| `copyright_per_file` | MUST | no | no | **Check**: the C# file header `.editorconfig` sets starts with the copyright line, and the build fails a C# file without it; check every other source file, such as scripts. The scripts the template owns, in `.template/`, `build/`, `.claude/hooks/` and `.githooks/`, carry the template's own copyright line ([ADR-0038](decisions/project-template/0038-the-templates-scripts-carry-the-templates-copyright-and-license.md)). |
+| `license_per_file` | MUST | no | no | **Check**: the C# file header holds `SPDX-License-Identifier: Apache-2.0`, and the build fails a C# file without it; check every other source file. The scripts the template owns carry the template's `SPDX-License-Identifier: MIT` ([ADR-0038](decisions/project-template/0038-the-templates-scripts-carry-the-templates-copyright-and-license.md)). |
 
 ### Change Control
 

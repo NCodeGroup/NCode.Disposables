@@ -1,6 +1,6 @@
 # 0036. A required approval is met by NCode Review's approver app
 
-- **Status:** Accepted
+- **Status:** Accepted (amended by 0041)
 - **Date:** 2026-11-21
 - **Amends:** 0022, 0034 and, where a project has it, 0150
 

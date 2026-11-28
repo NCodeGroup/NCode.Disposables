@@ -36,8 +36,8 @@ evidence that Scorecard and bestpractices.dev, which read the default branch, ca
 - A project that is already registered isn't registered twice.
 - The report separates what is true on the default branch from what a pending merge would change, and asks for a
   second run after the merge.
-- The Branch-Protection claim in ADR-0020 stays as it is until
-  [#437](https://github.com/NCodeGroup/project-template/issues/437).
+- The Branch-Protection claim in ADR-0020 matches Scorecard v5.7.0's
+  measured scores ([#437](https://github.com/NCodeGroup/project-template/issues/437)).
 
 ## References
 

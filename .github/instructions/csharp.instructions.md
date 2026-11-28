@@ -229,7 +229,8 @@ Use explicit byte arrays only for invalid UTF-8 or error-condition tests. A fixe
 
 ## Memory and Performance
 
-- Prefer `ReadOnlySpan<byte>` and `ReadOnlyMemory<byte>` inputs and an `IBufferWriter<byte>` output to returning a new `byte[]`. Rent transient buffers from `ArrayPool<T>.Shared` or use a small fixed `stackalloc`, and clear a buffer that held secret material before returning it.
+- Take `ReadOnlySpan<byte>`, or `ReadOnlyMemory<byte>` across `await` or in a field, and write into an `IBufferWriter<byte>` or a caller's `Span<byte>`, instead of returning a new `byte[]`. A `byte[]` belongs only at a call to an API that takes or returns nothing else, in a type a framework binds that needs one, and in tests. Rent a transient buffer that holds no secret from `ArrayPool<T>.Shared`, or `stackalloc` a small fixed size (ADR-0112, ADR-0156).
+- A buffer that may hold a secret (a key, password, token, plaintext or derived key) is pinned, pooled and zeroed on dispose: rent it with NCode.Buffers' `BufferFactory.Rent(length, isSensitive: true, out Span<byte> buffer)` in a `using`, or wrap a `stackalloc` with `GetSecureLifetime()`. Never put one in `new byte[]`, `ArrayPool<T>.Shared`, `MemoryPool<T>.Shared`, a `MemoryStream`, an `ArrayBufferWriter<T>`, a `StringBuilder` or a `string`, or take it from an array-returning method such as `Convert.FromBase64String` (ADR-0156).
 - Produce a string once with `string.Create`, not by filling a rented `char` buffer and copying it.
 - Size a collection when you know the count. Return a shared empty instance (`[]`, `FrozenSet<T>.Empty`) and create a collection lazily when it may stay empty. `list ?? []` allocates a new list; write `list ?? (IReadOnlyCollection<T>)[]`.
 - On a path that runs per request, replace LINQ (`Any`, `Where(...).ToList()`) with a `foreach`.

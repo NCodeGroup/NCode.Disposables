@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 Marcin Polewski
+# SPDX-License-Identifier: MIT
 #
 # ensure-pwsh.sh - make PowerShell available in a Claude Code cloud session.
 #

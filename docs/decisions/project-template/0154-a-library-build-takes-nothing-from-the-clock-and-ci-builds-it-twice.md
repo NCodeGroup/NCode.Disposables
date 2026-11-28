@@ -1,6 +1,6 @@
 # 0154. A library build takes nothing from the clock, and CI builds it twice
 
-- **Status:** Accepted
+- **Status:** Accepted (amended by 0040)
 - **Date:** 2026-11-20
 
 ## Context

@@ -46,6 +46,10 @@ jobs:
           key: ${{ runner.os }}-nuget-${{ hashFiles('Directory.Packages.props', 'global.json', '.config/dotnet-tools.json', '**/*.csproj') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
+      # The SDK and every target framework are LTS releases Microsoft supports (ADR-0155). A project that can't
+      # migrate yet adds -WarnOnly until it has.
+      - name: Check .NET support
+        run: ./build/Test-DotnetSupport.ps1
       - name: Check the decision index
         run: ./.template/Test-AdrIndex.ps1
       # The gate checks the sample keys, the README samples and the API map (ADR-1000, ADR-1010), then runs the

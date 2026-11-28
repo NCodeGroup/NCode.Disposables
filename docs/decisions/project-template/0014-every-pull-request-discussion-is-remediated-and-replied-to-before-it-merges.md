@@ -1,6 +1,6 @@
 # 0014. Every pull request discussion is remediated and replied to before it merges
 
-- **Status:** Accepted
+- **Status:** Accepted (amended by 0033 and 0040)
 - **Date:** 2026-11-01
 
 ## Context

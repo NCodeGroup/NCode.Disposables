@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Marcin Polewski
+# SPDX-License-Identifier: MIT
+
 <#
 .SYNOPSIS
     Checks that docs/decisions/README.md indexes every decision record in docs/decisions/, and nothing else.

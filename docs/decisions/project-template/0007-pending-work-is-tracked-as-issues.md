@@ -1,6 +1,6 @@
 # 0007. Pending work is tracked as issues
 
-- **Status:** Accepted
+- **Status:** Accepted (amended by 0040 and 0042)
 - **Date:** 2026-10-31
 
 ## Context

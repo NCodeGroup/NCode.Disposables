@@ -1,6 +1,6 @@
 # 0026. Tests gate coverage at the gold thresholds, and a release waits for them
 
-- **Status:** Accepted (amends 0016)
+- **Status:** Accepted (amends 0016; amended by 0040)
 - **Date:** 2026-11-16
 
 ## Context

@@ -37,6 +37,11 @@ starts it.
 - A project-owned `publish.yml` without the `workflow_dispatch` trigger ships nothing from a release the workflow
   publishes. The Tag and publish release workflow fails after publishing the release and names the trigger, and
   `Update-Project.ps1` warns about the missing trigger.
+- A library whose own workflows publish its packages, which the `nuget_publisher` answer names, has no
+  `publish.yml`: the Tag and publish release workflow starts each of those workflows instead, on the tag's ref, with
+  the tag as the `tag` input when the workflow declares one, and fails after publishing the release, naming the
+  trigger, for one without `workflow_dispatch`, and naming the answer for one that doesn't exist. With
+  `release: tag+release`, `Update-Project.ps1` warns about either.
 - A rerun of the Tag and publish release workflow finds the release published and starts nothing, so a person runs
   Publish packages by hand with the tag.
 

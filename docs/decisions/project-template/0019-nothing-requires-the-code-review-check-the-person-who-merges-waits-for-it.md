@@ -1,6 +1,6 @@
 # 0019. Nothing requires the Code review check; the person who merges waits for it
 
-- **Status:** Accepted (amended by 0022 and 0034)
+- **Status:** Accepted (amended by 0022, 0034 and 0043)
 - **Date:** 2026-11-14
 
 ## Context

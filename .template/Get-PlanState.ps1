@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Marcin Polewski
+# SPDX-License-Identifier: MIT
+
 <#
 .SYNOPSIS
     Print where the plan in a folder stands, and the workflow command to run next.
@@ -6,14 +9,14 @@
     Reads the Git repository that contains the folder and prints one "key: value" line per fact, in a fixed order:
     folder, worktree, branch, push-branch, pr-branch, default, host, plan, issue, refs, feedback, release, steps, reviewed, landing, pre-release, protected, ahead, behind, landed,
     pr, pr-branch-state, merge, tag, renumber, conflicts, changelog-format, changelog-version, changelog-backfill, changelog-duplicates, version-file, published, issue-state, issue-states, unfiled, dirty, plans, analyses and next. A fact that does not apply prints
-    "-". With an origin remote, the script fetches it, ignoring a failure, unless -NoFetch is given. The calls that wait on the network start together, each in a runspace of its own: the fetch, git ls-remote for origin's tags, and, through gh's REST API (gh api, which works where GitHub's GraphQL API is refused, as in a Claude Code cloud session) or glab, the pull request or merge request list, the branch protection, each issue's state and the release. The release check starts with them only when the clone already has the Release: tag, and otherwise once the fetch shows origin has it. The script waits for the fetch before it reads origin's refs, and for each other call where it uses the answer. landed is
-    yes when HEAD is on the default branch, or when any of the branch's merged pull requests or merge requests has its
+    "-". With an origin remote, the script fetches it, ignoring a failure, unless -NoFetch is given. The calls that wait on the network start together, each in a runspace of its own: the fetch, git ls-remote for origin's tags, and, through gh's REST API (gh api, which works where GitHub's GraphQL API is refused, as in a Claude Code cloud session), the pull request list, the branch protection, each issue's state and the release. The release check starts with them only when the clone already has the Release: tag, and otherwise once the fetch shows origin has it. The script waits for the fetch before it reads origin's refs, and for each other call where it uses the answer. landed is
+    yes when HEAD is on the default branch, or when any of the branch's merged pull requests has its
     merge commit there and its head holds HEAD, or has HEAD's tree while HEAD changes a file since it left the default branch, so a new plan's empty commits on top of an earlier request's merge don't count. pr names that request, or else the newest one.
     merge is the commit that request merged as, when it merged. issue is the plan's Issue: line, which names one
     issue or up to three separated by spaces; issue-states gives each one's state as <reference>=<state>, and
-    issue-state is OPEN while any of them is open, CLOSED when all are closed, and unknown otherwise. refs is the plan's Refs: line, the issues it relates to without resolving them; the script reads no state for them. feedback is the number on the plan's Pull request: line above its first ## heading, written #<number> on GitHub and !<number> on GitLab, in ASCII digits: the pull request whose feedback an /address-feedback run's plan answers, or -. For such a plan, pr names that pull request and its state, read by its number (gh api repos/{owner}/{repo}/pulls/<number>, or glab mr view <number>) in place of the branch's own, and conflicts is -. Its next names the stage to run, then address-feedback <number> once its steps are done and reviewed, which pushes the fixes to that pull request's branch and replies, never ship-plan, wait or finish-plan; once that pull request is merged or closed, next is none pull request #<number> is merged (or closed): address-feedback <number> discards this run.
+    issue-state is OPEN while any of them is open, CLOSED when all are closed, and unknown otherwise. refs is the plan's Refs: line, the issues it relates to without resolving them; the script reads no state for them. feedback is the number on the plan's Pull request: line above its first ## heading, written #<number>, in ASCII digits: the pull request whose feedback an /address-feedback run's plan answers, or -. For such a plan, pr names that pull request and its state, read by its number (gh api repos/{owner}/{repo}/pulls/<number>) in place of the branch's own, and conflicts is -. Its next names the stage to run, then address-feedback <number> once its steps are done and reviewed, which pushes the fixes to that pull request's branch and replies, never ship-plan, wait or finish-plan; once that pull request is merged or closed, next is none pull request #<number> is merged (or closed): address-feedback <number> discards this run.
     push-branch is the clone's plan.pushBranch Git setting, the branch a session with a designated push branch, such as a Claude Code cloud session's claude/<words>-<id> branch, pushes each plan to, or -; it is invalid when it isn't a valid branch name or names the default branch. pr-branch is the branch on origin the plan's pull request comes from: the branch's upstream on origin, read from its branch.<name>.remote and branch.<name>.merge settings, which outlast the branch on origin, unless it is the default branch; else the push branch; else the branch itself; - on the default branch or a detached HEAD. The pull request list is read for pr-branch. When pr-branch isn't the branch itself, a request counts for pr only when it holds this plan's commits: its head commit is in this clone, isn't on the default branch, and is in HEAD's history or holds HEAD; the requests other plans opened from the same branch are left out.
-    pr-branch-state says whether origin's copy of pr-branch can take this plan: new when origin has no such branch; ours when its tip holds this plan's commits, as above; landed when its tip is on the default branch; else unknown when GitHub's or GitLab's requests can't be read; else busy <number> when a request from it is open; else landed when its tip is the head of a merged request; else other. It is - on the default branch, for a feedback plan or once the plan has landed.
+    pr-branch-state says whether origin's copy of pr-branch can take this plan: new when origin has no such branch; ours when its tip holds this plan's commits, as above; landed when its tip is on the default branch; else unknown when GitHub's pull requests can't be read; else busy <number> when a request from it is open; else landed when its tip is the head of a merged request; else other. It is - on the default branch, for a feedback plan or once the plan has landed.
     landing gives each key of AGENTS.md's Landing section that the workflow reads as key=value, with its default when
     the section leaves it out; a value may be written in backticks, and a value with a space is printed in double quotes.
     The Landing section's pre-release is tracked, the default, or untracked; any other value prints as invalid. pre-release is yes while it is untracked, no tag merged into HEAD is a stable version (shaped like v1.2.3 or 1.2.3, with a major version of 1 or more) and the plan's Release: version, when it has one, isn't stable; else no.
@@ -24,6 +27,7 @@
     the [bot] suffix GitHub's REST API adds, joined by commas: ncode-review by default, or none.
     max-review-rounds is the number of rounds of pull request feedback after which /run-issues and /run-feedback ask
     the review bot for no further review, while still fixing and answering its findings, 3 by default; a value that isn't a whole number from 1 to 999 reads as 3.
+    board is the GitHub Project whose Status the commands move a story on, written <owner>/<number>, such as NCodeGroup/7, or none, the default; any other value prints as invalid.
     renumber is the version the plan moves to when another plan has landed its Release: version, or a later one, first: the newest version tag on origin (the clone's tags when origin's can't be read) or newest release heading of the changelog, ## [<version>] - <date> or ## <version>, on origin's default branch, raised as the plan's version was raised (patch, else minor, else major). It is - when that version is older, release is none, or the plan has landed. next is ship-plan rather than wait while a pull request is open and renumber isn't -, so /ship-plan renumbers the plan.
     tag is present when origin has the plan's Release: version tag, local when only this clone has it, such as one a failed push left, absent when neither has it, and unknown when git ls-remote can't read origin's tags. Without an origin remote, it reads the clone's tags: present or absent. It is - for a plan without a Release: line, which a plan that changes nothing a release ships doesn't have; next then sends it to finish-plan once it has landed, without a tag.
     conflicts names the files that conflict when origin's default branch merges into HEAD, joined by ", ", from git merge-tree --write-tree, which changes neither the index nor the working tree; none when the merge is clean, unknown when Git can't say, such as Git older than 2.38, and - on the default branch or once the plan has landed. next is ship-plan rather than wait while a pull request is open and conflicts names files, so /ship-plan adds a step that merges the default branch in.
@@ -31,7 +35,7 @@
     version-file is match when the root version.json's version is the plan's Release: version without its v, mismatch <version> when it holds another (mismatch unreadable when it can't be read), and - without the file or a Release: line.
     unfiled counts the lines of PLAN.md's ## Follow-ups section, up to the next ## heading, that start with "- " or "* " and don't end with a mark /ship-plan appends: an em dash, then "filed as #<number>" or "already tracked as #<number>", either with <owner/repo> before the #, or "dropped". A line that says only None or Nothing doesn't count. It is 0 without the section and - without a plan. next is ship-plan rather than finish-plan for a landed plan while unfiled is above 0 and the Landing section's follow-ups isn't none, so /ship-plan files them.
     analyses names the other worktrees under .claude/worktrees/ that hold no PLAN.md but an ANALYSIS.md, or whose newest commit's subject starts with "Record decision: ", as <name>=<title> sorted by name and joined by "; ", or -. The title is ANALYSIS.md's first # heading without an "Analysis:" prefix, else the subject after "Record decision: ". Without a plan, next names the open plans and analyses.
-    protected is hook when protect is hook and Git runs .githooks/pre-push, host when GitHub or GitLab requires pull
+    protected is hook when protect is hook and Git runs .githooks/pre-push, host when GitHub requires pull
     requests into the default branch, no when it does not, unknown when the host or its CLI cannot say, and - without
     a default branch.
 
@@ -158,34 +162,19 @@ function Get-OriginTags {
 
 function Get-IssueState([string]$Ref, [string]$HostName) {
     $issueState = 'unknown'
-    $numbers = [regex]::Matches($Ref, '\d+')
-    if ($HostName -in 'github', 'gitlab' -and $numbers.Count -gt 0) {
+    $numbers = [regex]::Matches($Ref, '[0-9]+')
+    if ($HostName -eq 'github' -and $numbers.Count -gt 0 -and (Get-Command gh -ErrorAction SilentlyContinue)) {
         $issueNumber = $numbers[$numbers.Count - 1].Value
-        $repoArgs = @()
         $apiRepo = '{owner}/{repo}'
-        if ($Ref -match '^(?<r>[^\s/#:]+/[^\s/#:]+)#\d+') { $repoArgs = @('--repo', $Matches['r']); $apiRepo = $Matches['r'] }
-        elseif ($Ref -match '^https?://[^/\s]+/(?<r>.+?)/(?:-/)?issues/\d+') { $repoArgs = @('--repo', $Matches['r']); $apiRepo = $Matches['r'] }
-        $cli = if ($HostName -eq 'github') { 'gh' } else { 'glab' }
-        if (Get-Command $cli -ErrorAction SilentlyContinue) {
-            if ($HostName -eq 'github') {
-                $out = & gh api "repos/$apiRepo/issues/$issueNumber" 2>$null | Out-String
-                if ($LASTEXITCODE -eq 0) {
-                    try {
-                        $s = "$(($out | ConvertFrom-Json -ErrorAction Stop).state)"
-                        if ($s) { $issueState = $s.ToUpperInvariant() }
-                    }
-                    catch { $issueState = 'unknown' }
-                }
+        if ($Ref -match '^(?<r>[^\s/#:]+/[^\s/#:]+)#[0-9]+') { $apiRepo = $Matches['r'] }
+        elseif ($Ref -match '^https?://[^/\s]+/(?<r>.+?)/issues/[0-9]+') { $apiRepo = $Matches['r'] }
+        $out = & gh api "repos/$apiRepo/issues/$issueNumber" 2>$null | Out-String
+        if ($LASTEXITCODE -eq 0) {
+            try {
+                $s = "$(($out | ConvertFrom-Json -ErrorAction Stop).state)"
+                if ($s) { $issueState = $s.ToUpperInvariant() }
             }
-            else {
-                $out = & glab issue view $issueNumber @repoArgs --output json 2>$null | Out-String
-                if ($LASTEXITCODE -eq 0) {
-                    try {
-                        $issueState = switch ("$(($out | ConvertFrom-Json -ErrorAction Stop).state)") { 'opened' { 'OPEN' } 'closed' { 'CLOSED' } default { 'unknown' } }
-                    }
-                    catch { $issueState = 'unknown' }
-                }
-            }
+            catch { $issueState = 'unknown' }
         }
     }
     $issueState
@@ -236,35 +225,23 @@ function Get-Protected([string]$HostName, [string]$Default, [string]$Protect) {
         if ($h -and ((((Split-Path -Leaf $h) -eq '.githooks') -and (Test-Path -LiteralPath "$h/pre-push")) -or [bool]('pre-push', 'pre-push.legacy' | Where-Object { Select-String -LiteralPath "$h/$_" -SimpleMatch '.githooks/pre-push' -Quiet -ErrorAction Ignore }))) { return 'hook' }
     }
     if ($Default -eq '-') { return '-' }
-    if ($HostName -notin 'github', 'gitlab') { return 'unknown' }
-    $cli = if ($HostName -eq 'github') { 'gh' } else { 'glab' }
-    if (-not (Get-Command $cli -ErrorAction SilentlyContinue)) { return 'unknown' }
+    if ($HostName -ne 'github' -or -not (Get-Command gh -ErrorAction SilentlyContinue)) { return 'unknown' }
     # The answer is no only when the host says so: rules without a pull request rule, or "not found" (HTTP 404). Any
     # other status, no response at all, or a body that can't be read may hide a rule that requires pull requests, so that
     # is unknown.
-    if ($HostName -eq 'github') {
-        $unknown = $false
-        $rules = Invoke-HostApi gh "repos/{owner}/{repo}/rules/branches/$Default"
-        if ($rules.Status -eq 200) {
-            try {
-                if (@($rules.Body | ConvertFrom-Json -ErrorAction Stop | Where-Object { $_.type -eq 'pull_request' }).Count -gt 0) { return 'host' }
-            }
-            catch { $unknown = $true }
+    $unknown = $false
+    $rules = Invoke-HostApi gh "repos/{owner}/{repo}/rules/branches/$Default"
+    if ($rules.Status -eq 200) {
+        try {
+            if (@($rules.Body | ConvertFrom-Json -ErrorAction Stop | Where-Object { $_.type -eq 'pull_request' }).Count -gt 0) { return 'host' }
         }
-        elseif ($rules.Status -ne 404) { $unknown = $true }
-        $protection = Invoke-HostApi gh "repos/{owner}/{repo}/branches/$Default/protection/required_pull_request_reviews"
-        if ($protection.Status -eq 200) { return 'host' }
-        if ($protection.Status -ne 404) { $unknown = $true }
-        if ($unknown) { return 'unknown' }
-        return 'no'
+        catch { $unknown = $true }
     }
-    $protection = Invoke-HostApi glab "projects/:id/protected_branches/$Default"
-    if ($protection.Status -eq 404) { return 'no' }
-    if ($protection.Status -ne 200) { return 'unknown' }
-    try {
-        if (@(($protection.Body | ConvertFrom-Json -ErrorAction Stop).push_access_levels | Where-Object { $_.access_level -ne 0 }).Count -eq 0) { return 'host' }
-    }
-    catch { return 'unknown' }
+    elseif ($rules.Status -ne 404) { $unknown = $true }
+    $protection = Invoke-HostApi gh "repos/{owner}/{repo}/branches/$Default/protection/required_pull_request_reviews"
+    if ($protection.Status -eq 200) { return 'host' }
+    if ($protection.Status -ne 404) { $unknown = $true }
+    if ($unknown) { return 'unknown' }
     'no'
 }
 
@@ -334,7 +311,7 @@ try {
         $hostName = 'none'
     }
     else {
-        $hostName = if ($originUrl -match 'gitlab') { 'gitlab' } elseif ($originUrl -match 'github\.com') { 'github' } else { 'other' }
+        $hostName = if ($originUrl -match 'github\.com') { 'github' } else { 'other' }
     }
 
     if ($hostName -eq 'none') { $default = '-' }
@@ -369,8 +346,7 @@ try {
         foreach ($line in $lines) { if ($line -match '^# Plan:\s*(.+)$') { $plan = $Matches[1].Trim(); break } }
         foreach ($line in $lines) { if ($line -match '^Issue:\s*(\S.*)$') { $issue = $Matches[1].Trim(); break } }
         foreach ($line in $lines) { if ($line -match '^Refs:\s*(\S.*)$') { $related = $Matches[1].Trim(); break } }
-        $prPrefix = switch ($hostName) { 'github' { '#' } 'gitlab' { '!' } default { '[#!]' } }
-        foreach ($line in $lines) { if ($line -match '^## ') { break }; if ($line -match "^Pull request:\s*$prPrefix([0-9]+)\s*$") { $feedback = $Matches[1]; break } }
+        foreach ($line in $lines) { if ($line -match '^## ') { break }; if ($line -match '^Pull request:\s*#([0-9]+)\s*$') { $feedback = $Matches[1]; break } }
         foreach ($line in $lines) { if ($line -match '^Release:\s*(\S+)') { $release = $Matches[1]; break } }
         $unfiled = Get-UnfiledFollowUps $lines
 
@@ -404,7 +380,7 @@ try {
 
     # Landing policy from AGENTS.md
     # Each key the workflow reads, with its default, in the order the landing line prints them.
-    $policy = [ordered]@{ integrate = 'pull-request'; release = 'none'; changelog = 'CHANGELOG.md'; 'pre-release' = 'tracked'; draft = 'no'; 'follow-ups' = 'issues'; 'follow-up-label' = 'follow-up'; gate = 'none'; protect = 'none'; 'pr-format' = 'none'; 'review-bots' = 'ncode-review'; 'max-review-rounds' = '3'; prelude = 'none' }
+    $policy = [ordered]@{ integrate = 'pull-request'; release = 'none'; changelog = 'CHANGELOG.md'; 'pre-release' = 'tracked'; draft = 'no'; 'follow-ups' = 'issues'; 'follow-up-label' = 'follow-up'; gate = 'none'; protect = 'none'; 'pr-format' = 'none'; 'review-bots' = 'ncode-review'; 'max-review-rounds' = '3'; board = 'none'; prelude = 'none' }
     $spacedKeys = @('follow-up-label', 'gate', 'pr-format', 'review-bots', 'prelude')   # keys whose value keeps its spaces
     $agents = Join-Path $folder 'AGENTS.md'
     if (Test-Path -LiteralPath $agents) {
@@ -423,32 +399,30 @@ try {
     $bots = @($policy['review-bots'] -split '[\s,]+' | ForEach-Object { $_ -replace '\[bot\]\z', '' } | Where-Object { $_ })
     $policy['review-bots'] = if ($bots.Count) { $bots -join ',' } else { 'none' }
     if ($policy['max-review-rounds'] -notmatch '^[1-9]\d{0,2}\z') { $policy['max-review-rounds'] = '3' }
+    if ($policy['board'] -ne 'none' -and $policy['board'] -cnotmatch '^[A-Za-z0-9][A-Za-z0-9-]{0,38}/[1-9][0-9]{0,9}\z') { $policy['board'] = 'invalid' }
     $integrate = $policy['integrate']; $releasePolicy = $policy['release']
     $landing = @(foreach ($key in $policy.Keys) { if ($policy[$key] -match '\s') { "$key=`"$($policy[$key])`"" } else { "$key=$($policy[$key])" } }) -join ' '
 
     # Start the calls that wait on the network at the same time; each part below receives its own.
     $fetchCall = $null; $tagsCall = $null
-    $cli = if ($hostName -eq 'github') { 'gh' } elseif ($hostName -eq 'gitlab') { 'glab' } else { '' }
-    $hasCli = $cli -and [bool](Get-Command $cli -ErrorAction SilentlyContinue)
+    $hasCli = $hostName -eq 'github' -and [bool](Get-Command gh -ErrorAction SilentlyContinue)
     $requestsCall = $null; $releaseCall = $null
     if ($hostName -ne 'none' -and -not $NoFetch) { $fetchCall = Start-Concurrent $folder 'git' @('fetch', 'origin', '--prune', '--tags', '--quiet') }
     if ($hostName -ne 'none' -and $release -ne '-') { $tagsCall = Start-Concurrent $folder 'Get-OriginTags' -Functions 'Get-OriginTags' }
     $protectedCall = Start-Concurrent $folder 'Get-Protected' @($hostName, $default, $policy['protect']) -Functions 'Get-Protected', 'Invoke-HostApi'
     if ($hasCli -and $feedback -ne '-') {
         # A feedback plan's commits go to the pull request it names: read that one by its number, not the branch's own.
-        $requestsCall = if ($hostName -eq 'github') { Start-Concurrent $folder 'gh' @('api', "repos/{owner}/{repo}/pulls/$feedback") }
-        else { Start-Concurrent $folder 'glab' @('mr', 'view', $feedback, '--output', 'json') }
+        $requestsCall = Start-Concurrent $folder 'gh' @('api', "repos/{owner}/{repo}/pulls/$feedback")
     }
     elseif ($hasCli -and $prBranch -ne '-') {
         # The colon is written %3A: gh api fills :owner, :repo and :branch as well as {owner}, so a branch such as repo-x would lose its name.
         # One page of 100, as gh pr list --limit 100 read before: a branch's own pull requests are far fewer.
-        $requestsCall = if ($hostName -eq 'github') { Start-Concurrent $folder 'gh' @('api', "repos/{owner}/{repo}/pulls?head={owner}%3A$([uri]::EscapeDataString($prBranch))&state=all&per_page=100") }
-        else { Start-Concurrent $folder 'glab' @('mr', 'list', '--source-branch', $prBranch, '--all', '--output', 'json') }
+        $requestsCall = Start-Concurrent $folder 'gh' @('api', "repos/{owner}/{repo}/pulls?head={owner}%3A$([uri]::EscapeDataString($prBranch))&state=all&per_page=100")
     }
-    $releaseArgs = if ($hostName -eq 'github') { @('api', "repos/{owner}/{repo}/releases/tags/$release") } else { @('release', 'view', $release) }
+    $releaseArgs = @('api', "repos/{owner}/{repo}/releases/tags/$release")
     if ($hasCli -and $releasePolicy -eq 'tag+release' -and $release -ne '-') {
         & git rev-parse -q --verify "refs/tags/$release" 2>$null | Out-Null
-        if ($LASTEXITCODE -eq 0) { $releaseCall = Start-Concurrent $folder $cli $releaseArgs }
+        if ($LASTEXITCODE -eq 0) { $releaseCall = Start-Concurrent $folder 'gh' $releaseArgs }
     }
     $issueRefs = @($issue -split '[\s,]+' | Where-Object { $_ -and $_ -ne '-' })
     $issueCalls = @(foreach ($ref in $issueRefs) { Start-Concurrent $folder 'Get-IssueState' @($ref, $hostName) -Functions 'Get-IssueState' })
@@ -460,7 +434,7 @@ try {
         & git rev-parse -q --verify "refs/tags/$release" 2>$null | Out-Null
         $localTag = ($LASTEXITCODE -eq 0)
     }
-    if (-not $releaseCall -and $localTag -and $hasCli -and $releasePolicy -eq 'tag+release') { $releaseCall = Start-Concurrent $folder $cli $releaseArgs }
+    if (-not $releaseCall -and $localTag -and $hasCli -and $releasePolicy -eq 'tag+release') { $releaseCall = Start-Concurrent $folder 'gh' $releaseArgs }
     $protected = (Receive-Concurrent $protectedCall).Value
 
     # Position against the default branch
@@ -485,9 +459,9 @@ try {
         else { $tag = 'absent' }
     }
 
-    # Pull request or merge request
+    # Pull request
     $pr = '-'; $prNumber = ''; $prState = ''; $prMerge = ''; $prBase = ''; $requests = @(); $requestsRead = $false
-    if ($hostName -in 'github', 'gitlab' -and ($feedback -ne '-' -or ($branch -ne '-' -and $branch -ne $default))) {
+    if ($hostName -eq 'github' -and ($feedback -ne '-' -or ($branch -ne '-' -and $branch -ne $default))) {
         $pr = 'unknown'
         if ($requestsCall) {
             $requestsResult = Receive-Concurrent $requestsCall
@@ -496,22 +470,11 @@ try {
                 try {
                     $items = @($json | ConvertFrom-Json -ErrorAction Stop)
                     $requests = @(foreach ($item in $items) {
-                        if ($hostName -eq 'github') {
-                            [pscustomobject]@{
-                                Number = "$($item.number)"
-                                State = if ($item.merged_at) { 'MERGED' } else { "$($item.state)".ToUpperInvariant() }
-                                Merge = if ($item.merged_at) { "$($item.merge_commit_sha)" } else { '' }
-                                Head = "$($item.head.sha)"; Base = "$($item.base.ref)"
-                            }
-                        }
-                        else {
-                            $mergeSha = "$($item.merge_commit_sha)"
-                            if (-not $mergeSha) { $mergeSha = "$($item.squash_commit_sha)" }
-                            [pscustomobject]@{
-                                Number = "$($item.iid)"
-                                State = switch ("$($item.state)") { 'opened' { 'OPEN' } 'merged' { 'MERGED' } 'closed' { 'CLOSED' } default { "$($item.state)".ToUpperInvariant() } }
-                                Merge = $mergeSha; Head = "$($item.sha)"; Base = "$($item.target_branch)"
-                            }
+                        [pscustomobject]@{
+                            Number = "$($item.number)"
+                            State = if ($item.merged_at) { 'MERGED' } else { "$($item.state)".ToUpperInvariant() }
+                            Merge = if ($item.merged_at) { "$($item.merge_commit_sha)" } else { '' }
+                            Head = "$($item.head.sha)"; Base = "$($item.base.ref)"
                         }
                     })
                     $requestsRead = $true
@@ -546,7 +509,7 @@ try {
         if (-not $tip) { $prBranchState = 'new' }
         elseif (Test-PlanCommit $tip $default) { $prBranchState = 'ours' }
         elseif ($tipOnDefault) { $prBranchState = 'landed' }
-        elseif ($hostName -in 'github', 'gitlab' -and -not $requestsRead) { $prBranchState = 'unknown' }
+        elseif ($hostName -eq 'github' -and -not $requestsRead) { $prBranchState = 'unknown' }
         elseif ($openRequest) { $prBranchState = "busy $($openRequest.Number)" }
         elseif (@($requests | Where-Object { $_.State -eq 'MERGED' -and $_.Head -eq $tip }).Count) { $prBranchState = 'landed' }
         else { $prBranchState = 'other' }
@@ -615,7 +578,7 @@ try {
     if ($releasePolicy -eq 'tag+release' -and $tag -eq 'present') {
         $published = 'unknown'
         if ($hasCli) {
-            if (-not $releaseResult) { $releaseResult = Receive-Concurrent (Start-Concurrent $folder $cli $releaseArgs) }
+            if (-not $releaseResult) { $releaseResult = Receive-Concurrent (Start-Concurrent $folder 'gh' $releaseArgs) }
             $published = if ($releaseResult.ExitCode -eq 0) { 'yes' } else { 'no' }
         }
     }

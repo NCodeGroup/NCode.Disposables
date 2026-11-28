@@ -5,12 +5,14 @@ name: Code review auto-merge
 # it changes is in .github/workflows and is that action's uses: line, pinned to a release's full commit SHA with its tag
 # in a comment. The ncode-review group in .github/dependabot.yml gives that bump a pull request of its own, apart from
 # the other actions' updates. The pull request then merges by itself once the checks the default branch requires pass
-# and, where the ruleset requires an approval (where NCode Review's approver is set up, or code-review.yml passes
-# approve: true and a second person has write access), a maintainer approves it, since NCode Review skips a bot's pull
-# request and this workflow approves nothing
+# and, where the ruleset requires an approval, someone approves it: the NCode Review Approver, after a clean review,
+# where NCode Review's approver is set up, since code-review.yml reviews Dependabot's pull requests by itself, and
+# elsewhere, where code-review.yml passes approve: true and a second person has write access, that person. This
+# workflow approves nothing
 # (docs/decisions/project-template/0022-ncode-reviews-approval-gates-the-merge.md,
-# 0034-with-one-writer-the-baseline-requires-no-approval.md and
-# 0036-a-required-approval-is-met-by-ncode-reviews-approver-app.md).
+# 0034-with-one-writer-the-baseline-requires-no-approval.md,
+# 0036-a-required-approval-is-met-by-ncode-reviews-approver-app.md and
+# 0041-ncode-review-reviews-and-approves-dependabots-pull-requests.md).
 # A major release, which may change the inputs the caller passes, a pull request that updates other dependencies too,
 # and one that changes any other line wait for you. Auto-merge has to be allowed in the repository's settings, which
 # tools/Set-RepositoryBaseline.ps1 in NCodeGroup/project-template turns on. A project without code-review.yml gets no

@@ -1,6 +1,6 @@
 # 0023. A project ships the documents the OpenSSF Best Practices silver level asks for
 
-- **Status:** Accepted (amended by 0025)
+- **Status:** Accepted (amended by 0025 and 0040)
 - **Date:** 2026-11-15
 
 ## Context

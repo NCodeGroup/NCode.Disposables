@@ -1,6 +1,6 @@
 # 0112. Binary data uses spans, caller-owned writers, pooled buffers, and cleared secrets
 
-- **Status:** Accepted
+- **Status:** Accepted (amended by 0156)
 - **Date:** 2026-10-31
 
 ## Context
