@@ -53,8 +53,9 @@ link, or "Decided: D3" when the answer is a decision above._
 
 ## Rollout and Phases
 
-_The phases, in order. Each phase is shippable on its own, passes the project's full gate, and is one or more plans
-with their issues. Say what each phase enables and how it is rolled out (flags, migrations, compatibility windows)._
+_The phases, in order. Each phase is shippable on its own, passes the project's full gate, and is an epic: an issue
+of type Epic whose sub-issues are its stories, one plan each. Link each phase's epic and list none of its stories.
+Say what each phase enables and how it is rolled out (flags, migrations, compatibility windows)._
 
 ## References
 

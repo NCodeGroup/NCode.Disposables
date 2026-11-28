@@ -34,12 +34,12 @@ The pack may print "Could not resolve reference '<assembly>.dll'" for a transiti
 
 Package validation gives each target framework's compile references to ApiCompat, never the runtime-only assemblies. A dependency package that ships a placeholder (`lib/<tfm>/_._`) as its compile asset and its real assembly only at run time, such as `Microsoft.VisualStudio.Threading.Only`, which `Nerdbank.Streams` brings in, is therefore unresolved, once per target framework. Your own code compiled without that assembly, so none of its types can be in your public API (using one is CS0012), and the warning hides no change to your API. Nothing needs fixing.
 
-To silence it anyway, add this to `Directory.Build.props` after the import, with the assembly's path as the package's `lib` file under `$(NuGetPackageRoot)`. The package version and target framework in the path are the ones this example's restore resolved; use the ones your own restore resolved, which `obj/project.assets.json` lists, or the target has no effect and the warning stays. The target hooks the SDK's private `_GetReferencePathFromInnerProjects` target, so check it after an SDK update:
+To silence it anyway, add this to `Directory.Build.props` after the import, with the assembly's path as the package's `lib` file under `$(NuGetPackageRoot)`. The package version in the path is the one this example's restore resolved, and `netN.0` stands for the target framework; use the ones your own restore resolved, which `obj/project.assets.json` lists, or the target has no effect and the warning stays. The target hooks the SDK's private `_GetReferencePathFromInnerProjects` target, so check it after an SDK update:
 
 ```xml
 <Target Name="ResolveRuntimeOnlyReferences" BeforeTargets="RunPackageValidation" DependsOnTargets="_GetReferencePathFromInnerProjects">
   <PropertyGroup>
-    <_RuntimeOnlyReference>$(NuGetPackageRoot)microsoft.visualstudio.threading.only/17.13.61/lib/net8.0/Microsoft.VisualStudio.Threading.dll</_RuntimeOnlyReference>
+    <_RuntimeOnlyReference>$(NuGetPackageRoot)microsoft.visualstudio.threading.only/17.13.61/lib/netN.0/Microsoft.VisualStudio.Threading.dll</_RuntimeOnlyReference>
   </PropertyGroup>
   <ItemGroup>
     <PackageValidationReferencePath Update="@(PackageValidationReferencePath)" ReferencePath="%(PackageValidationReferencePath.ReferencePath),$(_RuntimeOnlyReference)" />
